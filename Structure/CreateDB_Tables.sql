@@ -153,16 +153,16 @@ create table [userAcc].Student (
     StudentId int identity(1,1),
     FirstName nvarchar(50) not null,
     LastName nvarchar(50) not null,
-    Gender char(1),
-    BirthDate date,
-    StuAddress nvarchar(150),
-    Phone nvarchar(11),
-    NationalID nchar(14),
+    Gender char(1) not null,
+    BirthDate date not null,
+    StuAddress nvarchar(150) not null,
+    Phone nvarchar(11) not null,
+    NationalID nchar(14) not null,
     Age as (datediff(year, BirthDate, getdate())), 
-    UserId int,
-    BranchId int,
-    IntakeId int,
-    TrackId int,
+    UserId int not null,
+    BranchId int not null,
+    IntakeId int not null,
+    TrackId int not null,
 
     constraint StudentPK primary key (StudentId),
     constraint FirstNamelenCheck check(len(FirstName) >= 3),
@@ -194,13 +194,13 @@ create table [userAcc].Instructor (
     BirthDate date,
     Age as (datediff(year, BirthDate, getdate())), 
     InsAddress nvarchar(150),
-    Phone nvarchar(11),
-    NationalID nchar(14),
-    Salary decimal(10,2),
+    Phone nvarchar(11) not null,
+    NationalID nchar(14) not null,
+    Salary decimal(10,2) not null,
     HireDate date constraint InsHireDateDefault default getdate(),
-    Specialization nvarchar(50),
-    UserId int,
-    DeptId int,
+    Specialization nvarchar(50) not null,
+    UserId int not null,
+    DeptId int not null,
 
     constraint InstructorPK primary key (InsId),
     constraint InstructorFirstNamelenCheck check(len(FirstName) >= 3),
@@ -223,5 +223,7 @@ create table [userAcc].Instructor (
     constraint InstructorUserFK foreign key (UserId) references [userAcc].UserAccount(UserId),
     constraint InstructorDeptFK foreign key (DeptId) references [orgnization].Department(DeptId)
 ) on [FG_Users];
+
+create table 
 
 
