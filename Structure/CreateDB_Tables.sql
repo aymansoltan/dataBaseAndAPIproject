@@ -64,6 +64,9 @@ create table [orgnization].Branch
     constraint BranchPK primary key (BranchId),
     constraint BranchNameUniqe unique (BranchName),
     constraint BranchNamelenCheck check(len(BranchName) >=3),
+        constraint BranchNameFormatCheck check (BranchName NOT like '[0-9]%' AND BranchName NOT like '[!@#$%^&*]%'),
+
+
 ) on [primary]
 
 create table [orgnization].Department(
@@ -76,6 +79,7 @@ create table [orgnization].Department(
     constraint DepartmentPK primary key (DeptId),
     constraint DepartmentName_branchUniqe unique (DeptName ,BranchId ),
     constraint DepartmentNamelenCheck check(len(DeptName) >=3),
+    constraint DepartmentNameFormatCheck check (DeptName NOT like '[0-9]%' AND DeptName NOT like '[!@#$%^&*]%'),
     constraint DepartmentBranchFK foreign key (BranchId) references [orgnization].[Branch](BranchId)
 ) on [primary]
 
@@ -89,6 +93,7 @@ create table [orgnization].Track(
     constraint TrackPK primary key (TrackId),
     constraint TrackName_DeptUniqe unique (TrackName ,DeprtmentId ),
     constraint TrackNamelenCheck check(len(TrackName) >=3),
+    constraint TrackNameFormatCheck check (TrackName NOT like '[0-9]%' AND TrackName NOT like '[!@#$%^&*]%'),
     constraint TrackDepartmentFK foreign key (DeprtmentId) references [orgnization].[Department](DeptId)
 ) on [primary]
 
@@ -101,6 +106,8 @@ create table [orgnization].Intake(
     constraint IntakePK primary key (IntakeId),
     constraint IntakeNameUniqe unique (IntakeName),
     constraint IntakeNamelenCheck check(len(IntakeName) >=3),
+        constraint IntakeNameFormatCheck check (IntakeName NOT like '[0-9]%' AND IntakeName NOT like '[!@#$%^&*]%'),
+
 ) on [primary]
 
 create table [orgnization].IntakeTrack(
@@ -135,6 +142,7 @@ create table [userAcc].UserAccount(
     constraint UserPK primary key (UserId),
     constraint UserNameUnique unique (UserName),
     constraint UserNamelenCheck check(len(UserName) >=3),
+    constraint UserNameFormatCheck check (UserName NOT like '[0-9]%' AND UserName NOT like '[!@#$%^&*]%'),
     constraint EmailUnique unique (Email),
     constraint EmaillenCheck check(len(Email) > 10),
     constraint UserEmailFormatCheck check (Email like '%_@__%.__%'),
@@ -158,7 +166,11 @@ create table [userAcc].Student (
 
     constraint StudentPK primary key (StudentId),
     constraint FirstNamelenCheck check(len(FirstName) >= 3),
+    constraint FirstNameFormatCheck check (FirstName NOT like '[0-9]%' AND FirstName NOT like '[!@#$%^&*]%'),
+
     constraint LastNamelenCheck check(len(LastName) >= 3),
+    constraint LastNameFormatCheck check (LastName NOT like '[0-9]%' AND LastName NOT like '[!@#$%^&*]%'),
+
     constraint StudentGenderCheck check (Gender in ('M', 'F')),
     constraint StudentAgeCheck check (datediff(year, BirthDate, getdate()) >= 18),
     constraint StuAddresslenCheck check(len(StuAddress) >10),
@@ -192,7 +204,11 @@ create table [userAcc].Instructor (
 
     constraint InstructorPK primary key (InsId),
     constraint InstructorFirstNamelenCheck check(len(FirstName) >= 3),
+    constraint InstructorFirstNameFormatCheck check (FirstName NOT like '[0-9]%' AND FirstName NOT like '[!@#$%^&*]%'),
+
     constraint InstructorLastNamelenCheck check(len(LastName) >= 3),
+    constraint InstructorLastNameFormatCheck check (LastName NOT like '[0-9]%' AND LastName NOT like '[!@#$%^&*]%'),
+
     constraint InstructorAgeCheck check (datediff(year, BirthDate, getdate()) >= 20),
     constraint InstructorAddresslenCheck check(len(InsAddress) >10),
     constraint InstructorPhoneUnique unique (Phone),
@@ -207,3 +223,5 @@ create table [userAcc].Instructor (
     constraint InstructorUserFK foreign key (UserId) references [userAcc].UserAccount(UserId),
     constraint InstructorDeptFK foreign key (DeptId) references [orgnization].Department(DeptId)
 ) on [FG_Users];
+
+
