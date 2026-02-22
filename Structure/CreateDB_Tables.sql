@@ -347,3 +347,96 @@ create synonym ExamQuestions for [exams].ExamQuestion;
 create synonym StudentAnswers for [exams].Student_Answer;
 create synonym FinalResults for [exams].Student_Exam_Result;
 
+
+
+INSERT INTO [orgnization].Branch (BranchName) VALUES 
+('Smart Village'), ('Alexandria'), ('Mansoura'), ('Assiut'), ('Menofia');
+
+INSERT INTO [orgnization].Department (DeptName, BranchId) VALUES 
+('Software Engineering', 1), ('Data Science', 1), ('Cloud Computing', 2), 
+('Embedded Systems', 3), ('Cyber Security', 4);
+
+INSERT INTO [orgnization].Track (TrackName, DeprtmentId) VALUES 
+('Full Stack .NET', 1), ('Python for BI', 2), ('Azure Cloud Admin', 3),
+('Embedded C', 4), ('Ethical Hacking', 5);
+
+
+INSERT INTO [orgnization].Intake (IntakeName) VALUES 
+('Intake 42'), ('Intake 43'), ('Intake 44'), ('Intake 45'), ('Intake 46');
+
+INSERT INTO [userAcc].UserRole (RoleName) 
+VALUES 
+('admin'), 
+('instructor'), 
+('student'), 
+('Training Manager');
+
+-- (1 Admin, 4 Instructors, 10 Students)
+INSERT INTO [userAcc].UserAccount (UserName, Email, UserPassword, RoleId) VALUES 
+('admin_iti', 'admin@iti.gov.eg', 'admin123', 1),
+('moataz_ins', 'moataz@iti.gov.eg', 'ins123', 2),
+('sara_ins', 'sara@iti.gov.eg', 'ins123', 2),
+('ahmed_ins', 'ahmed@iti.gov.eg', 'ins123', 2),
+('omar_ins', 'omar@iti.gov.eg', 'ins123', 2),
+('stu_ali', 'ali@gmail.com', 'stu123', 3), 
+('stu_mona', 'mona@gmail.com', 'stu123', 3),
+('stu_zein', 'zein@gmail.com', 'stu123', 3),
+('stu_nour', 'nour@gmail.com', 'stu123', 3),
+('stu_hady', 'hady@gmail.com', 'stu123', 3), 
+('stu_mai', 'mai@gmail.com', 'stu123', 3),
+('stu_fady', 'fady@gmail.com', 'stu123', 3), 
+('stu_layla', 'layla@gmail.com', 'stu123', 3),
+('stu_gad', 'gad@gmail.com', 'stu123', 3),
+('stu_yara', 'yara@gmail.com', 'stu123', 3);
+
+INSERT INTO [userAcc].Instructor (FirstName, LastName, BirthDate, InsAddress, Phone, NationalID, Salary, Specialization, UserId, DeptId) VALUES 
+('Moataz', 'Leader', '1985-01-01', 'Cairo, District 5', '01012345678', '28501011234567', 12000, 'SQL & DB', 2, 1),
+('Sara', 'Ahmed', '1990-03-12', 'Alexandria, Roushdy', '01222334455', '29003121234567', 9500, 'Programming', 3, 2),
+('Ahmed', 'Hassan', '1988-11-05', 'Mansoura, Toriel', '01155667788', '28811051234567', 10000, 'Cloud Services', 4, 3),
+('Omar', 'Khalid', '1992-07-20', 'Cairo, Maadi', '01599887766', '29207201234567', 8500, 'Networks', 5, 4);
+
+
+INSERT INTO [userAcc].Student (FirstName, LastName, Gender, BirthDate, StuAddress, Phone, NationalID, UserId, BranchId, IntakeId, TrackId) VALUES 
+('Ali', 'Samy', 'M', '2001-01-01', 'Cairo, Nasr City', '01011112222', '30101011234561', 6, 1, 3, 1),
+('Mona', 'Zaki', 'F', '2002-02-02', 'Alex, Gleem', '01233334444', '30202021234562', 7, 2, 3, 2),
+('Zein', 'Eldin', 'M', '2000-05-10', 'Mansoura, Nile St', '01144445555', '30005101234563', 8, 3, 3, 3),
+('Nour', 'Amer', 'F', '2001-08-15', 'Assiut, University St', '01566667777', '30108151234564', 9, 4, 3, 4),
+('Hady', 'Adel', 'M', '2002-12-20', 'Cairo, Shobra', '01077778888', '30212201234565', 10, 1, 4, 1),
+('Mai', 'Ibrahim', 'F', '2001-04-05', 'Alex, Smouha', '01288889999', '30104051234566', 11, 2, 4, 2),
+('Fady', 'George', 'M', '2000-09-30', 'Mansoura, Mashaya', '01199990000', '30009301234567', 12, 3, 4, 3),
+('Layla', 'Mahmoud', 'F', '2001-11-11', 'Assiut, Free Zone', '01511113333', '30111111234568', 13, 4, 4, 4),
+('Gad', 'Ezz', 'M', '2002-06-25', 'Menofia, Shebin', '01022224444', '30206251234569', 14, 5, 4, 5),
+('Yara', 'Hany', 'F', '2001-10-01', 'Cairo, Rehab', '01233335555', '30110011234570', 15, 1, 4, 1);
+
+
+INSERT INTO [Courses].Course (CourseName, CourseDescription, MinDegree, MaxDegree) VALUES 
+('SQL Server', 'Database Design & T-SQL', 50, 100),
+('C# Fundamentals', 'Basics of C# and .NET', 60, 100),
+('Data Warehouse', 'ETL and BI Concepts', 50, 100),
+('Cloud Architecture', 'AWS & Azure Basics', 50, 100),
+('Python Basics', 'Syntax and Core Python', 50, 100),
+('Network Security', 'Firewalls & Encryption', 50, 100);
+
+
+INSERT INTO [Courses].CourseInstance (CourseId, InstructorId, BranchId, TrackId, IntakeId, AcademicYear) VALUES 
+(1, 1, 1, 1, 3, 2024), -- SQL by Moataz
+(2, 2, 1, 1, 3, 2024), -- C# by Sara
+(3, 2, 1, 2, 3, 2024), -- BI by Sara
+(4, 3, 2, 3, 4, 2024), -- Cloud by Ahmed
+(5, 4, 4, 4, 4, 2024), -- Python by Omar
+(6, 4, 4, 5, 4, 2024); -- Security by Omar
+
+
+INSERT INTO [exams].Question (QuestionText, QuestionType, CorrectAnswer, BestAnswer, Points, CourseId) VALUES 
+('What does SQL stand for?', 'MCQ', 'Structured Query Language', 'Structured Query Language', 2, 1),
+('Primary Key allows Null values?', 'T/F', 'False', 'False', 1, 1),
+('Explain what is a Join?', 'Text', NULL, 'A way to combine rows from two or more tables based on a related column', 5, 1),
+('Is C# an Object Oriented Language?', 'T/F', 'True', 'True', 1, 2),
+('Define a Class in C#.', 'Text', NULL, 'A blueprint for creating objects', 5, 2),
+('What is ETL?', 'MCQ', 'Extract Transform Load', 'Extract Transform Load', 2, 3),
+('S3 is a storage service in AWS?', 'T/F', 'True', 'True', 1, 4),
+('What is a List in Python?', 'Text', NULL, 'A mutable ordered collection of items', 5, 5),
+('List 3 types of Joins.', 'Text', NULL, 'Inner, Left, Right Joins', 5, 1),
+('Can we have multiple Primary Keys?', 'T/F', 'False', 'No, only one primary key per table', 1, 1),
+('What is the default port for SQL Server?', 'MCQ', '1433', '1433', 2, 1),
+('Dictionary in Python is unordered?', 'T/F', 'True', 'True in versions before 3.7', 1, 5);
