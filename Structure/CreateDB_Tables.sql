@@ -52,7 +52,7 @@ create schema userAcc;
 create schema orgnization;
 create schema Courses;
 create schema exams;
-create schema students;
+
 
 create table [orgnization].Branch
 (
@@ -299,8 +299,6 @@ create  table [exams].Exam (
     constraint EndTimeRangeCheck check (cast(EndTime AS TIME) <= '23:00:00'),
     constraint ExamTimeOrderCheck check (EndTime > StartTime),
     constraint ExamDurationCheck check (datediff(minute, StartTime, EndTime) >= 30),
-    
-
     constraint Exam_CourseInstanceFK foreign key  (CourseInstanceId) references  [Courses].CourseInstance(CourseInstanceId),
     constraint Exam_BranchFK foreign key (BranchId) references [orgnization].Branch(BranchId),
     constraint Exam_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
@@ -358,6 +356,11 @@ create synonym Exams for [exams].Exam;
 create synonym ExamQuestions for [exams].ExamQuestion;
 create synonym StudentAnswers for [exams].Student_Answer;
 create synonym FinalResults for [exams].Student_Exam_Result;
+
+
+
+
+
 
 
 
