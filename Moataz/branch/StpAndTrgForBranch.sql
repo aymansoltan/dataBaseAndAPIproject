@@ -1,4 +1,4 @@
-
+use [ExaminationSystemDB]
 create proc [orgnization].stp_AddBranch @BranchName nvarchar(50)
 as 
 begin
