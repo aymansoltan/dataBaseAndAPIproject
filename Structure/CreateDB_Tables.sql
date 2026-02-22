@@ -64,9 +64,7 @@ create table [orgnization].Branch
     constraint BranchPK primary key (BranchId),
     constraint BranchNameUniqe unique (BranchName),
     constraint BranchNamelenCheck check(len(BranchName) >=3),
-        constraint BranchNameFormatCheck check (BranchName NOT like '[0-9]%' AND BranchName NOT like '[!@#$%^&*]%'),
-
-
+    constraint BranchNameFormatCheck check (BranchName NOT like '[0-9]%' AND BranchName NOT like '[!@#$%^&*]%'),
 ) on [primary]
 
 create table [orgnization].Department(
@@ -106,8 +104,7 @@ create table [orgnization].Intake(
     constraint IntakePK primary key (IntakeId),
     constraint IntakeNameUniqe unique (IntakeName),
     constraint IntakeNamelenCheck check(len(IntakeName) >=3),
-        constraint IntakeNameFormatCheck check (IntakeName NOT like '[0-9]%' AND IntakeName NOT like '[!@#$%^&*]%'),
-
+    constraint IntakeNameFormatCheck check (IntakeName NOT like '[0-9]%' AND IntakeName NOT like '[!@#$%^&*]%'),
 ) on [primary]
 
 create table [orgnization].IntakeTrack(
@@ -224,6 +221,129 @@ create table [userAcc].Instructor (
     constraint InstructorDeptFK foreign key (DeptId) references [orgnization].Department(DeptId)
 ) on [FG_Users];
 
-create table 
 
+create table [Courses].Course(
+    CourseId int identity(1,1),
+    CourseName nvarchar(50) not null,
+    CourseDescription nvarchar(max),
+    MinDegree int constraint MinDegreeDefault default 50,
+    MaxDegree int constraint MaxDegreeDefault default 100,
+
+    constraint CoursePK primary key (CourseId),
+    constraint CourseNameUnique unique (CourseName),
+    constraint CourseNameFormatCheck check (CourseName NOT like '[0-9]%' AND CourseName NOT like '[!@#$%^&*]%'),
+    constraint MinDegreeCheck check (MinDegree >= (MaxDegree * 0.3)) 
+) on [FG_Courses];
+
+create table [Courses].CourseInstance(
+CourseInstanceId int identity(1,1),
+CourseId int not null,
+InstructorId int not null , 
+BranchId int not null,
+TrackId int not null,
+IntakeId int not null,
+AcademicYear int not null,
+
+constraint CourseInstancePK primary key (CourseInstanceId),
+
+constraint CI_CourseFK foreign key (CourseId) references [Courses].Course(CourseId),
+constraint CI_InstructorFK foreign key (InstructorId) references [userAcc].Instructor(InsId),
+constraint CI_BranchFK foreign key (BranchId) references [orgnization].Branch(BranchId),
+constraint CI_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
+constraint CI_IntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId),
+) on [FG_Courses];
+
+
+create table [exams].Question(
+QuestionId int identity(1,1),
+QuestionText nvarchar(max) not null,
+QuestionType nvarchar(20) not null,
+CorrectAnswer nvarchar(max) ,
+BestAnswer nvarchar(max) not null, 
+Points int default 1,
+CourseId int not null,
+IsDeleted BIT DEFAULT 0,
+
+constraint QuestionPK primary key (QuestionId),
+constraint QuestionTypeCheck check (QuestionType in ('MCQ', 'T/F','Text')),
+constraint FK_Question_Course foreign key (CourseId) references [Courses].Course(CourseId)
+)on [FG_Questions] 
+
+create table [exams].QuestionOption (
+    QuestionOptionId int identity(1,1),
+    QuestionOptionText nvarchar(max) not null,
+    QuestionId int not null,
+
+    constraint QuestionOptionPK primary key (QuestionOptionId),
+    constraint OQ_QuestionFK foreign key (QuestionId) references [exams].Question(QuestionId)
+) on [FG_Questions];
+
+create table [exams].Exam (
+    ExamId int identity(1,1),
+    ExamTitle nvarchar(100) not null,
+    StartTime datetime not null,
+    EndTime datetime not null,
+    DurationMinutes as (datediff(minute, StartTime, EndTime)),
+    CourseInstanceId int not null,
+    IsDeleted BIT DEFAULT 0,
+    constraint ExamPK primary key (ExamId),
+    constraint StartTimeRangeCheck check (cast(StartTime as time) >= '08:00:00'),
+    constraint EndTimeRangeCheck check (cast(EndTime as time) <= '16:00:00'),
+    constraint ExamTimeOrderCheck check (EndTime > StartTime),
+    constraint ExamDurationCheck check (datediff(minute, StartTime, EndTime) >= 30),
+    constraint FK_Exam_CourseInstance foreign key (CourseInstanceId) references [Courses].CourseInstance(CourseInstanceId)
+) on [FG_Exams];
+
+create table [exams].ExamQuestion (
+    ExamId int not null,
+    QuestionId int not null,
+
+    constraint ExamQuestionPK primary key (ExamId, QuestionId),
+    constraint EQ_ExamFK foreign key (ExamId) references [exams].Exam(ExamId),
+    constraint EQ_QuestionFK foreign key (QuestionId) references [exams].Question(QuestionId)
+) on [FG_Exams];
+
+
+create table [exams].Student_Answer (
+    StudentId int not null,
+    ExamId int not null,
+    QuestionId int not null,
+    StudentResponse nvarchar(max), 
+    SystemGrade int default 0,        
+    InstructorGrade int,             
+    
+    constraint StudentAnswerPK primary key (StudentId, ExamId, QuestionId),
+    constraint FK_Ans_Student foreign key (StudentId) references [userAcc].Student(StudentId),
+    constraint FK_Ans_Exam foreign key (ExamId) references [exams].Exam(ExamId),
+    constraint FK_Ans_Question foreign key (QuestionId) references [exams].Question(QuestionId)
+) on [FG_Exams];
+
+
+create table [exams].Student_Exam_Result (
+    StudentId int not null,
+    ExamId int not null,
+    TotalGrade int,                 
+    IsPassed bit,                  
+    
+    constraint StudentResultPK primary key (StudentId, ExamId),
+    constraint FK_Res_Student foreign key (StudentId) references [userAcc].Student(StudentId),
+    constraint FK_Res_Exam foreign key (ExamId) references [exams].Exam(ExamId)
+) on [FG_Exams];
+create synonym Branch for [orgnization].Branch;
+create synonym Dept for [orgnization].Department;
+create synonym Track for [orgnization].Track;
+create synonym Intake for [orgnization].Intake;
+create synonym IntakeTrack for [orgnization].IntakeTrack;
+create synonym Roles for [userAcc].UserRole;
+create synonym Accounts for [userAcc].UserAccount;
+create synonym Students for [userAcc].Student;
+create synonym Instructors for [userAcc].Instructor;
+create synonym Course for [Courses].Course;
+create synonym CourseInstance for [Courses].CourseInstance;
+create synonym Questions for [exams].Question;
+create synonym Options for [exams].QuestionOption;
+create synonym Exams for [exams].Exam;
+create synonym ExamQuestions for [exams].ExamQuestion;
+create synonym StudentAnswers for [exams].Student_Answer;
+create synonym FinalResults for [exams].Student_Exam_Result;
 
