@@ -278,22 +278,34 @@ create table [exams].QuestionOption (
     constraint OQ_QuestionFK foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Questions];
 
-create table [exams].Exam (
+
+create  table [exams].Exam (
     ExamId int identity(1,1),
-    ExamTitle nvarchar(100) not null,
+    ExamTitle nvarchar(100) not null ,
+    ExamType nvarchar(20) not null default 'Regular', 
     StartTime datetime not null,
     EndTime datetime not null,
-    DurationMinutes as (datediff(minute, StartTime, EndTime)),
-    CourseInstanceId int not null,
-    IsDeleted BIT DEFAULT 0,
+    DurationMinutes AS (datediff(minute, StartTime, EndTime)),
+    CourseInstanceId int not null ,
+    BranchId int not null ,
+    TrackId int not null ,
+    IntakeId int not null ,
+    
+    IsDeleted bit default 0,
+
     constraint ExamPK primary key (ExamId),
-    constraint StartTimeRangeCheck check (cast(StartTime as time) >= '08:00:00'),
-    constraint EndTimeRangeCheck check (cast(EndTime as time) <= '16:00:00'),
+    constraint ExamTypeCheck check (ExamType IN ('Regular', 'Corrective')),
+    constraint StartTimeRangeCheck check (cast(StartTime AS TIME) >= '08:00:00'),
+    constraint EndTimeRangeCheck check (cast(EndTime AS TIME) <= '23:00:00'),
     constraint ExamTimeOrderCheck check (EndTime > StartTime),
     constraint ExamDurationCheck check (datediff(minute, StartTime, EndTime) >= 30),
-    constraint FK_Exam_CourseInstance foreign key (CourseInstanceId) references [Courses].CourseInstance(CourseInstanceId)
-) on [FG_Exams];
+    
 
+    constraint Exam_CourseInstanceFK foreign key  (CourseInstanceId) references  [Courses].CourseInstance(CourseInstanceId),
+    constraint Exam_BranchFK foreign key (BranchId) references [orgnization].Branch(BranchId),
+    constraint Exam_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
+    constraint Exam_IntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId)
+) on [FG_Exams];
 create table [exams].ExamQuestion (
     ExamId int not null,
     QuestionId int not null,
