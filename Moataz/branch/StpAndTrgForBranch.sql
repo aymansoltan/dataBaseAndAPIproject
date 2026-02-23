@@ -105,3 +105,35 @@ begin
         print 'this branch deleted successfully from the data base'
     end
 end 
+
+
+
+create  proc [orgnization].stp_ActivateBranch @BranchId int 
+as
+begin
+    begin try
+        -- 1. «· √ﬂœ „‰ ÊÃÊœ «·›—⁄
+        if not exists (select 1 from [orgnization].[Branch] where [BranchId] = @BranchId)
+        begin
+            raiserror('Error: This branch ID was not found.', 16, 1);
+            return;
+        end
+
+        -- 2. «· Õﬁﬁ Ê«· ÕœÌÀ ›Ì ŒÿÊ… Ê«Õœ…
+        if exists(select 1 from [orgnization].[Branch] where [BranchId] = @BranchId and [isActive] = 1)
+        begin
+            print 'Info: This branch is already active.';
+        end
+        else
+        begin
+            update [orgnization].[Branch]
+            set [isActive] = 1
+            where [BranchId] = @BranchId;
+            
+            print 'Success: Branch has been activated.';
+        end
+    end try
+    begin catch
+        raiserror(ERROR_MESSAGE(), 16, 1);
+     end catch
+end
