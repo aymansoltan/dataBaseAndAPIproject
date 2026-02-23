@@ -122,4 +122,23 @@ begin
     end
 end
 
+create trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveTrack
+on [orgnization].[Track]
+after update
+as
+begin
 
+    if exists (select 1 from inserted i join deleted d on i.TrackId = d.TrackId 
+               where i.isActive = 0 and d.isActive = 1)
+    begin
+        declare @trackid int;
+        select @trackid = TrackId from inserted;
+
+   
+        update [orgnization].[IntakeTrack]
+        set [isActive] = 0
+        where [TrackId] = @trackid;
+
+        print 'track deactivated: all related intaketracks are now inactive.';
+    end
+end

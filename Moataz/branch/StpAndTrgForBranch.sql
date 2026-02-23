@@ -135,3 +135,23 @@ begin
         raiserror(@errorMassege ,16,1)
      end catch
 end
+
+
+create trigger [orgnization].trg_inactivateDepartmentWhenInActiveBranch
+on [orgnization].[branch]
+after update
+as
+begin
+    
+    if exists (select 1 from inserted i join deleted d on i.BranchId = d.BranchId 
+               where i.isActive = 0 and d.isActive = 1)
+    begin
+        declare @branchid int;
+        select @branchid = BranchId from inserted;
+
+        update [orgnization].[Department]
+        set [isActive] = 0
+        where [BranchId] = @branchid;
+        print 'branch deactivated: all related departments have been notified.';
+    end
+end

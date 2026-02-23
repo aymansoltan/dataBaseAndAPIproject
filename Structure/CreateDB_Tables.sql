@@ -357,7 +357,7 @@ create synonym Exams for [exams].Exam;
 create synonym ExamQuestions for [exams].ExamQuestion;
 create synonym StudentAnswers for [exams].Student_Answer;
 create synonym FinalResults for [exams].Student_Exam_Result;
-
+alter database [ExaminationSystemDB] set recursive_triggers on;
 
 
 

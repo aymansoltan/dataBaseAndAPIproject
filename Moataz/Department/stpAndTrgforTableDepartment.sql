@@ -136,3 +136,23 @@ begin
         print 'success: Department deleted from database.';
     end
 end
+
+create trigger [orgnization].trg_inactivateTracksWhenInActiveDerpartment
+on [orgnization].[Department]
+after update
+as
+begin
+  
+    if exists (select 1 from inserted i join deleted d on i.DeptId = d.DeptId 
+               where i.isActive = 0 and d.isActive = 1)
+    begin
+        declare @deptid int;
+        select @deptid = DeptId from inserted;
+
+        update [orgnization].[Track]
+        set [isActive] = 0
+        where [DeprtmentId]  = @deptid;
+
+        print 'department deactivated: all related tracks have been notified.';
+    end
+end

@@ -111,3 +111,23 @@ begin
         print 'success: intake deleted completely.';
     end
 end
+
+create trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveIntake
+on [orgnization].[Intake]
+after update
+as
+begin
+    if exists (select 1 from inserted i join deleted d on i.IntakeId = d.IntakeId 
+               where i.isActive = 0 and d.isActive = 1)
+    begin
+        declare @intakeid int;
+        select @intakeid = IntakeId from inserted;
+
+  
+        update [orgnization].[IntakeTrack]
+        set [isActive] = 0
+        where [IntakeId] = @intakeid;
+
+        print 'intake deactivated: all tracks within this intake are now inactive.';
+    end
+end
