@@ -361,6 +361,9 @@ create synonym FinalResults for [exams].Student_Exam_Result;
 
 
 
+
+
+
 INSERT INTO [orgnization].Branch (BranchName) VALUES 
 ('Smart Village'), ('Alexandria'), ('Mansoura'), ('Assiut'), ('Menofia');
 
