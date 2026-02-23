@@ -107,19 +107,16 @@ begin
 end 
 
 
-
+use [ExaminationSystemDB]
 create  proc [orgnization].stp_ActivateBranch @BranchId int 
 as
 begin
     begin try
-        -- 1. «· √ﬂœ „‰ ÊÃÊœ «·›—⁄
         if not exists (select 1 from [orgnization].[Branch] where [BranchId] = @BranchId)
         begin
             raiserror('Error: This branch ID was not found.', 16, 1);
             return;
-        end
-
-        -- 2. «· Õﬁﬁ Ê«· ÕœÌÀ ›Ì ŒÿÊ… Ê«Õœ…
+        end 
         if exists(select 1 from [orgnization].[Branch] where [BranchId] = @BranchId and [isActive] = 1)
         begin
             print 'Info: This branch is already active.';
@@ -134,6 +131,7 @@ begin
         end
     end try
     begin catch
-        raiserror(ERROR_MESSAGE(), 16, 1);
+        declare @errorMassege nvarchar(2000) = Error_Message()
+        raiserror(@errorMassege ,16,1)
      end catch
 end
