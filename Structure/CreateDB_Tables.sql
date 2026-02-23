@@ -339,6 +339,7 @@ create table [exams].Student_Exam_Result (
     constraint FK_Res_Student foreign key (StudentId) references [userAcc].Student(StudentId),
     constraint FK_Res_Exam foreign key (ExamId) references [exams].Exam(ExamId)
 ) on [FG_Exams];
+
 create synonym Branch for [orgnization].Branch;
 create synonym Dept for [orgnization].Department;
 create synonym Track for [orgnization].Track;
@@ -356,12 +357,6 @@ create synonym Exams for [exams].Exam;
 create synonym ExamQuestions for [exams].ExamQuestion;
 create synonym StudentAnswers for [exams].Student_Answer;
 create synonym FinalResults for [exams].Student_Exam_Result;
-
-
-
-
-
-
 
 
 
