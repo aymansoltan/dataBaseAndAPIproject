@@ -1,7 +1,7 @@
 use [ExaminationSystemDB]
 
 
-create proc [orgnization].stp_addIntakeTrack
+create proc [TrainingMangerStpTrg].stp_addIntakeTrack
     @intakeid int,
     @trackid int
 as
@@ -31,7 +31,7 @@ begin
     end catch
 end
 
-create proc [orgnization].stp_ToggleIntakeTrack
+create proc [TrainingMangerStpTrg].stp_ToggleIntakeTrack
     @intakeid int,
     @trackid int,
     @status bit
@@ -51,7 +51,7 @@ begin
     print 'intaketrack status updated.';
 end
 
-create proc [orgnization].stp_DeleteIntakeTrack
+create proc [TrainingMangerStpTrg].stp_DeleteIntakeTrack
     @intakeid int,
     @trackid int
 as

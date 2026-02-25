@@ -1,6 +1,6 @@
 use [ExaminationSystemDB]
 
-create proc [orgnization].stp_AddTrack
+create proc [TrainingMangerStpTrg].stp_AddTrack
     @TrackName nvarchar(50),
     @DeptId int
 as
@@ -37,7 +37,7 @@ begin
     end catch
 end
 
-create proc [orgnization].stp_UpdateTrack
+create proc [TrainingMangerStpTrg].stp_UpdateTrack
     @TrackId int,
     @TrackName nvarchar(50),
     @DeptId int
@@ -78,7 +78,7 @@ end
 
 
 
-create proc [orgnization].stp_DeleteTrack
+create proc [TrainingMangerStpTrg].stp_DeleteTrack
     @trackid int
 as
 begin

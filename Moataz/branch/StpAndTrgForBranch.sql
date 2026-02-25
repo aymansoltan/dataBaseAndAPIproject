@@ -1,5 +1,5 @@
 use [ExaminationSystemDB]
-create proc [orgnization].stp_AddBranch @BranchName nvarchar(50)
+create proc [TrainingMangerStpTrg].stp_AddBranch @BranchName nvarchar(50)
 as 
 begin
     begin try
@@ -28,7 +28,7 @@ begin
     end catch
 end
 
-create proc [orgnization].stp_UpdateBranch @BranchId int ,@BranchName nvarchar(50) , @IsActive bit = 1
+create proc [TrainingMangerStpTrg].stp_UpdateBranch @BranchId int ,@BranchName nvarchar(50) , @IsActive bit = 1
 as
 begin
     begin try
@@ -64,7 +64,7 @@ begin
 
 end
 
-create proc [orgnization].stp_DeleteBranch @BranchId int 
+create proc [TrainingMangerStpTrg].stp_DeleteBranch @BranchId int 
 as
 begin
     begin try
@@ -107,7 +107,7 @@ begin
     end
 end 
 
-create  proc [orgnization].stp_ActivateBranch @BranchId int 
+create  proc [TrainingMangerStpTrg].stp_ActivateBranch @BranchId int 
 as
 begin
     begin try

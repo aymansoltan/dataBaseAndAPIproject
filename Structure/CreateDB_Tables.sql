@@ -301,6 +301,7 @@ create  table [exams].Exam (
     TrackId int not null ,
     IntakeId int not null ,
     IsDeleted bit default 0,
+    TotalGrade int 
 
     constraint ExamPK primary key (ExamId),
     constraint ExamTypeCheck check (ExamType IN ('Regular', 'Corrective')),

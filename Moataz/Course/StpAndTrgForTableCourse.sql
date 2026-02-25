@@ -1,4 +1,4 @@
-create proc [Courses].stp_AddCourse 
+create proc [TrainingMangerStpTrg].stp_AddCourse 
     @CourseName nvarchar(50),
     @MaxDegree  int,
     @MinDegree  int,
@@ -36,7 +36,7 @@ begin
 end
 
 
-create proc [Courses].stp_UpdateCourse
+create proc [TrainingMangerStpTrg].stp_UpdateCourse
     @CourseId   int,
     @CourseName nvarchar(50) = null,
     @MaxDegree  int = null,
@@ -90,7 +90,7 @@ begin
 end;
 
 
-create proc [Courses].stp_DeleteCourse
+create proc [TrainingMangerStpTrg].stp_DeleteCourse
     @CourseId int
 as 
 begin

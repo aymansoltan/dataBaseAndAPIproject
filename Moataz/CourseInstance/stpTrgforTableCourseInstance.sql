@@ -1,4 +1,4 @@
-create proc[Courses].stp_addCourseInstance
+create proc[TrainingMangerStpTrg].stp_addCourseInstance
     @courseid     int,
     @instructorid int,
     @branchid     int,
@@ -40,7 +40,7 @@ begin
 end;
 
 
-create proc [Courses].stp_updatecourseinstance
+create proc [TrainingMangerStpTrg].stp_updatecourseinstance
     @instanceid    int,            
     @courseid      int = null,       
     @instructorid  int = null,       
@@ -109,7 +109,7 @@ begin
     end catch
 end;
 
-create  proc [courses].stp_deleteinstance
+create  proc [TrainingMangerStpTrg].stp_deleteinstance
     @instanceid int
 as
 begin

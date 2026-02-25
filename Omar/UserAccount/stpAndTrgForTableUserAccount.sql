@@ -1,7 +1,7 @@
 USE [ExaminationSystemDB]
 GO
 
-create or alter procedure [useracc].[sp_createsystemuser]
+create or alter procedure [TrainingMangerStpTrg].[stp_createsystemuser]
     @username nvarchar(50),
     @password nvarchar(250),
     @email    nvarchar(100),
@@ -82,7 +82,7 @@ go
 ------------------------------------------------------------
 -- 2) Update User (Fully Secured)
 ------------------------------------------------------------
-create or alter procedure [useracc].[sp_updateuseraccount] 
+create or alter procedure [TrainingMangerStpTrg].[stp_updateuseraccount] 
     @userid int,
     @username nvarchar(50) = null,
     @email nvarchar(100) = null,
@@ -152,7 +152,7 @@ go
 ------------------------------------------------------------
 -- 3) Delete User (Soft Delete Driven)
 ------------------------------------------------------------
-CREATE OR ALTER PROC [userAcc].stp_DeleteUserAccount 
+CREATE OR ALTER PROC [TrainingMangerStpTrg].stp_DeleteUserAccount 
     @UserId int
 AS
 BEGIN

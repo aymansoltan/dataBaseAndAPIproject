@@ -1,6 +1,6 @@
 use [ExaminationSystemDB]
 
-create proc [orgnization].stp_AddIntake
+create proc [TrainingMangerStpTrg].stp_AddIntake
     @IntakeName nvarchar(50)
 as
 begin
@@ -28,7 +28,7 @@ begin
     end catch
 end
 
-create proc [orgnization].stp_UpdateIntake
+create proc [TrainingMangerStpTrg].stp_UpdateIntake
     @IntakeId int,
     @IntakeName nvarchar(50),
     @IsActive bit =1
@@ -66,7 +66,7 @@ begin
     end catch
 end
 
-create proc [orgnization].stp_DeleteIntack @IntakeId int 
+create proc [TrainingMangerStpTrg].stp_DeleteIntack @IntakeId int 
 as
 begin
     begin try

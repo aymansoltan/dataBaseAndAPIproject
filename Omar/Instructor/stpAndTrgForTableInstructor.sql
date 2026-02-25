@@ -6,7 +6,7 @@
 ------------------------------------------------------------
 -- 1) Add Instructor
 ------------------------------------------------------------
-CREATE OR ALTER PROC [useracc].stp_addinstructor 
+CREATE OR ALTER PROC [TrainingMangerStpTrg].stp_addinstructor 
     @firstname nvarchar(50),
     @lastname  nvarchar(50),
     @birthdate date,
@@ -69,7 +69,7 @@ GO
 ------------------------------------------------------------
 -- 2) Update Instructor
 ------------------------------------------------------------
-CREATE OR ALTER PROC [useracc].stp_updateinstructor 
+CREATE OR ALTER PROC [TrainingMangerStpTrg].stp_updateinstructor 
     @insid int,
     @firstname nvarchar(50) = NULL,
     @lastname  nvarchar(50) = NULL,
@@ -113,6 +113,20 @@ BEGIN
     END CATCH
 END;
 GO
+create  proc [trainingmangerstptrg].stp_deleteinstructor 
+    @instructoid int 
+as 
+begin
+    set nocount on;
+
+    if not exists(select 1 from [useracc].[instructor] where [insid] = @instructoid)
+    begin
+        throw 52031, 'error: instructor not found.', 1;
+    end
+
+    delete from [useracc].[instructor] where [insid] = @instructoid;
+end;
+go
 
 ------------------------------------------------------------
 -- 3) Soft Delete Trigger (Enhanced)

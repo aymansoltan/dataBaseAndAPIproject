@@ -1,5 +1,5 @@
 use [ExaminationSystemDB]
-create proc [orgnization].stp_AddDepartment 
+create proc [TrainingMangerStpTrg].stp_AddDepartment 
     @Deptname nvarchar(50), 
     @BranchId int
 as
@@ -52,7 +52,7 @@ begin
     end
 end
 
-create proc [orgnization].stp_UpdateDepartment
+create proc [TrainingMangerStpTrg].stp_UpdateDepartment
     @DeptId int,
     @DeptName nvarchar(50),
     @BranchId int
@@ -92,7 +92,7 @@ begin
 end
 
 
-create proc [orgnization].stp_DeleteDepartment
+create proc [TrainingMangerStpTrg].stp_DeleteDepartment
     @DeptId int
 as
 begin
