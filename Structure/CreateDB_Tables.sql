@@ -52,7 +52,9 @@ create schema userAcc;
 create schema orgnization;
 create schema Courses;
 create schema exams;
-
+create schema [studentViews];
+create schema [InstructorViews];
+create schema [MangerViews] ;
 
 create table [orgnization].Branch
 (
@@ -290,7 +292,6 @@ create  table [exams].Exam (
     BranchId int not null ,
     TrackId int not null ,
     IntakeId int not null ,
-    
     IsDeleted bit default 0,
 
     constraint ExamPK primary key (ExamId),
@@ -357,6 +358,7 @@ create synonym Exams for [exams].Exam;
 create synonym ExamQuestions for [exams].ExamQuestion;
 create synonym StudentAnswers for [exams].Student_Answer;
 create synonym FinalResults for [exams].Student_Exam_Result;
+
 alter database [ExaminationSystemDB] set recursive_triggers on;
 
 

@@ -10,7 +10,7 @@ begin
         end
 
         insert into [orgnization].Branch (BranchName)
-        values (trim(@BranchName));
+        values (lower(trim(@BranchName)));
         print 'Branch name added succsefully ' + @BranchName ;
     end try
     begin catch 
@@ -32,6 +32,7 @@ create proc [orgnization].stp_UpdateBranch @BranchId int ,@BranchName nvarchar(5
 as
 begin
     begin try
+
         if not exists ( select 1 from [orgnization].[Branch] where [BranchId] =@BranchId)
         begin
             raiserror('this branch is not exists' ,16,1)
@@ -106,8 +107,6 @@ begin
     end
 end 
 
-
-use [ExaminationSystemDB]
 create  proc [orgnization].stp_ActivateBranch @BranchId int 
 as
 begin
@@ -136,7 +135,6 @@ begin
      end catch
 end
 
-
 create trigger [orgnization].trg_inactivateDepartmentWhenInActiveBranch
 on [orgnization].[branch]
 after update
@@ -155,3 +153,4 @@ begin
         print 'branch deactivated: all related departments have been notified.';
     end
 end
+
