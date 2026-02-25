@@ -1,138 +1,152 @@
 USE [ExaminationSystemDB]
 GO
 
-/* =========================================================
-   Module: UserAccount (Enterprise Secured Version)
-   Schema: userAcc
-   ========================================================= */
+create or alter procedure [useracc].[sp_createsystemuser]
+    @username nvarchar(50),
+    @password nvarchar(250),
+    @email    nvarchar(100),
+    @roletype nvarchar(20) 
+as
+begin
+    set nocount on;
+    begin try
+        begin transaction;
 
-------------------------------------------------------------
--- 1) Add User
-------------------------------------------------------------
-CREATE OR ALTER PROC [userAcc].stp_AddUserAccount 
-    @UserName nvarchar(50),
-    @Email nvarchar(100),
-    @UserPassword nvarchar(250),
-    @RoleId int
-AS
-BEGIN
-    SET NOCOUNT ON;
+      
+        declare @cleanname nvarchar(50) = lower(trim(@username));
+        declare @cleanrole nvarchar(20) = lower(trim(@roletype));
+        declare @mappedrolename nvarchar(50) = (case when @cleanrole = 'manager' then 'training manager' else @cleanrole end);
 
-    BEGIN TRY
+        declare @targetroleid int;
+        select @targetroleid = [RoleId] from [userAcc].[UserRole] where [RoleName] = @mappedrolename;
 
-        IF NOT EXISTS (
-            SELECT 1 
-            FROM [userAcc].[UserRole] 
-            WHERE RoleId = @RoleId
-        )
-            THROW 50001, 'Invalid RoleId.', 1;
+        if @targetroleid is null
+        begin
+            throw 50001, 'error: the specified role type does not exist in userrole table.', 1;
+        end
 
-        -- Prevent multiple admins
-        IF EXISTS (
-            SELECT 1 
-            FROM [userAcc].[UserRole]
-            WHERE RoleId = @RoleId AND RoleName = 'admin'
-        )
-        AND EXISTS (
-            SELECT 1 
-            FROM [userAcc].[UserAccount] UA
-            JOIN [userAcc].[UserRole] R
-                ON UA.RoleId = R.RoleId
-            WHERE R.RoleName = 'admin'
-        )
-            THROW 50002, 'Only one admin account is allowed.', 1;
+        if @cleanrole in ('admin', 'manager')
+        begin
+            if exists (
+                select 1 
+                from [userAcc].[UserAccount] ua 
+                join [userAcc].[UserRole] r on ua.[RoleId] = r.[RoleId] 
+                where r.[RoleName] = @mappedrolename
+            )
+            begin
+                declare @msg nvarchar(100) = 'error: only one ' + @mappedrolename + ' account is allowed.';
+                throw 50002, @msg, 1;
+            end
+        end
 
-        INSERT INTO [userAcc].[UserAccount]
-            (UserName, Email, UserPassword, RoleId)
-        VALUES
-            (LTRIM(RTRIM(@UserName)),
-             LTRIM(RTRIM(@Email)),
-             @UserPassword,
-             @RoleId);
+  
+        declare @loginname nvarchar(100) = @cleanname + 'login';
+        declare @dbusername nvarchar(100) = @cleanname + 'user';
+        
+        if exists (select 1 from sys.server_principals where name = @loginname)
+            throw 50003, 'error: login already exists on the server.', 1;
 
-        PRINT 'User account added successfully.';
+   
+        declare @sqllogin nvarchar(max) = 'create login [' + @loginname + '] with password = ''' + @password + ''';';
+        declare @sqluser  nvarchar(max) = 'create user [' + @dbusername + '] for login [' + @loginname + '];';
+        
+        declare @dbrolename nvarchar(50) = case 
+            when @cleanrole = 'admin' then 'adminrole'
+            when @cleanrole = 'instructor' then 'instructorerole'
+            when @cleanrole = 'student' then 'studentrole'
+            when @cleanrole = 'manager' then 'trainningmangerrole'
+        end;
 
-    END TRY
-    BEGIN CATCH
-        THROW;
-    END CATCH
-END
-GO
+        exec sp_executesql @sqllogin;
+        exec sp_executesql @sqluser;
+        
 
+        declare @sqladdrole nvarchar(max) = 'alter role [' + @dbrolename + '] add member [' + @dbusername + '];';
+        exec sp_executesql @sqladdrole;
+
+       
+        insert into [useracc].useraccount (username, email, userpassword, roleid)
+        values (@dbusername, lower(trim(@email)), @password, @targetroleid);
+
+        commit transaction;
+        print 'user account and server login created successfully.';
+    end try
+    begin catch
+        if @@trancount > 0 rollback transaction;
+        declare @errormessage nvarchar(4000) = error_message();
+        raiserror(@errormessage, 16, 1);
+    end catch
+end;
+go
 
 ------------------------------------------------------------
 -- 2) Update User (Fully Secured)
 ------------------------------------------------------------
-CREATE OR ALTER PROC [userAcc].stp_UpdateUserAccount 
-    @UserId int,
-    @UserName nvarchar(50) = NULL,
-    @Email nvarchar(100) = NULL,
-    @UserPassword nvarchar(250) = NULL,
-    @IsActive bit = NULL,
-    @RoleId int = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
+create or alter procedure [useracc].[sp_updateuseraccount] 
+    @userid int,
+    @username nvarchar(50) = null,
+    @email nvarchar(100) = null,
+    @userpassword nvarchar(250) = null,
+    @isactive bit = null,
+    @roleid int = null
+as
+begin
+    set nocount on;
+    begin try
+        begin transaction;
 
-    BEGIN TRY
+        if not exists (select 1 from [useracc].[useraccount] where userid = @userid)
+            throw 50003, 'error: user id not found.', 1;
 
-        IF NOT EXISTS (
-            SELECT 1 
-            FROM [userAcc].[UserAccount] 
-            WHERE UserId = @UserId
-        )
-            THROW 50003, 'User ID not found.', 1;
+        declare @currentrolename nvarchar(20);
+        declare @newrolename nvarchar(20);
+        declare @currentdbusername nvarchar(50);
 
-        DECLARE @CurrentRoleName nvarchar(20);
-        DECLARE @NewRoleName nvarchar(20);
+        select 
+            @currentrolename = r.rolename,
+            @currentdbusername = ua.username
+        from [useracc].[useraccount] ua
+        join [useracc].[userrole] r on ua.roleid = r.roleid
+        where ua.userid = @userid;
 
-        SELECT @CurrentRoleName = R.RoleName
-        FROM [userAcc].[UserAccount] UA
-        JOIN [userAcc].[UserRole] R
-            ON UA.RoleId = R.RoleId
-        WHERE UA.UserId = @UserId;
+        if @currentrolename = 'admin'
+            throw 50004, 'error: admin account cannot be modified via this procedure.', 1;
 
-        -- Prevent modifying existing admin
-        IF @CurrentRoleName = 'admin'
-            THROW 50004, 'Admin account cannot be modified.', 1;
+        if @roleid is not null
+        begin
+            select @newrolename = rolename from [useracc].[userrole] where roleid = @roleid;
+            
+            if @newrolename is null
+                throw 50005, 'error: invalid new roleid.', 1;
 
-        IF @RoleId IS NOT NULL
-        BEGIN
-            IF NOT EXISTS (
-                SELECT 1 FROM [userAcc].[UserRole] WHERE RoleId = @RoleId
-            )
-                THROW 50005, 'Invalid new RoleId.', 1;
+            if @newrolename = 'admin'
+                throw 50006, 'error: cannot promote user to admin.', 1;
 
-            SELECT @NewRoleName = RoleName
-            FROM [userAcc].[UserRole]
-            WHERE RoleId = @RoleId;
+     
+            if exists (select 1 from [organization].[student] where username = @currentdbusername)
+               or exists (select 1 from [organization].[instructor] where username = @currentdbusername)
+                throw 50007, 'error: cannot change role of a linked student or instructor.', 1;
+        end
 
-            -- Prevent promoting anyone to admin
-            IF @NewRoleName = 'admin'
-                THROW 50006, 'Cannot promote user to admin.', 1;
+        update [useracc].[useraccount]
+        set username     = isnull(lower(trim(@username)), username),
+            email        = isnull(lower(trim(@email)), email),
+            userpassword = isnull(@userpassword, userpassword),
+            isactive     = isnull(@isactive, isactive),
+            roleid       = isnull(@roleid, roleid)
+        where userid = @userid;
 
-            -- Prevent changing role if linked to Student or Instructor
-            IF EXISTS (SELECT 1 FROM [userAcc].[Student] WHERE UserId = @UserId)
-               OR EXISTS (SELECT 1 FROM [userAcc].[Instructor] WHERE UserId = @UserId)
-                THROW 50007, 'Cannot change role of linked Student/Instructor.', 1;
-        END
+        commit transaction;
+        print 'user account updated successfully.';
 
-        UPDATE [userAcc].[UserAccount]
-        SET UserName     = ISNULL(LTRIM(RTRIM(@UserName)), UserName),
-            Email        = ISNULL(LTRIM(RTRIM(@Email)), Email),
-            UserPassword = ISNULL(@UserPassword, UserPassword),
-            isActive     = ISNULL(@IsActive, isActive),
-            RoleId       = ISNULL(@RoleId, RoleId)
-        WHERE UserId = @UserId;
-
-        PRINT 'User account updated successfully.';
-
-    END TRY
-    BEGIN CATCH
-        THROW;
-    END CATCH
-END
-GO
+    end try
+    begin catch
+        if @@trancount > 0 rollback transaction;
+        declare @err nvarchar(4000) = error_message();
+        raiserror(@err, 16, 1);
+    end catch
+end;
+go
 
 
 ------------------------------------------------------------

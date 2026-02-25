@@ -8,272 +8,235 @@ GO
 ------------------------------------------------------------
 -- 1) Add Student
 ------------------------------------------------------------
-CREATE OR ALTER PROC [userAcc].stp_AddStudent
-    @FirstName nvarchar(50),
-    @LastName nvarchar(50),
-    @Gender char(1),
-    @BirthDate date,
-    @StuAddress nvarchar(150),
-    @Phone nvarchar(11),
-    @NationalID nchar(14),
-    @UserId int,
-    @BranchId int,
-    @IntakeId int,
-    @TrackId int
-AS
-BEGIN
-    SET NOCOUNT ON;
+create or alter procedure [useracc].[stp_addstudent]
+    @firstname nvarchar(50),
+    @lastname  nvarchar(50),
+    @gender    char(1),
+    @birthdate date,
+    @stuaddress nvarchar(150),
+    @phone     nvarchar(11),
+    @nationalid nchar(14),
+    @userid    int,
+    @branchid  int,
+    @intakeid  int,
+    @trackid   int
+as
+begin
+    set nocount on;
+    begin try
+      
+        if len(ltrim(rtrim(@firstname))) < 3 or len(ltrim(rtrim(@lastname))) < 3
+            throw 51000, 'error: first and last name must be at least 3 characters.', 1;
 
-    BEGIN TRY
+      
+        if exists (select 1 from [userAcc].[Student] where [Phone]  = @phone)
+            throw 51008, 'error: phone number already exists.', 1;
 
-        -- Validate names
-        IF LEN(LTRIM(RTRIM(@FirstName))) < 3 
-           OR LEN(LTRIM(RTRIM(@LastName))) < 3
-            THROW 51000, 'First and Last name must be at least 3 characters.', 1;
+        if exists (select 1 from [userAcc].[Student] where [NationalID] = @nationalid)
+            throw 51009, 'error: national id already exists.', 1;
 
-        -- Validate phone uniqueness
-        IF EXISTS (SELECT 1 FROM userAcc.Student WHERE Phone = @Phone)
-            THROW 51008, 'Phone already exists.', 1;
-
-        -- Validate NationalID uniqueness
-        IF EXISTS (SELECT 1 FROM userAcc.Student WHERE NationalID = @NationalID)
-            THROW 51009, 'National ID already exists.', 1;
-
-        -- Validate active user with student role
-        IF NOT EXISTS (
-            SELECT 1
-            FROM userAcc.UserAccount UA
-            JOIN userAcc.UserRole R ON UA.RoleId = R.RoleId
-            WHERE UA.UserId = @UserId
-              AND UA.isActive = 1
-              AND R.RoleName = 'student'
+        if not exists (
+            select 1
+            from [userAcc].[UserAccount]  ua
+            join [userAcc].[UserRole] r on ua.RoleId = r.RoleId
+            where ua.UserId = @userid
+              and ua.isActive = 1
+              and r.RoleName = 'student'
         )
-            THROW 51001, 'Invalid active student user.', 1;
+            throw 51001, 'error: invalid or inactive student user.', 1;
 
-        -- Prevent duplicate link
-        IF EXISTS (SELECT 1 FROM userAcc.Student WHERE UserId = @UserId)
-            THROW 51002, 'User already linked to Student.', 1;
+        if exists (select 1 from[userAcc].[Student]  where [UserId] = @userid)
+            throw 51002, 'error: this user is already linked to a student profile.', 1;
 
-        IF EXISTS (SELECT 1 FROM userAcc.Instructor WHERE UserId = @UserId)
-            THROW 51003, 'User cannot be both Student and Instructor.', 1;
+        if exists (select 1 from [userAcc].Instructor where UserId = @userid)
+            throw 51003, 'error: a user cannot be both a student and an instructor.', 1;
 
-        -- Validate active Branch
-        IF NOT EXISTS (
-            SELECT 1 FROM orgnization.Branch
-            WHERE BranchId = @BranchId AND isActive = 1
+        if not exists (select 1 from [orgnization].[Branch] where BranchId = @branchid and isActive = 1)
+            throw 51004, 'error: invalid or inactive branch.', 1;
+
+        if not exists (select 1 from [orgnization].[Intake] where IntakeId = @intakeid and isActive = 1)
+            throw 51005, 'error: invalid or inactive intake.', 1;
+
+        if not exists (select 1 from [orgnization].Track where TrackId = @trackid and  isActive= 1)
+            throw 51006, 'error: invalid or inactive track.', 1;
+
+        if not exists (
+            select 1 from [orgnization].IntakeTrack
+            where IntakeId = @intakeid and TrackId = @trackid and isActive = 1
         )
-            THROW 51004, 'Invalid or inactive Branch.', 1;
+            throw 51007, 'error: the selected track does not belong to this intake.', 1;
 
-        -- Validate active Intake
-        IF NOT EXISTS (
-            SELECT 1 FROM orgnization.Intake
-            WHERE IntakeId = @IntakeId AND isActive = 1
+      
+        insert into [userAcc].Student(
+            firstname, lastname, gender, birthdate,
+            stuaddress, phone, nationalid,
+            userid, branchid, intakeid, trackid
         )
-            THROW 51005, 'Invalid or inactive Intake.', 1;
-
-        -- Validate active Track
-        IF NOT EXISTS (
-            SELECT 1 FROM orgnization.Track
-            WHERE TrackId = @TrackId AND isActive = 1
-        )
-            THROW 51006, 'Invalid or inactive Track.', 1;
-
-        -- Validate IntakeTrack relationship
-        IF NOT EXISTS (
-            SELECT 1
-            FROM orgnization.IntakeTrack
-            WHERE IntakeId = @IntakeId
-              AND TrackId = @TrackId
-              AND isActive = 1
-        )
-            THROW 51007, 'Track does not belong to this Intake.', 1;
-
-        INSERT INTO userAcc.Student
-        (
-            FirstName, LastName, Gender, BirthDate,
-            StuAddress, Phone, NationalID,
-            UserId, BranchId, IntakeId, TrackId
-        )
-        VALUES
-        (
-            LTRIM(RTRIM(@FirstName)),
-            LTRIM(RTRIM(@LastName)),
-            @Gender,
-            @BirthDate,
-            @StuAddress,
-            @Phone,
-            @NationalID,
-            @UserId,
-            @BranchId,
-            @IntakeId,
-            @TrackId
+        values (
+            lower(trim(@firstname)), 
+            lower(trim(@lastname)), 
+            upper(@gender),
+            @birthdate,
+            @stuaddress,
+            @phone,
+            @nationalid,
+            @userid,
+            @branchid,
+            @intakeid,
+            @trackid
         );
 
-        PRINT 'Student added successfully.';
-
-    END TRY
-    BEGIN CATCH
-        THROW;
-    END CATCH
-END
-GO
+        print 'student profile created and linked successfully.';
+    end try
+    begin catch
+        throw;
+    end catch
+end;
+go
 
 
 ------------------------------------------------------------
 -- 2) Update Student
 ------------------------------------------------------------
-CREATE OR ALTER PROC [userAcc].stp_UpdateStudent
-    @StudentId int,
-    @FirstName nvarchar(50) = NULL,
-    @LastName nvarchar(50) = NULL,
-    @Gender char(1) = NULL,
-    @BirthDate date = NULL,
-    @StuAddress nvarchar(150) = NULL,
-    @Phone nvarchar(11) = NULL,
-    @NationalID nchar(14) = NULL,
-    @BranchId int = NULL,
-    @IntakeId int = NULL,
-    @TrackId int = NULL,
-    @IsActive bit = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
+create or alter procedure [useracc].[stp_updatestudent]
+    @studentid int,
+    @firstname nvarchar(50) = null,
+    @lastname  nvarchar(50) = null,
+    @gender    char(1)      = null,
+    @birthdate date         = null,
+    @stuaddress nvarchar(150) = null,
+    @phone     nvarchar(11) = null,
+    @nationalid nchar(14)   = null,
+    @branchid  int          = null,
+    @intakeid  int          = null,
+    @trackid   int          = null,
+    @isactive  bit          = null
+as
+begin
+    set nocount on;
+    begin try
+        begin transaction;
 
-    BEGIN TRY
+        -- 1. «· √ﬂœ „‰ ÊÃÊœ «·ÿ«·»
+        if not exists (select 1 from [useracc].student where studentid = @studentid)
+            throw 51020, 'error: student not found.', 1;
 
-        IF NOT EXISTS (
-            SELECT 1 FROM userAcc.Student WHERE StudentId = @StudentId
+        -- 2. «· Õﬁﬁ „‰ ›—«œ… «· ·Ì›Ê‰ (»«” À‰«¡ «·ÿ«·» ‰›”Â)
+        if @phone is not null and exists (
+            select 1 from [useracc].student 
+            where phone = @phone and studentid <> @studentid
         )
-            THROW 51020, 'Student not found.', 1;
+            throw 51022, 'error: phone number already exists for another student.', 1;
 
-        -- Validate phone uniqueness
-        IF @Phone IS NOT NULL
-           AND EXISTS (
-                SELECT 1 FROM userAcc.Student
-                WHERE Phone = @Phone
-                  AND StudentId <> @StudentId
-           )
-            THROW 51022, 'Phone already exists.', 1;
-
-        -- Validate NationalID uniqueness
-        IF @NationalID IS NOT NULL
-           AND EXISTS (
-                SELECT 1 FROM userAcc.Student
-                WHERE NationalID = @NationalID
-                  AND StudentId <> @StudentId
-           )
-            THROW 51023, 'National ID already exists.', 1;
-
-        -- Validate Branch if changed
-        IF @BranchId IS NOT NULL
-           AND NOT EXISTS (
-                SELECT 1 FROM orgnization.Branch
-                WHERE BranchId = @BranchId AND isActive = 1
-           )
-            THROW 51024, 'Invalid or inactive Branch.', 1;
-
-        DECLARE @CurrentIntake int, @CurrentTrack int;
-
-        SELECT 
-            @CurrentIntake = IntakeId,
-            @CurrentTrack  = TrackId
-        FROM userAcc.Student
-        WHERE StudentId = @StudentId;
-
-        DECLARE @FinalIntake int = COALESCE(@IntakeId, @CurrentIntake);
-        DECLARE @FinalTrack  int = COALESCE(@TrackId, @CurrentTrack);
-
-        -- Always validate final IntakeTrack relationship
-        IF NOT EXISTS (
-            SELECT 1
-            FROM orgnization.IntakeTrack
-            WHERE IntakeId = @FinalIntake
-              AND TrackId  = @FinalTrack
-              AND isActive = 1
+        -- 3. «· Õﬁﬁ „‰ ›—«œ… «·—ﬁ„ «·ﬁÊ„Ì
+        if @nationalid is not null and exists (
+            select 1 from [useracc].student 
+            where nationalid = @nationalid and studentid <> @studentid
         )
-            THROW 51021, 'Invalid Intake/Track combination.', 1;
+            throw 51023, 'error: national id already exists for another student.', 1;
 
-        UPDATE userAcc.Student
-        SET
-            FirstName  = COALESCE(LTRIM(RTRIM(@FirstName)), FirstName),
-            LastName   = COALESCE(LTRIM(RTRIM(@LastName)), LastName),
-            Gender     = COALESCE(@Gender, Gender),
-            BirthDate  = COALESCE(@BirthDate, BirthDate),
-            StuAddress = COALESCE(@StuAddress, StuAddress),
-            Phone      = COALESCE(@Phone, Phone),
-            NationalID = COALESCE(@NationalID, NationalID),
-            BranchId   = COALESCE(@BranchId, BranchId),
-            IntakeId   = @FinalIntake,
-            TrackId    = @FinalTrack,
-            isActive   = COALESCE(@IsActive, isActive)
-        WHERE StudentId = @StudentId;
+        -- 4. «· Õﬁﬁ „‰ «·›—⁄ (·Ê „»⁄Ê )
+        if @branchid is not null and not exists (
+            select 1 from [orgnization].branch where branchid = @branchid and isactive = 1
+        )
+            throw 51024, 'error: invalid or inactive branch.', 1;
 
-        PRINT 'Student updated successfully.';
+        -- 5. „‰ÿﬁ «·‹ Intake Ê«·‹ Track
+        declare @currentintake int, @currenttrack int;
+        select @currentintake = intakeid, @currenttrack = trackid 
+        from [useracc].student where studentid = @studentid;
 
-    END TRY
-    BEGIN CATCH
-        THROW;
-    END CATCH
-END
-GO
+        declare @finalintake int = coalesce(@intakeid, @currentintake);
+        declare @finaltrack  int = coalesce(@trackid, @currenttrack);
+
+        -- «· √ﬂœ „‰ ’Õ… «·—»ÿ »Ì‰ «·‹ Intake Ê«·‹ Track «·ÃœÌœ/«·Õ«·Ì
+        if not exists (
+            select 1 from [orgnization].intaketrack 
+            where intakeid = @finalintake and trackid = @finaltrack and isactive = 1
+        )
+            throw 51021, 'error: invalid intake/track combination.', 1;
+
+        -- 6. «· ÕœÌÀ «·›⁄·Ì
+        update [useracc].student
+        set 
+            firstname  = coalesce(lower(trim(@firstname)), firstname),
+            lastname   = coalesce(lower(trim(@lastname)), lastname),
+            gender     = coalesce(upper(@gender), gender),
+            birthdate  = coalesce(@birthdate, birthdate),
+            stuaddress = coalesce(@stuaddress, stuaddress),
+            phone      = coalesce(@phone, phone),
+            nationalid = coalesce(@nationalid, nationalid),
+            branchid   = coalesce(@branchid, branchid),
+            intakeid   = @finalintake,
+            trackid    = @finaltrack,
+            isactive   = coalesce(@isactive, isactive)
+        where studentid = @studentid;
+
+        commit transaction;
+        print 'student updated successfully.';
+
+    end try
+    begin catch
+        if @@trancount > 0 rollback transaction;
+        throw;
+    end catch
+end;
+go
 
 
 ------------------------------------------------------------
 -- 3) Delete Student (Soft Delete Only)
 ------------------------------------------------------------
-CREATE OR ALTER PROC [userAcc].stp_DeleteStudent
-    @StudentId int
-AS
-BEGIN
-    SET NOCOUNT ON;
+create or alter proc [userAcc].stp_DeleteStudent @StudentId int
+as 
+begin 
+    set nocount on;
+    delete from [userAcc].[Student]
+    where [StudentId] =@StudentId and [isActive] =1
+    
+end 
 
-    DELETE FROM userAcc.Student
-    WHERE StudentId = @StudentId
-      AND isActive = 1;
-END
-GO
 
 
 ------------------------------------------------------------
 -- 4) Soft Delete Trigger
 ------------------------------------------------------------
-CREATE OR ALTER TRIGGER [userAcc].trg_PreventDeleteStudent
-ON userAcc.Student
-INSTEAD OF DELETE
-AS
-BEGIN
-    SET NOCOUNT ON;
+create or alter trigger [useracc].[trg_preventdeletestudent]
+on [useracc].[student]
+instead of delete
+as
+begin
+    set nocount on;
 
-    -- Prevent delete if answers exist
-    IF EXISTS (
-        SELECT 1
-        FROM deleted d
-        JOIN exams.Student_Answer SA
-            ON d.StudentId = SA.StudentId
+    if exists (
+        select 1
+        from deleted d
+        join [exams].[student_answer] sa on d.studentid = sa.studentid
     )
-        THROW 51030, 'Cannot delete student with submitted answers.', 1;
+    begin
+        throw 51030, 'error: cannot delete student with submitted answers. use deactivation instead.', 1;
+    end
 
-    -- Prevent delete if results exist
-    IF EXISTS (
-        SELECT 1
-        FROM deleted d
-        JOIN exams.Student_Exam_Result SR
-            ON d.StudentId = SR.StudentId
+    if exists (
+        select 1
+        from deleted d
+        join [exams].[student_exam_result] sr on d.studentid = sr.studentid
     )
-        THROW 51031, 'Cannot delete student with exam results.', 1;
+    begin
+        throw 51031, 'error: cannot delete student with exam results.', 1;
+    end
 
-    -- Soft deactivate Student
-    UPDATE S
-    SET isActive = 0
-    FROM userAcc.Student S
-    JOIN deleted d ON S.StudentId = d.StudentId;
+    update s
+    set isactive = 0
+    from [useracc].student s
+    join deleted d on s.studentid = d.studentid;
 
-    -- Also deactivate related UserAccount
-    UPDATE UA
-    SET isActive = 0
-    FROM userAcc.UserAccount UA
-    JOIN userAcc.Student S ON UA.UserId = S.UserId
-    JOIN deleted d ON S.StudentId = d.StudentId;
+    update ua
+    set isactive = 0
+    from [useracc].useraccount ua
+    join [useracc].student s on ua.userid = s.userid
+    join deleted d on s.studentid = d.studentid;
 
-END
-GO
+    print 'soft delete performed: student and user account deactivated.';
+end;
+go

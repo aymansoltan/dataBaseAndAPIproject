@@ -55,6 +55,11 @@ create schema exams;
 create schema [studentViews];
 create schema [InstructorViews];
 create schema [MangerViews] ;
+create schema [InstructorStpTrg]
+create schema [StudentStpTrg]
+create schema [TrainingMangerStpTrg]
+create schema [adminStpTrg]
+
 
 create table [orgnization].Branch
 (
@@ -162,7 +167,7 @@ create table [userAcc].Student (
     BranchId int not null,
     IntakeId int not null,
     TrackId int not null,
-
+    isActive bit default 1,
     constraint StudentPK primary key (StudentId),
     constraint FirstNamelenCheck check(len(FirstName) >= 3),
     constraint FirstNameFormatCheck check (FirstName NOT like '[0-9]%' AND FirstName NOT like '[!@#$%^&*]%'),
@@ -186,6 +191,9 @@ create table [userAcc].Student (
     constraint StudentTrackFK foreign key (TrackId) references [orgnization].Track(TrackId)
 ) on [FG_Users];
 
+
+
+
 create table [userAcc].Instructor (
     InsId int identity(1,1),
     FirstName nvarchar(50) not null,
@@ -200,7 +208,7 @@ create table [userAcc].Instructor (
     Specialization nvarchar(50) not null,
     UserId int not null,
     DeptId int not null,
-
+    isActive bit default 1
     constraint InstructorPK primary key (InsId),
     constraint InstructorFirstNamelenCheck check(len(FirstName) >= 3),
     constraint InstructorFirstNameFormatCheck check (FirstName NOT like '[0-9]%' AND FirstName NOT like '[!@#$%^&*]%'),
@@ -230,7 +238,7 @@ create table [Courses].Course(
     CourseDescription nvarchar(max),
     MinDegree int constraint MinDegreeDefault default 50,
     MaxDegree int constraint MaxDegreeDefault default 100,
-
+    isActive bit default 1
     constraint CoursePK primary key (CourseId),
     constraint CourseNameUnique unique (CourseName),
     constraint CourseNameFormatCheck check (CourseName NOT like '[0-9]%' AND CourseName NOT like '[!@#$%^&*]%'),
@@ -388,24 +396,6 @@ VALUES
 ('student'), 
 ('Training Manager');
 
--- (1 Admin, 4 Instructors, 10 Students)
-INSERT INTO [userAcc].UserAccount (UserName, Email, UserPassword, RoleId) VALUES 
-('admin_iti', 'admin@iti.gov.eg', 'admin123', 1),
-('moataz_ins', 'moataz@iti.gov.eg', 'ins123', 2),
-('sara_ins', 'sara@iti.gov.eg', 'ins123', 2),
-('ahmed_ins', 'ahmed@iti.gov.eg', 'ins123', 2),
-('omar_ins', 'omar@iti.gov.eg', 'ins123', 2),
-('stu_ali', 'ali@gmail.com', 'stu123', 3), 
-('stu_mona', 'mona@gmail.com', 'stu123', 3),
-('stu_zein', 'zein@gmail.com', 'stu123', 3),
-('stu_nour', 'nour@gmail.com', 'stu123', 3),
-('stu_hady', 'hady@gmail.com', 'stu123', 3), 
-('stu_mai', 'mai@gmail.com', 'stu123', 3),
-('stu_fady', 'fady@gmail.com', 'stu123', 3), 
-('stu_layla', 'layla@gmail.com', 'stu123', 3),
-('stu_gad', 'gad@gmail.com', 'stu123', 3),
-('stu_yara', 'yara@gmail.com', 'stu123', 3);
-
 INSERT INTO [userAcc].Instructor (FirstName, LastName, BirthDate, InsAddress, Phone, NationalID, Salary, Specialization, UserId, DeptId) VALUES 
 ('Moataz', 'Leader', '1985-01-01', 'Cairo, District 5', '01012345678', '28501011234567', 12000, 'SQL & DB', 2, 1),
 ('Sara', 'Ahmed', '1990-03-12', 'Alexandria, Roushdy', '01222334455', '29003121234567', 9500, 'Programming', 3, 2),
@@ -424,6 +414,12 @@ INSERT INTO [userAcc].Student (FirstName, LastName, Gender, BirthDate, StuAddres
 ('Layla', 'Mahmoud', 'F', '2001-11-11', 'Assiut, Free Zone', '01511113333', '30111111234568', 13, 4, 4, 4),
 ('Gad', 'Ezz', 'M', '2002-06-25', 'Menofia, Shebin', '01022224444', '30206251234569', 14, 5, 4, 5),
 ('Yara', 'Hany', 'F', '2001-10-01', 'Cairo, Rehab', '01233335555', '30110011234570', 15, 1, 4, 1);
+
+
+
+
+
+
 
 
 INSERT INTO [Courses].Course (CourseName, CourseDescription, MinDegree, MaxDegree) VALUES 
