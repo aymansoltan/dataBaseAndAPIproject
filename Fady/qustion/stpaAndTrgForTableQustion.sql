@@ -3,27 +3,15 @@ GO
 
 -- =====================================================================
 --  stp_CreateQuestion
---
---  المميزات:
---  - Role Check: instructor نشط فقط
---  - التحقق من وجود الـ Course
---  - التحقق إن المدرس بيدرّس الـ Course دي (عبر CourseInstance)
---  - Validation على QuestionText / QuestionType / Points
---  - T/F  → CorrectAnswer لازم 'True' أو 'False'
---  - MCQ  → CorrectAnswer مطلوب + لازم Options (minimum 2)
---  - Text → CorrectAnswer مش مطلوب (BestAnswer بس)
---  - Duplicate check: نفس الـ QuestionText على نفس الـ Course
---  - MCQ Options بتتضاف من @OptionsList (مفصولة بـ '|')
---  - Transaction كامل: لو فشل أي حاجة → Rollback السؤال والـ Options
 -- =====================================================================
 CREATE OR ALTER PROCEDURE [exams].stp_CreateQuestion
     @QuestionText  NVARCHAR(MAX),
-    @QuestionType  NVARCHAR(20),        -- 'MCQ' | 'T/F' | 'Text'
+    @QuestionType  NVARCHAR(20),        
     @CorrectAnswer NVARCHAR(MAX) = NULL,
     @BestAnswer    NVARCHAR(MAX),
     @Points        INT           = 1,
     @CourseId      INT,
-    @OptionsList   NVARCHAR(MAX) = NULL  -- MCQ فقط: 'Option A|Option B|Option C|Option D'
+    @OptionsList   NVARCHAR(MAX) = NULL  
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -235,16 +223,6 @@ GO
 
 -- =====================================================================
 --  stp_UpdateQuestion
---
---  المميزات:
---  - Role Check: instructor نشط فقط
---  - Question Exists + مش محذوف
---  - Instructor Ownership على الـ Course
---  - منع التعديل لو السؤال في امتحان وطالب عنده إجابة عليه
---  - نفس validations الـ CreateQuestion
---  - لو تغير الـ QuestionType من MCQ → بيحذف الـ Options القديمة مع warning
---  - لو تغير الـ QuestionType إلى MCQ → لازم يبعت Options جديدة
---  - Duplicate check (باستثناء السؤال نفسه)
 -- =====================================================================
 CREATE OR ALTER PROCEDURE [exams].stp_UpdateQuestion
     @QuestionId    INT,
@@ -253,7 +231,7 @@ CREATE OR ALTER PROCEDURE [exams].stp_UpdateQuestion
     @CorrectAnswer NVARCHAR(MAX) = NULL,
     @BestAnswer    NVARCHAR(MAX),
     @Points        INT           = 1,
-    @OptionsList   NVARCHAR(MAX) = NULL   -- MCQ فقط: 'Option A|Option B|Option C|Option D'
+    @OptionsList   NVARCHAR(MAX) = NULL  
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -489,12 +467,6 @@ GO
 
 -- =====================================================================
 --  stp_DeleteQuestion
---
---  المميزات:
---  - Role Check: instructor نشط فقط
---  - Question Exists + مش محذوف فعلاً
---  - Instructor Ownership على الـ Course
---  - الـ Trigger هو اللي يقرر: Soft أو Hard Delete
 -- =====================================================================
 CREATE OR ALTER PROCEDURE [exams].stp_DeleteQuestion
     @QuestionId INT
@@ -578,12 +550,6 @@ GO
 
 -- =====================================================================
 --  trg_SoftDeleteQuestion
---
---  المميزات:
---  - Soft Delete (IsDeleted = 1) لو السؤال مرتبط بـ ExamQuestion أو Student_Answer
---  - Hard Delete لو مفيش علاقات (بيحذف الـ Options بعدين السؤال)
---  - بيحسب SoftCount/HardCount قبل أي عملية (@@ROWCOUNT fix)
---  - Print واضح لكل حالة
 -- =====================================================================
 CREATE OR ALTER TRIGGER [exams].trg_SoftDeleteQuestion
 ON [exams].Question
