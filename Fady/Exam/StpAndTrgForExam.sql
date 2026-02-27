@@ -1,16 +1,9 @@
 USE [ExaminationSystemDB]
 GO
 
--- =====================================================================
+
 --  stp_CreateExam  (v4 - Fixed)
---
---  الإصلاحات على النسخة السابقة:
---  [FIX #1] إضافة isActive = 1 على الـ Instructor
---  [FIX #2] التحقق من توافق BranchId/TrackId/IntakeId مع الـ CourseInstance
---  [FIX #3] تهيئة @FillTypes = '' عند الإعلان لتجنب NULL في رسائل الـ Warning
---  [FIX #4] معالجة Error 2627 (Duplicate Key) في الـ CATCH
---  [FIX #5] تفريق رسالة الخطأ بين "مش موجود" و"مش بتاعك" في STEP 2
--- =====================================================================
+
 CREATE OR ALTER PROCEDURE [exams].stp_CreateExam
     @ExamTitle        NVARCHAR(100),
     @ExamType         NVARCHAR(20)  = 'Regular',
@@ -32,8 +25,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- STEP 1: Role Check – المدرسين النشطين فقط
-      
+        -- STEP 1: Role Check 
         DECLARE @CurrentInsId INT;
 
         SELECT @CurrentInsId = I.InsId
@@ -80,9 +72,9 @@ BEGIN
             ROLLBACK; RETURN;
         END
 
-        -- ==============================================================
+     
         -- STEP 3: التأكد من أن التواريخ غير NULL
-        -- ==============================================================
+     
         IF @StartTime IS NULL OR @EndTime IS NULL
         BEGIN
             RAISERROR('StartTime and EndTime must be provided.', 16, 1);
@@ -526,18 +518,6 @@ GO
 
 -- =====================================================================
 --  stp_UpdateExam
---
---  المميزات:
---  - Role Check من SUSER_NAME() (admin أو instructor نشط)
---  - منع الـ instructor من استخدام @IsDeleted = 1
---  - Time Lock: منع التعديل قبل الامتحان بساعة
---  - منع التعديل لو طلاب بدأوا
---  - CourseInstance existence check قبل Ownership
---  - Title Uniqueness (باستثناء الـ Exam نفسه)
---  - توافق Branch/Track/Intake مع الـ CourseInstance
---  - Max Duration (180 دقيقة)
---  - لو تغير الـ CourseInstance لـ Course تاني → حذف الأسئلة القديمة مع warning
---  - معالجة Error 2627 في الـ CATCH
 -- =====================================================================
 CREATE OR ALTER PROCEDURE [exams].stp_UpdateExam
     @ExamId           INT,
