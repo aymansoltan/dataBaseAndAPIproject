@@ -3,19 +3,11 @@ GO
 
 -- =====================================================================
 --  stp_AddExamQuestion  (v2 - Improved)
---
---  الإصلاحات والتحسينات على النسخة السابقة:
---  [FIX  #1] إضافة isActive = 1 في الـ Instructor JOIN (كان ناقص)
---  [FIX  #2] إضافة StartTime > GETDATE() check - منع التعديل على امتحان
---             انتهى أو بدأ فعلاً (الـ Time Lock وحده مش كافي)
---  [NEW  #3] @SkipExisting BIT = 0 → لو 1 يتجاهل الأسئلة الموجودة
---             بالفعل ويضيف الباقيين بدل ما يفشل بالكامل
---  [NEW  #4] @AddedCount INT OUTPUT → يرجع عدد الأسئلة اللي اتضافت فعلاً
--- =====================================================================
+
 CREATE OR ALTER PROCEDURE [exams].stp_AddExamQuestion
     @ExamId        INT,
     @QuestionIds   NVARCHAR(MAX),
-    @SkipExisting  BIT = 0,              -- 0 = error on duplicate | 1 = skip silently
+    @SkipExisting  BIT = 0,              -
     @AddedCount    INT = NULL OUTPUT
 AS
 BEGIN
@@ -32,7 +24,7 @@ BEGIN
         FROM   [userAcc].UserAccount UA
         INNER JOIN [userAcc].Instructor I
                ON UA.UserId  = I.UserId
-              AND I.isActive = 1              -- [FIX #1] كانت ناقصة
+              AND I.isActive = 1            
         WHERE  UA.UserName = SUSER_NAME();
 
         IF @CurrentInsId IS NULL
@@ -66,7 +58,7 @@ BEGIN
             ROLLBACK; RETURN;
         END
 
-        -- [FIX #2] منع التعديل على امتحان بدأ فعلاً (مش بس الـ Lock)
+    
         IF @ExamStartTime <= GETDATE()
         BEGIN
             RAISERROR('Cannot add questions: the exam has already started or passed.', 16, 1);
@@ -208,8 +200,7 @@ BEGIN
         );
 
         DECLARE @ActualAdded INT = @@ROWCOUNT;
-        SET @AddedCount = @ActualAdded;       -- [NEW #4] Output Parameter
-
+        SET @AddedCount = @ActualAdded;       
         COMMIT TRANSACTION;
         PRINT 'Questions added successfully to Exam ID = ' + CAST(@ExamId AS NVARCHAR(10))
             + ' | Questions added: ' + CAST(@ActualAdded AS NVARCHAR(10));
@@ -231,20 +222,11 @@ GO
 
 -- =====================================================================
 --  stp_UpdateExamQuestion  (v2 - Improved)
---
---  الإصلاحات والتحسينات على النسخة السابقة:
---  [FIX #1] إضافة isActive = 1 في الـ Instructor JOIN
---  [FIX #2] إضافة StartTime > GETDATE() check
---  [NEW #3] دعم تبديل أسئلة متعددة دفعة واحدة عبر:
---           @SwapList NVARCHAR(MAX) = 'OldId:NewId, OldId:NewId, ...'
---           مع الإبقاء على @OldQuestionId / @NewQuestionId للتوافق
---           مع النسخة القديمة (Single-swap mode)
--- =====================================================================
 CREATE OR ALTER PROCEDURE [exams].stp_UpdateExamQuestion
     @ExamId        INT,
-    @OldQuestionId INT           = NULL,   -- Single swap mode
-    @NewQuestionId INT           = NULL,   -- Single swap mode
-    @SwapList      NVARCHAR(MAX) = NULL    -- Multi swap: 'OldId:NewId, OldId:NewId'
+    @OldQuestionId INT           = NULL,   
+    @NewQuestionId INT           = NULL,   
+    @SwapList      NVARCHAR(MAX) = NULL    
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -500,13 +482,6 @@ GO
 
 -- =====================================================================
 --  stp_DeleteExamQuestion  (v2 - Improved)
---
---  الإصلاحات والتحسينات على النسخة السابقة:
---  [FIX #1] إضافة isActive = 1 في الـ Instructor JOIN
---  [FIX #2] إضافة StartTime > GETDATE() check
---  [NEW #3] @SkipNotFound BIT = 0 → لو 1 يتجاهل الأسئلة الغير موجودة
---            ويحذف الباقيين بدل ما يفشل بالكامل
---  [NEW #4] @RemovedCount INT OUTPUT → يرجع عدد الأسئلة المحذوفة فعلاً
 -- =====================================================================
 CREATE OR ALTER PROCEDURE [exams].stp_DeleteExamQuestion
     @ExamId        INT,
