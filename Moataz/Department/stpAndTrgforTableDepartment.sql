@@ -1,5 +1,6 @@
 use [ExaminationSystemDB]
-create proc [TrainingMangerStpTrg].stp_AddDepartment 
+go
+create proc [TrainingMangerStp].stp_AddDepartment 
     @Deptname nvarchar(50), 
     @BranchId int
 as
@@ -33,7 +34,7 @@ begin
         raiserror(@errmsg, 16, 1);
     end catch
 end
-
+go
 create trigger [orgnization].trg_CheckBranchStatusBeforeInsert
 on [orgnization].[Department]
 after insert
@@ -51,8 +52,8 @@ begin
         raiserror('operation cancelled: cannot add a department to an inactive branch.', 16, 1);
     end
 end
-
-create proc [TrainingMangerStpTrg].stp_UpdateDepartment
+go
+create proc [TrainingMangerStp].stp_UpdateDepartment
     @DeptId int,
     @DeptName nvarchar(50),
     @BranchId int
@@ -90,9 +91,9 @@ begin
         raiserror(@errmsg, 16, 1);
     end catch
 end
+go
 
-
-create proc [TrainingMangerStpTrg].stp_DeleteDepartment
+create proc [TrainingMangerStp].stp_DeleteDepartment
     @DeptId int
 as
 begin
@@ -112,7 +113,7 @@ begin
     end catch
 end
 
-
+go
 create trigger [orgnization].trg_SoftDeleteDepartment
 on [orgnization].[Department]
 instead of delete
@@ -136,7 +137,7 @@ begin
         print 'success: Department deleted from database.';
     end
 end
-
+go
 create trigger [orgnization].trg_inactivateTracksWhenInActiveDerpartment
 on [orgnization].[Department]
 after update

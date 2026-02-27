@@ -1,6 +1,6 @@
 use [ExaminationSystemDB]
-
-create proc [TrainingMangerStpTrg].stp_AddTrack
+go
+create proc [TrainingMangerStp].stp_AddTrack
     @TrackName nvarchar(50),
     @DeptId int
 as
@@ -36,8 +36,8 @@ begin
         raiserror(@errmsg, 16, 1);
     end catch
 end
-
-create proc [TrainingMangerStpTrg].stp_UpdateTrack
+go
+create proc [TrainingMangerStp].stp_UpdateTrack
     @TrackId int,
     @TrackName nvarchar(50),
     @DeptId int
@@ -75,10 +75,10 @@ begin
         raiserror(@errmsg, 16, 1);
     end catch
 end
+go
 
 
-
-create proc [TrainingMangerStpTrg].stp_DeleteTrack
+create proc [TrainingMangerStp].stp_DeleteTrack
     @trackid int
 as
 begin
@@ -96,7 +96,7 @@ begin
         raiserror(@errmsg, 16, 1);   
     end catch
 end
-
+go
 
 create trigger [orgnization].trg_SoftDeleteTrack
 on [orgnization].[Track]
@@ -121,7 +121,7 @@ begin
         print 'success: track deleted from database.';
     end
 end
-
+go
 create trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveTrack
 on [orgnization].[Track]
 after update

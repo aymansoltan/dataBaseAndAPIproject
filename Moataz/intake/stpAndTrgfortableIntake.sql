@@ -1,6 +1,6 @@
 use [ExaminationSystemDB]
-
-create proc [TrainingMangerStpTrg].stp_AddIntake
+go
+create proc [TrainingMangerStp].stp_AddIntake
     @IntakeName nvarchar(50)
 as
 begin
@@ -27,8 +27,8 @@ begin
         raiserror(@errmsg, 16, 1);
     end catch
 end
-
-create proc [TrainingMangerStpTrg].stp_UpdateIntake
+go
+create proc [TrainingMangerStp].stp_UpdateIntake
     @IntakeId int,
     @IntakeName nvarchar(50),
     @IsActive bit =1
@@ -65,8 +65,8 @@ begin
         raiserror(@errorMessage ,16,1)    
     end catch
 end
-
-create proc [TrainingMangerStpTrg].stp_DeleteIntack @IntakeId int 
+go
+create proc [TrainingMangerStp].stp_DeleteIntack @IntakeId int 
 as
 begin
     begin try
@@ -85,7 +85,7 @@ begin
         raiserror(@errorMassege ,16,1)
     end catch
 end
-
+go
 create trigger [orgnization].trg_SoftDeleteIntake
 on [orgnization].[Intake]
 instead of delete
@@ -111,7 +111,7 @@ begin
         print 'success: intake deleted completely.';
     end
 end
-
+go
 create trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveIntake
 on [orgnization].[Intake]
 after update

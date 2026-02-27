@@ -1,4 +1,5 @@
-create proc[TrainingMangerStpTrg].stp_addCourseInstance
+go
+create proc[TrainingMangerStp].stp_addCourseInstance
     @courseid     int,
     @instructorid int,
     @branchid     int,
@@ -38,9 +39,9 @@ begin
         throw;
     end catch
 end;
+go
 
-
-create proc [TrainingMangerStpTrg].stp_updatecourseinstance
+create proc [TrainingMangerStp].stp_updatecourseinstance
     @instanceid    int,            
     @courseid      int = null,       
     @instructorid  int = null,       
@@ -108,8 +109,8 @@ begin
         throw;
     end catch
 end;
-
-create  proc [TrainingMangerStpTrg].stp_deleteinstance
+go
+create  proc [TrainingMangerStp].stp_deleteinstance
     @instanceid int
 as
 begin
@@ -130,7 +131,7 @@ begin
         throw; 
     end catch
 end
-
+go
 
 create  trigger [courses].trg_preventdeleteinstance
 on [courses].[courseinstance]

@@ -1,7 +1,7 @@
 use [ExaminationSystemDB]
 
-
-create proc [TrainingMangerStpTrg].stp_addIntakeTrack
+go
+create proc [TrainingMangerStp].stp_addIntakeTrack
     @intakeid int,
     @trackid int
 as
@@ -30,8 +30,8 @@ begin
         raiserror(@errmsg, 16, 1);
     end catch
 end
-
-create proc [TrainingMangerStpTrg].stp_ToggleIntakeTrack
+go
+create proc [TrainingMangerStp].stp_ToggleIntakeTrack
     @intakeid int,
     @trackid int,
     @status bit
@@ -50,8 +50,8 @@ begin
 
     print 'intaketrack status updated.';
 end
-
-create proc [TrainingMangerStpTrg].stp_DeleteIntakeTrack
+go
+create proc [TrainingMangerStp].stp_DeleteIntakeTrack
     @intakeid int,
     @trackid int
 as
@@ -73,7 +73,7 @@ begin
         raiserror(@errmsg, 16, 1);
     end catch
 end
-
+go
 create trigger [orgnization].trg_SoftDeleteIntakeTrack
 on [orgnization].[IntakeTrack]
 instead of delete

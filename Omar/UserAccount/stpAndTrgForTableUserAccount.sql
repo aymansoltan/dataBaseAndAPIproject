@@ -1,7 +1,7 @@
 USE [ExaminationSystemDB]
 GO
 
-create or alter procedure [TrainingMangerStpTrg].[stp_createsystemuser]
+create or alter procedure [TrainingMangerStp].[stp_createsystemuser]
     @username nvarchar(50),
     @password nvarchar(250),
     @email    nvarchar(100),
@@ -82,62 +82,67 @@ go
 ------------------------------------------------------------
 -- 2) Update User (Fully Secured)
 ------------------------------------------------------------
-create or alter procedure [TrainingMangerStpTrg].[stp_updateuseraccount] 
+go
+create or alter procedure [TrainingMangerStp].[stp_updateuseraccount] 
     @userid int,
-    @username nvarchar(50) = null,
+    @username nvarchar(50) = null,     -- «·«”„ «·ÃœÌœ (·Ê Õ«»»  €Ì—Â)
     @email nvarchar(100) = null,
-    @userpassword nvarchar(250) = null,
-    @isactive bit = null,
-    @roleid int = null
+    @password nvarchar(250) = null,   -- ﬂ·„… «·”— «·ÃœÌœ…
+    @isactive bit = null
 as
 begin
     set nocount on;
     begin try
         begin transaction;
 
+        -- 1. «· √ﬂœ „‰ ÊÃÊœ «·ÌÊ“—
         if not exists (select 1 from [useracc].[useraccount] where userid = @userid)
             throw 50003, 'error: user id not found.', 1;
 
-        declare @currentrolename nvarchar(20);
-        declare @newrolename nvarchar(20);
-        declare @currentdbusername nvarchar(50);
+        declare @olddbusername nvarchar(100);
+        declare @oldloginname nvarchar(100);
+        declare @rolename nvarchar(20);
 
+        -- Ã·» «·»Ì«‰«  «·Õ«·Ì…
         select 
-            @currentrolename = r.rolename,
-            @currentdbusername = ua.username
-        from [useracc].[useraccount] ua
-        join [useracc].[userrole] r on ua.roleid = r.roleid
+            @olddbusername = ua.username,
+            @rolename = r.rolename
+        from [useracc].useraccount ua
+        join [useracc].userrole r on ua.roleid = r.roleid
         where ua.userid = @userid;
 
-        if @currentrolename = 'admin'
+        -- 2. Õ„«Ì… «·√œ„‰ („„‰Ê⁄ «· ⁄œÌ· ⁄·ÌÂ „‰ Â‰«)
+        if @rolename = 'admin'
             throw 50004, 'error: admin account cannot be modified via this procedure.', 1;
 
-        if @roleid is not null
+        -- 3.  ÕœÌÀ ﬂ·„… «·”— ⁄·Ï «·”Ì—›— (·Ê „»⁄Ê …)
+        if @password is not null
         begin
-            select @newrolename = rolename from [useracc].[userrole] where roleid = @roleid;
+            -- »‰‘ ﬁ «”„ «··ÊÃ‰ («·«”„ «·ﬁœÌ„ + login) “Ì „« ⁄„·‰« ›Ì «·ﬂ—ÌÂ
+            set @oldloginname = replace(@olddbusername, 'user', 'login'); 
             
-            if @newrolename is null
-                throw 50005, 'error: invalid new roleid.', 1;
-
-            if @newrolename = 'admin'
-                throw 50006, 'error: cannot promote user to admin.', 1;
-
-     
-            if exists (select 1 from [organization].[student] where username = @currentdbusername)
-               or exists (select 1 from [organization].[instructor] where username = @currentdbusername)
-                throw 50007, 'error: cannot change role of a linked student or instructor.', 1;
+            declare @sqlpass nvarchar(max) = 'alter login [' + @oldloginname + '] with password = ''' + @password + ''';';
+            exec sp_executesql @sqlpass;
         end
 
+        -- 4.  ÕœÌÀ Õ«·… «·Õ”«» (active / inactive) ⁄·Ï «·”Ì—›—
+        if @isactive is not null
+        begin
+            set @oldloginname = replace(@olddbusername, 'user', 'login');
+            declare @sqlstatus nvarchar(max) = 'alter login [' + @oldloginname + '] ' + case when @isactive = 1 then 'enable' else 'disable' end + ';';
+            exec sp_executesql @sqlstatus;
+        end
+
+        -- 5.  ÕœÌÀ «·ÃœÊ· «·œ«Œ·Ì (useraccount)
         update [useracc].[useraccount]
-        set username     = isnull(lower(trim(@username)), username),
-            email        = isnull(lower(trim(@email)), email),
-            userpassword = isnull(@userpassword, userpassword),
-            isactive     = isnull(@isactive, isactive),
-            roleid       = isnull(@roleid, roleid)
+        set 
+            email = isnull(lower(trim(@email)), email),
+            userpassword = isnull(@password, userpassword),
+            isactive = isnull(@isactive, isactive)
         where userid = @userid;
 
         commit transaction;
-        print 'user account updated successfully.';
+        print 'user account and server login updated successfully.';
 
     end try
     begin catch
@@ -148,11 +153,11 @@ begin
 end;
 go
 
-
 ------------------------------------------------------------
 -- 3) Delete User (Soft Delete Driven)
 ------------------------------------------------------------
-CREATE OR ALTER PROC [TrainingMangerStpTrg].stp_DeleteUserAccount 
+go
+CREATE OR ALTER PROC [TrainingMangerStp].stp_DeleteUserAccount 
     @UserId int
 AS
 BEGIN

@@ -1,4 +1,4 @@
-create trigger  trg_PreventModifyUserRole
+create trigger trg_PreventModifyUserRole
 on [userAcc].[UserRole]
 instead of insert , update , delete
 as 

@@ -1,4 +1,5 @@
-create proc [TrainingMangerStpTrg].stp_AddCourse 
+go
+create proc [TrainingMangerStp].stp_AddCourse 
     @CourseName nvarchar(50),
     @MaxDegree  int,
     @MinDegree  int,
@@ -34,9 +35,8 @@ begin
         throw;
     end catch 
 end
-
-
-create proc [TrainingMangerStpTrg].stp_UpdateCourse
+go
+create proc [TrainingMangerStp].stp_UpdateCourse
     @CourseId   int,
     @CourseName nvarchar(50) = null,
     @MaxDegree  int = null,
@@ -78,7 +78,7 @@ begin
             [CourseName]  = coalesce(lower(trim(@CourseName)), CourseName),
             [MaxDegree]   = @CurrentMax,
             [MinDegree]   = @CurrentMin,
-            [CourseDescription] = coalesce(trim(@Description), [Description]),
+            [CourseDescription] = coalesce(trim(@Description),[CourseDescription] ),
             [isActive]    = coalesce(@IsActive, isActive)
         where [CourseId] = @CourseId;
 
@@ -89,8 +89,8 @@ begin
     end catch 
 end;
 
-
-create proc [TrainingMangerStpTrg].stp_DeleteCourse
+go
+create proc [TrainingMangerStp].stp_DeleteCourse
     @CourseId int
 as 
 begin
@@ -102,7 +102,7 @@ begin
 
         print 'Course deactivated successfully (Soft Delete).';
 end;
-
+go
 create trigger [courses].trg_Softcoursedelete
 on [courses].[course]
 instead of delete

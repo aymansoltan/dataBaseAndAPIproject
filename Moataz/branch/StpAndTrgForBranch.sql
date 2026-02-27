@@ -1,5 +1,6 @@
 use [ExaminationSystemDB]
-create proc [TrainingMangerStpTrg].stp_AddBranch @BranchName nvarchar(50)
+go
+create proc [TrainingMangerStp].stp_AddBranch @BranchName nvarchar(50)
 as 
 begin
     begin try
@@ -27,8 +28,8 @@ begin
         end
     end catch
 end
-
-create proc [TrainingMangerStpTrg].stp_UpdateBranch @BranchId int ,@BranchName nvarchar(50) , @IsActive bit = 1
+go
+create proc [TrainingMangerStp].stp_UpdateBranch @BranchId int ,@BranchName nvarchar(50) , @IsActive bit = 1
 as
 begin
     begin try
@@ -63,8 +64,8 @@ begin
     end catch
 
 end
-
-create proc [TrainingMangerStpTrg].stp_DeleteBranch @BranchId int 
+go
+create proc [TrainingMangerStp].stp_DeleteBranch @BranchId int 
 as
 begin
     begin try
@@ -83,7 +84,7 @@ begin
         raiserror(@errorMassege ,16,1)
     end catch
 end
-
+go
 create trigger [orgnization].trg_SoftDeleteBranch
 on [orgnization].[Branch]
 instead of delete 
@@ -106,8 +107,8 @@ begin
         print 'this branch deleted successfully from the data base'
     end
 end 
-
-create  proc [TrainingMangerStpTrg].stp_ActivateBranch @BranchId int 
+go
+create  proc [TrainingMangerStp].stp_ActivateBranch @BranchId int 
 as
 begin
     begin try
@@ -134,7 +135,7 @@ begin
         raiserror(@errorMassege ,16,1)
      end catch
 end
-
+go
 create trigger [orgnization].trg_inactivateDepartmentWhenInActiveBranch
 on [orgnization].[branch]
 after update

@@ -47,18 +47,31 @@ log on
     maxsize = 100MB,
     filegrowth = 5MB
 );
-use ExaminationSystemDB;
+go
+use [ExaminationSystemDB];
+go
 create schema userAcc;
+go
 create schema orgnization;
+go
 create schema Courses;
+go
 create schema exams;
+go
 create schema [studentViews];
+go
 create schema [InstructorViews];
+go
 create schema [MangerViews] ;
-create schema [InstructorStpTrg]
-create schema [StudentStpTrg]
-create schema [TrainingMangerStpTrg]
-create schema [adminStpTrg]
+go
+create schema [InstructorStp]
+go
+create schema [StudentStp]
+go
+create schema [TrainingMangerStp]
+go
+create schema [adminStp]
+go
 
 
 create table [orgnization].Branch
@@ -73,7 +86,7 @@ create table [orgnization].Branch
     constraint BranchNamelenCheck check(len(BranchName) >=3),
     constraint BranchNameFormatCheck check (BranchName NOT like '[0-9]%' AND BranchName NOT like '[!@#$%^&*]%'),
 ) on [primary]
-
+go
 create table [orgnization].Department(
     DeptId int identity(1,1),
     DeptName nvarchar(50) not null,
@@ -87,7 +100,7 @@ create table [orgnization].Department(
     constraint DepartmentNameFormatCheck check (DeptName NOT like '[0-9]%' AND DeptName NOT like '[!@#$%^&*]%'),
     constraint DepartmentBranchFK foreign key (BranchId) references [orgnization].[Branch](BranchId)
 ) on [primary]
-
+go
 create table [orgnization].Track(
     TrackId int identity(1,1),
     TrackName nvarchar(50) not null,
@@ -101,7 +114,7 @@ create table [orgnization].Track(
     constraint TrackNameFormatCheck check (TrackName NOT like '[0-9]%' AND TrackName NOT like '[!@#$%^&*]%'),
     constraint TrackDepartmentFK foreign key (DeprtmentId) references [orgnization].[Department](DeptId)
 ) on [primary]
-
+go
 create table [orgnization].Intake(
     IntakeId int identity(1,1),
     IntakeName nvarchar(50) not null,
@@ -113,7 +126,7 @@ create table [orgnization].Intake(
     constraint IntakeNamelenCheck check(len(IntakeName) >=3),
     constraint IntakeNameFormatCheck check (IntakeName NOT like '[0-9]%' AND IntakeName NOT like '[!@#$%^&*]%'),
 ) on [primary]
-
+go
 create table [orgnization].IntakeTrack(
     IntakeId int,
     TrackId int,
@@ -123,7 +136,7 @@ create table [orgnization].IntakeTrack(
     constraint IT_IntackFK foreign key (IntakeId) references [orgnization].Intake(IntakeId),
     constraint IT_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId)
 ) on [primary]
- 
+go
 create table [userAcc].UserRole(
     RoleId int identity(1,1),
     RoleName nvarchar(20) not null,
@@ -133,7 +146,7 @@ create table [userAcc].UserRole(
     constraint RoleNamelenCheck check(len(RoleName) >=3),
     constraint RoleNameCheck check (RoleName in ('admin' , 'instructor','student','Training Manager'))
 ) on [FG_Users]
-
+go
 create table [userAcc].UserAccount(
     UserId int identity(1,1),
     UserName nvarchar(50) not null,
@@ -152,7 +165,7 @@ create table [userAcc].UserAccount(
     constraint UserEmailFormatCheck check (Email like '%_@__%.__%'),
     constraint UserRoleFK foreign key (RoleId) references [userAcc].UserRole(RoleId)
 )on [FG_Users]
-
+go
 create table [userAcc].Student (
     StudentId int identity(1,1),
     FirstName nvarchar(50) not null,
@@ -190,10 +203,7 @@ create table [userAcc].Student (
     constraint StudentIntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId),
     constraint StudentTrackFK foreign key (TrackId) references [orgnization].Track(TrackId)
 ) on [FG_Users];
-
-
-
-
+go
 create table [userAcc].Instructor (
     InsId int identity(1,1),
     FirstName nvarchar(50) not null,
@@ -230,8 +240,7 @@ create table [userAcc].Instructor (
     constraint InstructorUserFK foreign key (UserId) references [userAcc].UserAccount(UserId),
     constraint InstructorDeptFK foreign key (DeptId) references [orgnization].Department(DeptId)
 ) on [FG_Users];
-
-
+go
 create table [Courses].Course(
     CourseId int identity(1,1),
     CourseName nvarchar(50) not null,
@@ -244,7 +253,7 @@ create table [Courses].Course(
     constraint CourseNameFormatCheck check (CourseName NOT like '[0-9]%' AND CourseName NOT like '[!@#$%^&*]%'),
     constraint MinDegreeCheck check (MinDegree >= (MaxDegree * 0.3)) 
 ) on [FG_Courses];
-
+go
 create table [Courses].CourseInstance(
 CourseInstanceId int identity(1,1),
 CourseId int not null,
@@ -262,8 +271,7 @@ constraint CI_BranchFK foreign key (BranchId) references [orgnization].Branch(Br
 constraint CI_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
 constraint CI_IntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId),
 ) on [FG_Courses];
-
-
+go
 create table [exams].Question(
 QuestionId int identity(1,1),
 QuestionText nvarchar(max) not null,
@@ -278,7 +286,7 @@ constraint QuestionPK primary key (QuestionId),
 constraint QuestionTypeCheck check (QuestionType in ('MCQ', 'T/F','Text')),
 constraint FK_Question_Course foreign key (CourseId) references [Courses].Course(CourseId)
 )on [FG_Questions] 
-
+go
 create table [exams].QuestionOption (
     QuestionOptionId int identity(1,1),
     QuestionOptionText nvarchar(max) not null,
@@ -287,8 +295,7 @@ create table [exams].QuestionOption (
     constraint QuestionOptionPK primary key (QuestionOptionId),
     constraint OQ_QuestionFK foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Questions];
-
-
+go
 create  table [exams].Exam (
     ExamId int identity(1,1),
     ExamTitle nvarchar(100) not null ,
@@ -314,6 +321,7 @@ create  table [exams].Exam (
     constraint Exam_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
     constraint Exam_IntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId)
 ) on [FG_Exams];
+go
 create table [exams].ExamQuestion (
     ExamId int not null,
     QuestionId int not null,
@@ -322,8 +330,7 @@ create table [exams].ExamQuestion (
     constraint EQ_ExamFK foreign key (ExamId) references [exams].Exam(ExamId),
     constraint EQ_QuestionFK foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Exams];
-
-
+go
 create table [exams].Student_Answer (
     StudentId int not null,
     ExamId int not null,
@@ -337,120 +344,52 @@ create table [exams].Student_Answer (
     constraint FK_Ans_Exam foreign key (ExamId) references [exams].Exam(ExamId),
     constraint FK_Ans_Question foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Exams];
-
-
+go
 create table [exams].Student_Exam_Result (
     StudentId int not null,
     ExamId int not null,
     TotalGrade int,                 
-    IsPassed bit,                  
+    IsPassed bit default 0,                  
     
     constraint StudentResultPK primary key (StudentId, ExamId),
     constraint FK_Res_Student foreign key (StudentId) references [userAcc].Student(StudentId),
     constraint FK_Res_Exam foreign key (ExamId) references [exams].Exam(ExamId)
 ) on [FG_Exams];
-
+go
 create synonym Branch for [orgnization].Branch;
+go
 create synonym Dept for [orgnization].Department;
+go
 create synonym Track for [orgnization].Track;
+go
 create synonym Intake for [orgnization].Intake;
+go
 create synonym IntakeTrack for [orgnization].IntakeTrack;
+go
 create synonym Roles for [userAcc].UserRole;
+go
 create synonym Accounts for [userAcc].UserAccount;
+go
 create synonym Students for [userAcc].Student;
+go
 create synonym Instructors for [userAcc].Instructor;
+go
 create synonym Course for [Courses].Course;
+go
 create synonym CourseInstance for [Courses].CourseInstance;
+go
 create synonym Questions for [exams].Question;
+go
 create synonym Options for [exams].QuestionOption;
+go
 create synonym Exams for [exams].Exam;
+go
 create synonym ExamQuestions for [exams].ExamQuestion;
+go
 create synonym StudentAnswers for [exams].Student_Answer;
+go
 create synonym FinalResults for [exams].Student_Exam_Result;
-
+go
 alter database [ExaminationSystemDB] set recursive_triggers on;
+go
 
-
-
-
-
-
-INSERT INTO [orgnization].Branch (BranchName) VALUES 
-('Smart Village'), ('Alexandria'), ('Mansoura'), ('Assiut'), ('Menofia');
-
-INSERT INTO [orgnization].Department (DeptName, BranchId) VALUES 
-('Software Engineering', 1), ('Data Science', 1), ('Cloud Computing', 2), 
-('Embedded Systems', 3), ('Cyber Security', 4);
-
-INSERT INTO [orgnization].Track (TrackName, DeprtmentId) VALUES 
-('Full Stack .NET', 1), ('Python for BI', 2), ('Azure Cloud Admin', 3),
-('Embedded C', 4), ('Ethical Hacking', 5);
-
-
-INSERT INTO [orgnization].Intake (IntakeName) VALUES 
-('Intake 42'), ('Intake 43'), ('Intake 44'), ('Intake 45'), ('Intake 46');
-
-INSERT INTO [userAcc].UserRole (RoleName) 
-VALUES 
-('admin'), 
-('instructor'), 
-('student'), 
-('Training Manager');
-
-INSERT INTO [userAcc].Instructor (FirstName, LastName, BirthDate, InsAddress, Phone, NationalID, Salary, Specialization, UserId, DeptId) VALUES 
-('Moataz', 'Leader', '1985-01-01', 'Cairo, District 5', '01012345678', '28501011234567', 12000, 'SQL & DB', 2, 1),
-('Sara', 'Ahmed', '1990-03-12', 'Alexandria, Roushdy', '01222334455', '29003121234567', 9500, 'Programming', 3, 2),
-('Ahmed', 'Hassan', '1988-11-05', 'Mansoura, Toriel', '01155667788', '28811051234567', 10000, 'Cloud Services', 4, 3),
-('Omar', 'Khalid', '1992-07-20', 'Cairo, Maadi', '01599887766', '29207201234567', 8500, 'Networks', 5, 4);
-
-
-INSERT INTO [userAcc].Student (FirstName, LastName, Gender, BirthDate, StuAddress, Phone, NationalID, UserId, BranchId, IntakeId, TrackId) VALUES 
-('Ali', 'Samy', 'M', '2001-01-01', 'Cairo, Nasr City', '01011112222', '30101011234561', 6, 1, 3, 1),
-('Mona', 'Zaki', 'F', '2002-02-02', 'Alex, Gleem', '01233334444', '30202021234562', 7, 2, 3, 2),
-('Zein', 'Eldin', 'M', '2000-05-10', 'Mansoura, Nile St', '01144445555', '30005101234563', 8, 3, 3, 3),
-('Nour', 'Amer', 'F', '2001-08-15', 'Assiut, University St', '01566667777', '30108151234564', 9, 4, 3, 4),
-('Hady', 'Adel', 'M', '2002-12-20', 'Cairo, Shobra', '01077778888', '30212201234565', 10, 1, 4, 1),
-('Mai', 'Ibrahim', 'F', '2001-04-05', 'Alex, Smouha', '01288889999', '30104051234566', 11, 2, 4, 2),
-('Fady', 'George', 'M', '2000-09-30', 'Mansoura, Mashaya', '01199990000', '30009301234567', 12, 3, 4, 3),
-('Layla', 'Mahmoud', 'F', '2001-11-11', 'Assiut, Free Zone', '01511113333', '30111111234568', 13, 4, 4, 4),
-('Gad', 'Ezz', 'M', '2002-06-25', 'Menofia, Shebin', '01022224444', '30206251234569', 14, 5, 4, 5),
-('Yara', 'Hany', 'F', '2001-10-01', 'Cairo, Rehab', '01233335555', '30110011234570', 15, 1, 4, 1);
-
-
-
-
-
-
-
-
-INSERT INTO [Courses].Course (CourseName, CourseDescription, MinDegree, MaxDegree) VALUES 
-('SQL Server', 'Database Design & T-SQL', 50, 100),
-('C# Fundamentals', 'Basics of C# and .NET', 60, 100),
-('Data Warehouse', 'ETL and BI Concepts', 50, 100),
-('Cloud Architecture', 'AWS & Azure Basics', 50, 100),
-('Python Basics', 'Syntax and Core Python', 50, 100),
-('Network Security', 'Firewalls & Encryption', 50, 100);
-
-
-INSERT INTO [Courses].CourseInstance (CourseId, InstructorId, BranchId, TrackId, IntakeId, AcademicYear) VALUES 
-(1, 1, 1, 1, 3, 2024), -- SQL by Moataz
-(2, 2, 1, 1, 3, 2024), -- C# by Sara
-(3, 2, 1, 2, 3, 2024), -- BI by Sara
-(4, 3, 2, 3, 4, 2024), -- Cloud by Ahmed
-(5, 4, 4, 4, 4, 2024), -- Python by Omar
-(6, 4, 4, 5, 4, 2024); -- Security by Omar
-
-
-INSERT INTO [exams].Question (QuestionText, QuestionType, CorrectAnswer, BestAnswer, Points, CourseId) VALUES 
-('What does SQL stand for?', 'MCQ', 'Structured Query Language', 'Structured Query Language', 2, 1),
-('Primary Key allows Null values?', 'T/F', 'False', 'False', 1, 1),
-('Explain what is a Join?', 'Text', NULL, 'A way to combine rows from two or more tables based on a related column', 5, 1),
-('Is C# an Object Oriented Language?', 'T/F', 'True', 'True', 1, 2),
-('Define a Class in C#.', 'Text', NULL, 'A blueprint for creating objects', 5, 2),
-('What is ETL?', 'MCQ', 'Extract Transform Load', 'Extract Transform Load', 2, 3),
-('S3 is a storage service in AWS?', 'T/F', 'True', 'True', 1, 4),
-('What is a List in Python?', 'Text', NULL, 'A mutable ordered collection of items', 5, 5),
-('List 3 types of Joins.', 'Text', NULL, 'Inner, Left, Right Joins', 5, 1),
-('Can we have multiple Primary Keys?', 'T/F', 'False', 'No, only one primary key per table', 1, 1),
-('What is the default port for SQL Server?', 'MCQ', '1433', '1433', 2, 1),
-('Dictionary in Python is unordered?', 'T/F', 'True', 'True in versions before 3.7', 1, 5);
