@@ -252,3 +252,67 @@ join [userAcc].[Student] as s on ser.[StudentId] = s.[StudentId]
 join [exams].[Exam] as ex on ser.[ExamId] = ex.[ExamId] 
 join [Courses].[CourseInstance] as ci on ex.[CourseInstanceId] = ci.[CourseInstanceId] 
 join [Courses].[Course] as cr on ci.[CourseId] = cr.[CourseId];
+go
+create or alter proc[TrainingMangerStp].Stp_ViewStudentData 
+    @StudentId INT 
+as
+begin
+    SET NOCOUNT ON;
+
+    SELECT 
+        s.StudentId,
+        CONCAT_WS(' ', s.firstname, s.lastname) AS [full_name],
+        ua.username AS [user_name],
+        ua.email AS [user_email],
+        r.rolename AS [role_name],
+        s.gender,
+        s.age,
+        s.nationalid AS [ssn],
+        s.phone AS [phone_number],
+        br.branchname AS [branch_name],
+        tr.trackname AS [track_name],
+        ik.intakename AS [intake_name],
+        ua.createdat AS [account_created_at],
+        CASE 
+            WHEN ua.isactive = 1 THEN 'Active'
+            ELSE 'Inactive'
+        END AS [account_status]
+    FROM [userAcc].[Student] s
+     JOIN [userAcc].[UserAccount] ua ON s.UserId = ua.UserId
+     JOIN [userAcc].[UserRole] r      ON ua.RoleId = r.RoleId
+     JOIN [orgnization].[Branch] br  ON s.BranchId = br.BranchId
+     JOIN [orgnization].[Track] tr   ON s.TrackId = tr.TrackId
+     JOIN [orgnization].[Intake] ik  ON s.IntakeId = ik.IntakeId
+    WHERE s.[StudentId] =@StudentId
+END
+GO
+
+CREATE OR ALTER PROC [TrainingMangerStp].Stp_ViewinstructoreData 
+    @InstructorID INT 
+AS
+BEGIN
+    SET NOCOUNT ON;
+    select 
+    concat(ins.[firstname], ' ', ins.[lastname]) as [full_name],
+    ua.[username] as [user_name],
+    ua.[email] as [user_email],
+    r.[rolename] as [role_name],
+    ins.[age],
+    ins.[nationalid] as [ssn],
+    ins.[phone] as [phone_number],
+    ins.[salary],
+    ins.[hiredate],
+    ins.[specialization],
+    dept.[deptname] as [department_name],
+    ua.[createdat] as [account_created_at],
+    case 
+        when ua.[isactive] = 1 then 'active'
+        else 'not active'
+    end as [account_status]
+from [useracc].[userrole] r 
+join [useracc].[useraccount] ua on r.[roleid] = ua.[roleid] 
+join [useracc].[instructor] ins on ua.[userid] = ins.[userid]
+join [orgnization].[department] dept on ins.[deptid] = dept.[deptid]
+where ins.InsId= @InstructorID;
+end
+go
