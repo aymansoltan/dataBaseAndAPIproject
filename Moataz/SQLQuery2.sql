@@ -108,6 +108,11 @@ exec [trainingmangerstp].stp_deleteinstructor @instructoid
 ---------------------------------------------
 --------------VIEWS--------------------------
 ---------------------------------------------
+go
+exec [TrainingMangerStp].Stp_ViewinstructoreData @InstructorID =1;
+go
+exec [TrainingMangerStp].Stp_ViewStudentData @StudentId =1
+go
 select * from [MangerViews].v_branchsummary
 select * from [MangerViews].v_department_branch_summary
 select * from [MangerViews].v_track_department_branch_details
