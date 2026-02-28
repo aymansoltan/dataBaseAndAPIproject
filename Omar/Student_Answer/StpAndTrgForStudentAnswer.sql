@@ -258,7 +258,7 @@ end
 go
 ---------------------------------------------------------------------------------------------
 
-create or alter procedure [exams].stp_InstructorGradeText
+create or alter procedure [InstructorStp].stp_InstructorGradeText
     @ExamId          int,
     @StudentId       int,
     @QuestionId      int,
@@ -470,7 +470,7 @@ begin
 end
 go
 --------------------------------- ----------------------------------------------
-create  or alter procedure stp_deletstudentanswer 
+create  or alter procedure [InstructorStp].stp_deletstudentanswer 
 @studentid int
 as 
 begin
