@@ -70,8 +70,8 @@ begin
             if @totalcount <> @distinctcount
                 raiserror('duplicate options are not allowed.', 16, 1);
 
-            if not exists (select 1 from string_split(@optionslist, '|') where lower(trim(value)) = @correctanswer)
-                raiserror('correctanswer must match one of the provided options.', 16, 1);
+            if not exists (select 1 from string_split(@optionslist, '|') where lower(trim(value)) = @bestanswer)
+                raiserror('bestanswer must match one of the provided options.', 16, 1);
         end
 
         if @questiontype = 't/f'

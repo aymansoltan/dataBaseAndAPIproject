@@ -125,16 +125,16 @@ begin
                 rollback; return;
             end
 
-            if not exists (
-                select 1
-                from   [exams].QuestionOption
-                where  QuestionId        = @QuestionId
-                  and  lower(trim(QuestionOptionText)) = lower(trim(@StudentResponse))
-            )
-            begin
-                raiserror('Invalid MCQ response: answer is not among the available options.', 16, 1);
-                rollback; return;
-            end
+            -- if not exists (
+            --     select 1
+            --     from   [exams].QuestionOption
+            --     where  QuestionId        = @QuestionId
+            --       and  lower(trim(QuestionOptionText)) = lower(trim(@StudentResponse))
+            -- )
+            -- begin
+            --     raiserror('Invalid MCQ response: answer is not among the available options.', 16, 1);
+            --     rollback; return;
+            -- end
         end
 
         if @QuestionType = 'T/F'

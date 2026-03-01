@@ -14,8 +14,8 @@ exec [TrainingMangerStp].stp_ActivateBranch @BranchId =7
 ------------------------------------------------
 --Stp
 
-exec [TrainingMangerStp].stp_AddDepartment @Deptname ='Cyber Security', @BranchId =10
-exec [TrainingMangerStp].stp_UpdateDepartment @DeptId =3 , @DeptName='cloud' ,@BranchId =8
+exec [TrainingMangerStp].stp_AddDepartment @Deptname ='Full Stack .net', @BranchId =1
+exec [TrainingMangerStp].stp_UpdateDepartment @DeptId =1 , @DeptName='Full Stack' ,@BranchId =1
 exec [TrainingMangerStp].stp_DeleteDepartment @DeptId =2
 
 --trg
@@ -26,7 +26,7 @@ exec [TrainingMangerStp].stp_DeleteDepartment @DeptId =2
 ----------------Track----------------------
 ------------------------------------------------
 --Stp
-exec [TrainingMangerStp].stp_AddTrack @TrackName='Ethical Hacking' ,@DeptId =5
+exec [TrainingMangerStp].stp_AddTrack @TrackName='Mern' ,@DeptId =1
 exec [TrainingMangerStp].stp_UpdateTrack @TrackId =1 ,@TrackName ='Full Stack .NET' ,@DeptId =1
 exec [TrainingMangerStp].stp_DeleteTrack @trackid =5
 
@@ -47,7 +47,7 @@ exec [TrainingMangerStp].stp_DeleteIntack @IntakeId =5
 ----------------IntakeTrack----------------------
 ------------------------------------------------
 --Stp
-exec [TrainingMangerStp].stp_addIntakeTrack @intakeid =1 ,@trackid=6
+exec [TrainingMangerStp].stp_addIntakeTrack @intakeid =1 ,@trackid=2
 exec [TrainingMangerStp].stp_ToggleIntakeTrack @intakeid  ,@trackid ,@status
 exec [TrainingMangerStp].stp_DeleteIntakeTrack @intakeid ,@trackid
 --trg
@@ -60,11 +60,14 @@ exec [TrainingMangerStp].stp_DeleteIntakeTrack @intakeid ,@trackid
 exec [TrainingMangerStp].[stp_createsystemuser] @username = 'Admin',  @password = 'Pass@123', @email = 'admin@exam.com',  @roletype = 'admin';
 --  ﬂ—Ì  «·„«‰Ã— (≈‰  ⁄«„· Mapping ·‹ manager ⁄‘«‰ Ì—ÊÕ ·‹ training manager)
 exec [TrainingMangerStp].[stp_createsystemuser] @username = 'Mrihan', @password = 'Mrihan@123', @email = 'Mrihan@exam.com', @roletype = 'manager';
-exec [TrainingMangerStp].[stp_createsystemuser] 'InstructorOne', 'Inst@123', 'InsOne@exam.com', 'instructor';
-exec [TrainingMangerStp].[stp_createsystemuser] 'InstructorTwo', 'Inst@123', 'InsTwo@exam.com', 'instructor';
-exec [TrainingMangerStp].[stp_createsystemuser] 'StudentOne', 'Std@123', 'StdOne@exam.com', 'student';
-exec [TrainingMangerStp].[stp_createsystemuser] 'StudentTwo', 'Std@123', 'StdTwo@exam.com', 'student';
-exec [TrainingMangerStp].[stp_createsystemuser] 'StudentThree', 'Stu@123', 'StdThree@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Hassan', 'Inst@123', 'Hassan@exam.com', 'instructor';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Mariam', 'Inst@123', 'Mariam@exam.com', 'instructor';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Moatz', 'Std@123', 'Moatz@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Fady', 'Std@123', 'Fady@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Omar', 'Stu@123', 'Omar@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Marco', 'Stu@123', 'Marco@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Ragab', 'Stu@123', 'Ragab@exam.com', 'student';
+
 
 
 exec [TrainingMangerStp].[sp_updateuseraccount] @userid ,@username ,@email ,@userpassword ,@isactive ,@roleid 
@@ -76,7 +79,14 @@ exec [TrainingMangerStp].stp_DeleteUserAccount @UserId
 ----------------student------------------------
 ------------------------------------------------
 --Stp
-exec [TrainingMangerStp].[stp_addstudent] @firstname ,@lastname  ,@gender    ,@birthdate ,@stuaddress,@phone,@nationalid,@userid,@branchid,@intakeid,@trackid   
+exec [TrainingMangerStp].[stp_addstudent] 'Moatz' ,'Ahmed'  ,'M'   ,'1985-05-20' ,'Minya','30108222501474',5,1,1,1   
+select * from [userAcc].[UserAccount]
+exec [TrainingMangerStp].[stp_addstudent] @firstname ='Moatz' ,@lastname='Ahmed'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650211',@nationalid='30108222501474',@userid=5,@branchid=1,@intakeid=1,@trackid=1 
+exec [TrainingMangerStp].[stp_addstudent] @firstname ='Fady' ,@lastname='Sameh'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650214',@nationalid='30108222501476',@userid=6,@branchid=1,@intakeid=1,@trackid=1 
+exec [TrainingMangerStp].[stp_addstudent] @firstname ='Omar' ,@lastname='Kotb'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650213',@nationalid='30108222501477',@userid=7,@branchid=1,@intakeid=1,@trackid=1 
+exec [TrainingMangerStp].[stp_addstudent] @firstname ='Marco' ,@lastname='Samh'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650215',@nationalid='30108222501475',@userid=8,@branchid=1,@intakeid=1,@trackid=2
+exec [TrainingMangerStp].[stp_addstudent] @firstname ='Ragab' ,@lastname='Ahmed'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650218',@nationalid='30108222501478',@userid=9,@branchid=1,@intakeid=1,@trackid=2 
+
 exec [TrainingMangerStp].[stp_updatestudent] @studentid = 1,@stuaddress = '6th of october, giza', @phone = '01122334455';
 exec [TrainingMangerStp].[stp_deletestudent] @studentid = 5;
 --trg
@@ -86,25 +96,111 @@ exec [TrainingMangerStp].[stp_deletestudent] @studentid = 5;
 ------------------------------------------------
 --Stp
 exec [TrainingMangerStp].stp_addinstructor 
-    @firstname = 'ahmed', 
-    @lastname  = 'hassan', 
+    @firstname = 'Hassan', 
+    @lastname  = 'Eldash', 
     @birthdate = '1985-05-20', 
     @insaddress = 'nasr city, cairo', 
     @phone      = '01012345678', 
     @nationalid = '28505201234567', 
     @salary     = 7500.00, 
-    @specialization = 'sql server development', 
-    @userid     = 6,  
+    @specialization = 'JS', 
+    @userid     = 3,  
+    @deptid     = 1 
+
+    exec [TrainingMangerStp].stp_addinstructor 
+    @firstname = 'Mariam', 
+    @lastname  = 'Ahmed', 
+    @birthdate = '1985-05-20', 
+    @insaddress = 'nasr city, cairo', 
+    @phone      = '01012345679', 
+    @nationalid = '28505201234569', 
+    @salary     = 7500.00, 
+    @specialization = 'Node js', 
+    @userid     = 4,  
     @deptid     = 1 
     
+
+
 exec [TrainingMangerStp].stp_updateinstructor 
     @insid = 1,                 -- —ﬁ„ «·„œ—” ›Ì «·ÃœÊ·
     @salary = 9500.50,          -- «·—« » «·ÃœÌœ (·«“„ > 4000)
     @specialization = 'Data Science'; -- «· Œ’’ «·ÃœÌœ
 
 exec [trainingmangerstp].stp_deleteinstructor @instructoid
+
+
 --trg
 --CREATE OR ALTER TRIGGER [useracc].[trg_preventdeleteinstructor] ON [useracc].[instructor] INSTEAD OF DELETE
+-- Courses--------------
+EXEC [TrainingMangerStp].stp_AddCourse 'Web Fundamentals (HTML/CSS)', 100, 50, 'Building responsive web pages';
+EXEC [TrainingMangerStp].stp_AddCourse 'JavaScript & ES6', 100, 50, 'Modern JavaScript for Web Development';
+EXEC [TrainingMangerStp].stp_AddCourse 'Introduction to Linux', 100, 50, 'Linux Administration and Shell Scripting';
+EXEC [TrainingMangerStp].stp_AddCourse 'Cloud Computing (Azure)', 100, 60, 'Deploying and managing cloud resources';
+
+--CourseInstance--------------------
+EXEC [TrainingMangerStp].stp_addCourseInstance
+    @courseid=1     ,
+    @instructorid=1 ,
+    @branchid=1     ,
+    @trackid=1      ,
+    @intakeid=1     ,
+    @academicyear=2026 
+
+
+    EXEC [TrainingMangerStp].stp_addCourseInstance
+    @courseid=2     ,
+    @instructorid=1 ,
+    @branchid=1     ,
+    @trackid=1      ,
+    @intakeid=1     ,
+    @academicyear=2026 
+
+    EXEC [TrainingMangerStp].stp_addCourseInstance
+    @courseid=3     ,
+    @instructorid=2 ,
+    @branchid=1     ,
+    @trackid=2      ,
+    @intakeid=1     ,
+    @academicyear=2026 
+
+      EXEC [TrainingMangerStp].stp_addCourseInstance
+    @courseid=4     ,
+    @instructorid=2 ,
+    @branchid=1     ,
+    @trackid=2      ,
+    @intakeid=1     ,
+    @academicyear=2026 
+
+    select * from [Courses].[Course]
+        select * from [userAcc].[Instructor]
+            select * from [orgnization].[Track]
+--Question------------------------------------------------------
+('mcq', 't/f', 'text')
+EXEC [InstructorStp].stp_createquestion
+    @questiontext='html html html html ',
+    @questiontype='t/f'  ,        
+    @correctanswer='True' ,
+    @bestanswer='True'    ,
+    @points =2      ,
+    @courseid=1     
+
+
+    EXEC [InstructorStp].stp_createquestion
+    @questiontext='css html html html ',
+    @questiontype='mcq'  ,        
+    @correctanswer='A' ,
+    @bestanswer='A'    ,
+    @points =4      ,
+    @courseid=1,
+    @optionlist = 'A-omar |B-Moatz |C-Fady'
+
+        EXEC [InstructorStp].stp_createquestion
+    @questiontext='JS html html html ',
+    @questiontype='text'  ,        
+    @bestanswer=' js js js'    ,
+    @points =4      ,
+    @courseid=1
+
 ---------------------------------------------
 --------------VIEWS--------------------------
 ---------------------------------------------
