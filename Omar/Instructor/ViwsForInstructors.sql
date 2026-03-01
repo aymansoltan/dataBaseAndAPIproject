@@ -1,171 +1,135 @@
-USE [ExaminationSystemDB]
-GO
+use [ExaminationSystemDB]
+go
 
-CREATE OR ALTER VIEW [InstructorViews].vw_InstructorDetails
-AS
-SELECT
-    -- بيانات الـ Instructor
-    I.InsId,
-    I.FirstName,
-    I.LastName,
-    I.FirstName + ' ' + I.LastName   AS FullName,
+create or alter view [InstructorViews].vw_InstructorProfile
+as
+    select
+        -- personal info
+        i.FirstName + ' ' + i.LastName  as FullName,
+        i.BirthDate,
+        i.Age,
+        i.Phone,
+        i.InsAddress                    as [Address],
+        i.NationalID,
+        i.Specialization,
+        i.HireDate,
+        i.Salary,
 
-    -- بيانات الـ UserAccount
-    UA.UserName,
-    UA.Email,
-    UA.isActive,
+        -- account info
+        ua.UserName,
+        ua.Email,
+        ua.createdAt                    as MemberSince,
 
-    -- بيانات الـ Branch
-    B.BranchId,
-    B.BranchName,
+        -- organization info
+        d.DeptName                      as Department,
+        b.BranchName
 
-    -- بيانات الـ Department
-    D.DepartmentId,
-    D.DepartmentName
+    from   [userAcc].Instructor          i
+    inner join [userAcc].UserAccount     ua on i.UserId   = ua.UserId
+    inner join [orgnization].Department  d  on i.DeptId   = d.DeptId
+    inner join [orgnization].Branch      b  on d.BranchId = b.BranchId
 
-FROM        [userAcc].Instructor   I
-INNER JOIN  [userAcc].UserAccount  UA ON I.UserId       = UA.UserId
-INNER JOIN  [userAcc].Branch       B  ON I.BranchId     = B.BranchId
-INNER JOIN  [userAcc].Department   D  ON I.DepartmentId = D.DepartmentId
-WHERE       UA.UserName = replace(suser_name(), 'login', 'user')
-  AND       UA.isActive = 1;
-GO
+    -- each instructor sees only their own data
+    where  ua.UserName = replace(suser_name(), 'login', 'user')
+      and  ua.isActive = 1
+      and  i.isActive  = 1;
+go
 
------------------------------------------------------------------------
+---------------------------------------------------------------
 
+use [ExaminationSystemDB]
+go
 
-USE [ExaminationSystemDB]
-GO
+create or alter view [InstructorViews].vw_InstructorCourses
+as
+    select
+        -- course info
+        c.CourseName,
+        ci.AcademicYear,
 
-CREATE OR ALTER VIEW [InstructorViews].vw_InstructorMyExams
-AS
-SELECT
-    -- بيانات الـ Instructor
-    I.InsId,
-    I.FirstName + ' ' + I.LastName   AS InstructorName,
-    UA.UserName                       AS InstructorUserName,
+        -- organization info
+        t.TrackName,
+        it.IntakeName,
+        b.BranchName,
 
-    -- بيانات الـ Course
-    C.CourseId,
-    C.CourseName,
-    C.CourseCode,
+        -- number of students in this course instance
+        (
+            select count(*)
+            from   [userAcc].Student s
+            where  s.TrackId  = ci.TrackId
+              and  s.IntakeId = ci.IntakeId
+              and  s.BranchId = ci.BranchId
+              and  s.isActive = 1
+        )                                           as StudentCount
 
-    -- بيانات الـ CourseInstance
-    CI.CourseInstanceId,
-    CI.Year,
-    CI.Semester,
+    from   [userAcc].Instructor          i
+    inner join [userAcc].UserAccount     ua on i.UserId             = ua.UserId
+    inner join [Courses].CourseInstance  ci on i.InsId              = ci.InstructorId
+    inner join [Courses].Course          c  on ci.CourseId          = c.CourseId
+    inner join [orgnization].Track       t  on ci.TrackId           = t.TrackId
+    inner join [orgnization].Intake      it on ci.IntakeId          = it.IntakeId
+    inner join [orgnization].Branch      b  on ci.BranchId          = b.BranchId
 
-    -- بيانات الـ Track + Intake + Branch
-    T.TrackName,
-    IT.IntakeName,
-    B.BranchName,
+    -- each instructor sees only their own courses
+    where  ua.UserName = replace(suser_name(), 'login', 'user')
+      and  ua.isActive = 1
+      and  i.isActive  = 1
+      and  c.isActive  = 1;
+go
+-----------------------------------------------------------
 
-    -- بيانات الـ Exam
-    E.ExamId,
-    E.ExamType,
-    E.StartTime,
-    E.EndTime,
-    E.TotalGrade,
-    E.IsDeleted,
+use [ExaminationSystemDB]
+go
 
-    -- حالة الامتحان
-    CASE
-        WHEN E.IsDeleted = 1                        THEN 'Cancelled'
-        WHEN GETDATE() < E.StartTime                THEN 'Upcoming'
-        WHEN GETDATE() BETWEEN E.StartTime
-                           AND E.EndTime            THEN 'In Progress'
-        ELSE                                             'Ended'
-    END AS ExamStatus,
+create or alter view [InstructorViews].vw_InstructorExams
+as
+    select
+        -- exam info
+        e.ExamTitle,
+        e.ExamType,
 
-    -- عدد الأسئلة
-    (
-        SELECT COUNT(*)
-        FROM   [exams].ExamQuestion EQ
-        WHERE  EQ.ExamId = E.ExamId
-    ) AS TotalQuestions,
+        -- course info
+        c.CourseName,
+        ci.AcademicYear,
 
-    -- عدد الطلاب اللي اجوا الامتحان
-    (
-        SELECT COUNT(DISTINCT SA.StudentId)
-        FROM   [exams].Student_Answer SA
-        WHERE  SA.ExamId = E.ExamId
-    ) AS StudentsAnswered,
+        -- timing
+        e.StartTime,
+        e.EndTime,
+        e.DurationMinutes,
 
-    -- عدد الناجحين
-    (
-        SELECT COUNT(*)
-        FROM   [exams].Student_Exam_Result R
-        WHERE  R.ExamId  = E.ExamId
-          AND  R.IsPassed = 1
-    ) AS PassedCount,
+        -- exam status
+        case
+            when e.IsDeleted = 1                              then 'Cancelled'
+            when getdate() < e.StartTime                      then 'Upcoming'
+            when getdate() between e.StartTime and e.EndTime  then 'In Progress'
+            else                                                   'Ended'
+        end                                                   as ExamStatus,
 
-    -- عدد الراسبين
-    (
-        SELECT COUNT(*)
-        FROM   [exams].Student_Exam_Result R
-        WHERE  R.ExamId  = E.ExamId
-          AND  R.IsPassed = 0
-    ) AS FailedCount
+        -- total questions in exam
+        (
+            select count(*)
+            from   [exams].ExamQuestion eq
+            where  eq.ExamId = e.ExamId
+        )                                                     as TotalQuestions
 
-FROM        [userAcc].UserAccount    UA
-INNER JOIN  [userAcc].Instructor     I   ON UA.UserId           = I.UserId
-INNER JOIN  [Courses].CourseInstance CI  ON I.InsId             = CI.InstructorId
-INNER JOIN  [Courses].Course         C   ON CI.CourseId         = C.CourseId
-INNER JOIN  [userAcc].Track          T   ON CI.TrackId          = T.TrackId
-INNER JOIN  [userAcc].Intake         IT  ON CI.IntakeId         = IT.IntakeId
-INNER JOIN  [userAcc].Branch         B   ON CI.BranchId         = B.BranchId
-INNER JOIN  [exams].Exam             E   ON CI.CourseInstanceId = E.CourseInstanceId
-WHERE       UA.UserName = replace(suser_name(), 'login', 'user')
-  AND       UA.isActive = 1;
-GO
+    from   [userAcc].Instructor          i
+    inner join [userAcc].UserAccount     ua on i.UserId             = ua.UserId
+    inner join [Courses].CourseInstance  ci on i.InsId              = ci.InstructorId
+    inner join [Courses].Course          c  on ci.CourseId          = c.CourseId
+    inner join [exams].Exam              e  on ci.CourseInstanceId  = e.CourseInstanceId
 
+    -- each instructor sees only their own exams
+    where  ua.UserName = replace(suser_name(), 'login', 'user')
+      and  ua.isActive = 1
+      and  i.isActive  = 1;
+go
 
--------------------------------------------------------
+--------------------------------------------------------------
 
+use [ExaminationSystemDB]
+go
 
-USE [ExaminationSystemDB]
-GO
-
-CREATE OR ALTER VIEW [InstructorViews].vw_InstructorMyCourses
-AS
-SELECT
-    -- بيانات الـ Instructor
-    I.InsId,
-    I.FirstName + ' ' + I.LastName  AS InstructorName,
-    UA.UserName,
-
-    -- بيانات الـ CourseInstance
-    CI.CourseInstanceId,
-    CI.Year,
-    CI.Semester,
-
-    -- بيانات الـ Course
-    C.CourseId,
-    C.CourseName,
-    C.CourseCode,
-    C.CreditHours,
-
-    -- بيانات الـ Track + Intake + Branch
-    T.TrackId,
-    T.TrackName,
-    IT.IntakeId,
-    IT.IntakeName,
-    B.BranchId,
-    B.BranchName
-
-FROM        [userAcc].UserAccount    UA
-INNER JOIN  [userAcc].Instructor     I   ON UA.UserId           = I.UserId
-INNER JOIN  [Courses].CourseInstance CI  ON I.InsId             = CI.InstructorId
-INNER JOIN  [Courses].Course         C   ON CI.CourseId         = C.CourseId
-INNER JOIN  [userAcc].Track          T   ON CI.TrackId          = T.TrackId
-INNER JOIN  [userAcc].Intake         IT  ON CI.IntakeId         = IT.IntakeId
-INNER JOIN  [userAcc].Branch         B   ON CI.BranchId         = B.BranchId
-WHERE       UA.UserName = replace(suser_name(), 'login', 'user')
-  AND       UA.isActive = 1;
-GO
---------------------------------------------------------------------------
-
-create or alter procedure [InstructorStp].stp_InstructorExamResultsFailorPass
+create or alter procedure [InstructorStp].stp_InstructorStudentResultsPassOrFail
     @Filter nvarchar(10)  -- 'Pass' or 'Fail'
 as
 begin
@@ -175,17 +139,17 @@ begin
         -- ══════════════════════════════════════════════════════════════
         -- step 1: get current instructor from sql server login
         -- ══════════════════════════════════════════════════════════════
-        declare @CurrentInstructorId int;
+        declare @CurrentInsId int;
 
-        select @CurrentInstructorId = i.InstructorId
+        select @CurrentInsId = i.InsId
         from   [userAcc].UserAccount ua
         inner join [userAcc].Instructor i
-            on ua.UserId   = i.UserId
-           and i.isActive  = 1
+            on ua.UserId  = i.UserId
+           and i.isActive = 1
         where  ua.UserName = replace(suser_name(), 'login', 'user')
           and  ua.isActive = 1;
 
-        if @CurrentInstructorId is null
+        if @CurrentInsId is null
         begin
             raiserror('Access Denied. Only active instructors can view results.', 16, 1);
             return;
@@ -205,14 +169,14 @@ begin
         -- ══════════════════════════════════════════════════════════════
         if not exists (
             select 1
-            from   [exams].Student_Exam_Result    r
-            inner join [exams].Exam               e  on r.ExamId           = e.ExamId
-            inner join [Courses].CourseInstance   ci on e.CourseInstanceId = ci.CourseInstanceId
-            where  ci.InstructorId = @CurrentInstructorId
+            from   [exams].Student_Exam_Result  r
+            inner join [exams].Exam             e  on r.ExamId          = e.ExamId
+            inner join [Courses].CourseInstance ci on e.CourseInstanceId = ci.CourseInstanceId
+            where  ci.InstructorId = @CurrentInsId
               and  e.IsDeleted     = 0
         )
         begin
-            print 'No exam results found for your courses.';
+            print 'No exam results found for your courses yet.';
             return;
         end
 
@@ -223,18 +187,18 @@ begin
 
         if not exists (
             select 1
-            from   [exams].Student_Exam_Result    r
-            inner join [exams].Exam               e  on r.ExamId           = e.ExamId
-            inner join [Courses].CourseInstance   ci on e.CourseInstanceId = ci.CourseInstanceId
-            where  ci.InstructorId = @CurrentInstructorId
+            from   [exams].Student_Exam_Result  r
+            inner join [exams].Exam             e  on r.ExamId          = e.ExamId
+            inner join [Courses].CourseInstance ci on e.CourseInstanceId = ci.CourseInstanceId
+            where  ci.InstructorId = @CurrentInsId
               and  r.IsPassed      = @IsPassed
               and  e.IsDeleted     = 0
         )
         begin
             if @Filter = 'Pass'
-                print 'No students have passed any exams in your courses yet.';
+                print 'No passed students found in your courses.';
             else
-                print 'No students have failed any exams in your courses.';
+                print 'No failed students found in your courses.';
             return;
         end
 
@@ -243,32 +207,53 @@ begin
         -- ══════════════════════════════════════════════════════════════
         select
             -- student info
-            s.FirstName + ' ' + s.LastName             as StudentName,
+            s.FirstName + ' ' + s.LastName      as StudentName,
 
             -- exam info
             e.ExamTitle,
             e.ExamType,
-            ci.AcademicYear,
-            cast(e.StartTime as date)                   as ExamDate,
+            cast(e.StartTime as date)            as ExamDate,
 
             -- course info
             c.CourseName,
+            ci.AcademicYear,
 
             -- grades
-            r.TotalGrade                                as StudentGrade,
-            e.TotalGrade                                as ExamTotalGrade
+            r.TotalGrade                         as StudentGrade,
+            e.TotalGrade                         as ExamTotalGrade,
 
-        from   [exams].Student_Exam_Result    r
-        inner join [exams].Exam               e   on r.ExamId           = e.ExamId
-        inner join [Courses].CourseInstance   ci  on e.CourseInstanceId = ci.CourseInstanceId
-        inner join [Courses].Course           c   on ci.CourseId        = c.CourseId
-        inner join [userAcc].Student          s   on r.StudentId        = s.StudentId
+            -- grade based on course min/max degree
+            case
+                when r.TotalGrade * 1.0 / e.TotalGrade
+                     < c.MinDegree * 1.0 / c.MaxDegree
+                then 'Fail'
 
-        where  ci.InstructorId = @CurrentInstructorId
+                when r.TotalGrade * 1.0 / e.TotalGrade
+                     < (c.MinDegree * 1.0 / c.MaxDegree) + 0.10
+                then 'Pass'
+
+                when r.TotalGrade * 1.0 / e.TotalGrade
+                     < (c.MinDegree * 1.0 / c.MaxDegree) + 0.20
+                then 'Good'
+
+                when r.TotalGrade * 1.0 / e.TotalGrade
+                     < (c.MinDegree * 1.0 / c.MaxDegree) + 0.30
+                then 'Very Good'
+
+                else 'Excellent'
+            end                                  as Grade
+
+        from   [exams].Student_Exam_Result   r
+        inner join [exams].Exam              e  on r.ExamId           = e.ExamId
+        inner join [Courses].CourseInstance  ci on e.CourseInstanceId = ci.CourseInstanceId
+        inner join [Courses].Course          c  on ci.CourseId        = c.CourseId
+        inner join [userAcc].Student         s  on r.StudentId        = s.StudentId
+
+        where  ci.InstructorId = @CurrentInsId
           and  r.IsPassed      = @IsPassed
           and  e.IsDeleted     = 0
 
-        order by e.StartTime desc;
+        order by c.CourseName, ci.AcademicYear, s.FirstName;
 
     end try
     begin catch
