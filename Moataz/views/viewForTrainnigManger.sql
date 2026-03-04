@@ -10,7 +10,7 @@ select
     [createdat] as [creation_time]
 from [orgnization].[branch];
 go
-
+-----------------------------------------------
 create  view [MangerViews].v_department_branch_summary
 as
 select 
@@ -25,7 +25,7 @@ from [orgnization].[department] as dept
 join [orgnization].[branch] as br
     on dept.branchid = br.branchid;
 go
-
+-----------------------------------------------------
 create  view [MangerViews].v_track_department_branch_details
 as
 select
@@ -44,7 +44,7 @@ join [orgnization].[branch] as br
     on dept.branchid = br.branchid;
 
 go
-
+-----------------------------------------------------------
 create view [MangerViews].v_track_Intake_details
 as
 select 
@@ -59,7 +59,7 @@ from [orgnization].[Track] as tr join [orgnization].[IntakeTrack] as ITr
 on tr.[TrackId] = ITr.TrackId join [orgnization].[Intake] as ik
 on ITr.IntakeId = ik.[IntakeId]
 go
-
+--------------------------------------------------------
 create view [MangerViews].v_orgnizationSummarySchema
 as 
 select 
@@ -77,6 +77,7 @@ from [orgnization].[branch] as br right join [orgnization].[department] as dept
     on tr.trackid = itr.trackid left join [orgnization].[intake] as ik 
     on itr.intakeid = ik.intakeid;
 go
+-------------------------------------------------
 create or alter view [MangerViews].v_org_integrity_check
 as
 SELECT 
@@ -88,6 +89,7 @@ LEFT JOIN [orgnization].[Department] dept ON br.BranchId = dept.BranchId
 LEFT JOIN [orgnization].[Track] tr ON dept.DeptId = tr.DeprtmentId
 GROUP BY br.BranchName;
 go
+----------------------------------------------------
 create or alter view [MangerViews].v_active_intake_map
 as
 select 
@@ -100,6 +102,7 @@ join [orgnization].[track] tr on itr.trackid = tr.trackid
 join [orgnization].[department] dept on tr.deprtmentid = dept.deptid
 where ik.isactive = 1 and tr.isactive = 1;
 go
+-----------------------------------------------------
 create  view [MangerViews].v_numTrackInIntake
 as
 select
@@ -120,6 +123,7 @@ from [orgnization].[intake] ik
 left join [orgnization].[intaketrack] itr on ik.intakeid = itr.intakeid
 group by ik.intakeid, ik.intakename, ik.createdat;
 go
+----------------------------------------------------
 create  view [MangerViews].v_student_comprehensive_profile
 as
 select 
@@ -146,9 +150,8 @@ join [orgnization].[branch] br on s.[branchid] = br.[branchid]
 join [orgnization].[track] tr on s.[trackid] = tr.[trackid] 
 join [orgnization].[intake] ik on s.[intakeid] = ik.[intakeid]
 where r.[RoleName] ='student'
-
-
 go
+-----------------------------------------------------
 create  view [MangerViews].v_instructor_profiles
 as
 select 
@@ -174,7 +177,7 @@ join [useracc].[instructor] ins on ua.[userid] = ins.[userid]
 join [orgnization].[department] dept on ins.[deptid] = dept.[deptid]
 where r.[rolename] = 'instructor';
 go
-
+----------------------------------------------------
 create  view [MangerViews].v_Student_Courses_Instructore
 as
 select 
@@ -198,7 +201,7 @@ join [Courses].[Course] c on ci.[CourseId] = c.[CourseId]
 join [userAcc].[Instructor] ins on ci.[InstructorId] = ins.[InsId];
 go
 
-
+----------------------------------------------------
 create  view [MangerViews].v_question_bank_summary
 as
 select 
@@ -211,7 +214,7 @@ join [courses].course c on q.courseid = c.courseid
 where q.isdeleted = 0
 group by c.coursename, q.questiontype;
 go
-
+-------------------------------------------------------
 create  view [MangerViews].v_exams_comprehensive_details
 as
 select 
@@ -234,8 +237,8 @@ join [Courses].[Course] as cr on cr.[CourseId] = cri.[CourseId]
 join [userAcc].[Instructor] as ins on cri.[InstructorId] = ins.[InsId]
 where ex.[IsDeleted] = 0;
 go
-
-create view [MangerViews].v_students_final_results
+------------------------------------------------------
+create  view [MangerViews].v_students_final_results
 as
 select 
     concat(s.[FirstName], ' ', s.[LastName]) as [student_name],
@@ -253,8 +256,8 @@ join [exams].[Exam] as ex on ser.[ExamId] = ex.[ExamId]
 join [Courses].[CourseInstance] as ci on ex.[CourseInstanceId] = ci.[CourseInstanceId] 
 join [Courses].[Course] as cr on ci.[CourseId] = cr.[CourseId];
 go
-
-create proc[TrainingMangerStp].Stp_ViewStudentData 
+---------------------------------------------
+create or alter proc[TrainingMangerStp].Stp_ViewStudentData 
     @StudentId INT 
 as
 begin
@@ -287,8 +290,8 @@ begin
     WHERE s.[StudentId] =@StudentId
 END
 GO
-
-CREATE  PROC [TrainingMangerStp].Stp_ViewinstructoreData 
+------------------------------------------------------
+CREATE or alter PROC [TrainingMangerStp].Stp_ViewinstructoreData 
     @InstructorID INT 
 AS
 BEGIN

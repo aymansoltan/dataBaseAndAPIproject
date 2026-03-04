@@ -9,23 +9,25 @@ go
 
 
 
-
-
-
-deny insert , update , delete ,select on schema :: [orgnization] to  instructoreRole ,trainningMangerRole ,studentRole ,[adminrole]
-deny insert , update , delete ,select on schema :: [Courses] to  instructoreRole ,trainningMangerRole ,studentRole ,[adminrole]
-deny insert , update , delete ,select on schema :: [exams]  to   instructoreRole ,trainningMangerRole ,studentRole ,[adminrole]
-deny insert , update , delete ,select on schema :: [userAcc] to   instructoreRole ,trainningMangerRole ,studentRole ,[adminrole]
-
 deny execute on schema :: [trainingmangerstp] to studentrole, instructorerole,adminRole;
 deny select on schema :: [MangerViews] to studentRole, instructoreRole ,adminRole;
 
-deny execute on schema :: [InstructorStp] to studentrole, trainningMangerRole,adminRole;
+deny execute on schema :: [InstructorStp] to trainningMangerRole ,studentRole ,[adminrole]
+deny select on schema :: [InstructorViews] to trainningMangerRole ,studentRole ,[adminrole]
+
+deny execute on schema :: [StudentStp] to instructoreRole ,trainningMangerRole  ,[adminrole]
+deny select on schema :: [studentViews] to instructoreRole ,trainningMangerRole  ,[adminrole]
+
+deny execute on schema :: [admin] to instructoreRole ,trainningMangerRole  ,studentRole
 
 grant execute on schema :: [trainingmangerstp] to trainningmangerrole;
 grant select on schema :: [MangerViews] to trainningMangerRole;
 
 grant execute on schema :: [InstructorStp] to instructoreRole;
-    grant execute on schema :: [StudentStp] to studentRole;
+grant select on schema :: [InstructorViews] to instructoreRole;
 
-select * from [userAcc].[Instructor]
+grant execute on schema :: [StudentStp] to studentRole;
+grant select on schema :: [studentViews] to studentRole;
+
+grant execute on schema :: [admin] to [adminrole];
+

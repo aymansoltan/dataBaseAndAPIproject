@@ -22,7 +22,7 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua 
         join [useracc].instructor i on ua.userid = i.userid 
-        where ua.username =suser_name()  and i.isactive = 'true';
+        where ua.username =replace(suser_name() ,'login' , 'user')  and i.isactive = 1;
 
       
         if @currentinsid is null
@@ -144,8 +144,7 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua
         inner join [useracc].instructor i on ua.userid = i.userid
-        where ua.username = suser_name()
-          and i.isactive = 'true';
+        where ua.username =replace(suser_name() ,'login' , 'user')  and i.isactive = 1;
 
         if @currentinsid is null
         begin
@@ -265,8 +264,7 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua
         inner join [useracc].instructor i on ua.userid = i.userid
-        where ua.username = suser_name()
-          and i.isactive = 'true';
+        where ua.username = replace(suser_name() ,'login' , 'user')  and i.isactive = 1;
 
         if @currentinsid is null
         begin

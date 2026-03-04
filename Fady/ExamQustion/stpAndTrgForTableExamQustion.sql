@@ -86,7 +86,7 @@ create or alter procedure [InstructorStp].stp_updateexamquestion
     @examid        int,
     @oldquestionid int           = null,   
     @newquestionid int           = null,   
-    @swaplist      nvarchar(max) = null    
+    @swaplist      nvarchar(max) = null 
 as
 begin
     set nocount on;

@@ -1,3 +1,12 @@
+
+INSERT INTO [userAcc].UserRole (RoleName)
+VALUES 
+('admin'), 
+('instructor'), 
+('student'), 
+('training manager'); 
+GO
+
 ------------------------------------------------
 ----------------Branch--------------------------
 ------------------------------------------------
@@ -63,13 +72,13 @@ exec [TrainingMangerStp].stp_DeleteIntakeTrack @intakeid ,@trackid
 
 exec [TrainingMangerStp].[stp_createsystemuser] @username = 'Admin',  @password = 'Pass@123', @email = 'admin@exam.com',  @roletype = 'admin';
 exec [TrainingMangerStp].[stp_createsystemuser] @username = 'Mrihan', @password = 'Mrihan@123', @email = 'Mrihan@exam.com', @roletype = 'manager';
-exec [TrainingMangerStp].[stp_createsystemuser] 'Hassan', 'Inst@123', 'Hassan@exam.com', 'instructor';
-exec [TrainingMangerStp].[stp_createsystemuser] 'Mariam', 'Inst@123', 'Mariam@exam.com', 'instructor';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Hassan', 'Ins@123', 'Hassan@exam.com', 'instructor';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Mariam', 'Ins@123', 'Mariam@exam.com', 'instructor';
 exec [TrainingMangerStp].[stp_createsystemuser] 'Moatz', 'Std@123', 'Moatz@exam.com', 'student';
 exec [TrainingMangerStp].[stp_createsystemuser] 'Fady', 'Std@123', 'Fady@exam.com', 'student';
-exec [TrainingMangerStp].[stp_createsystemuser] 'Omar', 'Stu@123', 'Omar@exam.com', 'student';
-exec [TrainingMangerStp].[stp_createsystemuser] 'Marco', 'Stu@123', 'Marco@exam.com', 'student';
-exec [TrainingMangerStp].[stp_createsystemuser] 'Ragab', 'Stu@123', 'Ragab@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Omar', 'Std@123', 'Omar@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Marco', 'Std@123', 'Marco@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Ragab', 'Std@123', 'Ragab@exam.com', 'student';
 
 
 
@@ -172,15 +181,13 @@ EXEC [TrainingMangerStp].stp_addCourseInstance
     @intakeid=1     ,
     @academicyear=2026 
 
-select * from [userAcc].[UserAccount]
-
-
-
 
 
 ---------------------------------------------
 --------------VIEWS--------------------------
 ---------------------------------------------
+EXECUTE AS USER = 'mrihanuser';
+revert
 go
 exec [TrainingMangerStp].Stp_ViewinstructoreData @InstructorID =1;
 go

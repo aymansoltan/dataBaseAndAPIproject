@@ -129,7 +129,7 @@ begin
     end
 
     delete from [useracc].[instructor] where [insid] = @instructoid;
-end;
+end
 go
 
 ------------------------------------------------------------

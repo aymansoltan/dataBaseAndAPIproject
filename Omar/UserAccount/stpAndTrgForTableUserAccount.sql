@@ -41,7 +41,7 @@ begin
 
   
         declare @loginname nvarchar(100) = @cleanname + 'login';
-        declare @dbusername nvarchar(100) = @cleanname + 'login';
+        declare @dbusername nvarchar(100) = @cleanname + 'user';
         
         if exists (select 1 from sys.server_principals where name = @loginname)
             throw 50003, 'error: login already exists on the server.', 1;

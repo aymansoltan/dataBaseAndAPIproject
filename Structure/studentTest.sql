@@ -1,25 +1,44 @@
+select * from [userAcc].[UserAccount]
+EXECUTE AS USER = 'moatzuser';
+EXECUTE AS USER = 'marcouser'; --id 
+EXECUTE AS USER = 'ragabuser'; --id
+revert
+select SUSER_SNAME()
 exec [StudentStp].stp_StudentSubmitAnswer 
     @ExamId=4,
     @QuestionId =89,
-    @StudentResponse ='true'
-    exec [StudentStp].stp_StudentSubmitAnswer 
+    @StudentResponse ='true' --true 2points
+go
+exec [StudentStp].stp_StudentSubmitAnswer 
     @ExamId=4,
     @QuestionId =90,
-    @StudentResponse ='true'
-    exec [StudentStp].stp_StudentSubmitAnswer 
+    @StudentResponse ='true' --error
+go 
+exec [StudentStp].stp_StudentSubmitAnswer 
+    @ExamId=4,
+    @QuestionId =91,
+    @StudentResponse ='true' -- false answer 2 points
+go 
+exec [StudentStp].stp_StudentSubmitAnswer 
     @ExamId=4,
     @QuestionId =99,
-    @StudentResponse ='a'
-    exec [StudentStp].stp_StudentSubmitAnswer 
+    @StudentResponse ='a' -- true 4points
+go
+exec [StudentStp].stp_StudentSubmitAnswer 
     @ExamId=4,
-    @QuestionId =103,
-    @StudentResponse ='b'
-    exec [StudentStp].stp_StudentSubmitAnswer 
+    @QuestionId =105,
+    @StudentResponse ='a' -- true 4 points
+go
+exec [StudentStp].stp_StudentSubmitAnswer 
     @ExamId=4,
     @QuestionId =113,
-    @StudentResponse =' container  Azure '
-exec [InstructorStp].stp_InstructorGradeText
+    @StudentResponse ='container Azure' -- text
+go
+
+EXECUTE AS USER = 'mariamuser';
+go
+exec [InstructorStp].stp_InstructorGradeText --marco 4 points
     @ExamId   =   4   ,
-    @StudentId = 4    ,
+    @StudentId = 8    ,
     @QuestionId =113     ,
     @InstructorGrade =2

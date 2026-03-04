@@ -2,6 +2,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [studentViews].vw_StudentProfile
+with execute as owner
 as
     select
         -- personal info
@@ -43,6 +44,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [studentViews].vw_StudentCourses
+with execute as owner
 as
     select
         -- course info
@@ -78,6 +80,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [studentViews].vw_StudentExamResults
+with execute as owner
 as
     select
         -- exam info
@@ -134,6 +137,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [studentViews].vw_StudentUpcomingExams
+with execute as owner
 as
     select
         -- exam info
@@ -174,6 +178,7 @@ go
 
 create or alter procedure [StudentStp].stp_StudentExamResultsFailorPass
     @Filter nvarchar(10)  -- 'Pass' or 'Fail'
+    with execute as owner
 as
 begin
     set nocount on;
@@ -292,3 +297,5 @@ begin
     end catch
 end
 go
+
+

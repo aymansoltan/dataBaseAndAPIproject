@@ -4,6 +4,7 @@ go
 create or alter proc [TrainingMangerStp].stp_addIntakeTrack
     @intakeid int,
     @trackid int
+
 as
 begin
     begin try
@@ -35,6 +36,7 @@ create or alter proc [TrainingMangerStp].stp_ToggleIntakeTrack
     @intakeid int,
     @trackid int,
     @status bit
+
 as
 begin
     set nocount on;
@@ -54,6 +56,7 @@ go
 create or alter proc [TrainingMangerStp].stp_DeleteIntakeTrack
     @intakeid int,
     @trackid int
+
 as
 begin
     begin try

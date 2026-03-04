@@ -57,6 +57,7 @@ create proc [TrainingMangerStp].stp_UpdateDepartment
     @DeptId int,
     @DeptName nvarchar(50),
     @BranchId int
+
 as
 begin
     begin try
@@ -95,6 +96,7 @@ go
 
 create proc [TrainingMangerStp].stp_DeleteDepartment
     @DeptId int
+
 as
 begin
     begin try

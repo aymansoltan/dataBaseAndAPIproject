@@ -2,6 +2,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [InstructorViews].vw_InstructorProfile
+
 as
     select
         -- personal info
@@ -30,7 +31,7 @@ as
     inner join [orgnization].Branch      b  on d.BranchId = b.BranchId
 
     -- each instructor sees only their own data
-    where  ua.UserName = replace(suser_name(), 'login', 'user')
+    where  ua.UserName = suser_name()
       and  ua.isActive = 1
       and  i.isActive  = 1;
 go
@@ -40,7 +41,7 @@ go
 use [ExaminationSystemDB]
 go
 
-create or alter view [InstructorViews].vw_InstructorCourses
+create or alter view [InstructorViews].vw_InstructorCourses 
 as
     select
         -- course info
@@ -71,7 +72,7 @@ as
     inner join [orgnization].Branch      b  on ci.BranchId          = b.BranchId
 
     -- each instructor sees only their own courses
-    where  ua.UserName = replace(suser_name(), 'login', 'user')
+    where  ua.UserName =  suser_name()
       and  ua.isActive = 1
       and  i.isActive  = 1
       and  c.isActive  = 1;
@@ -82,6 +83,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [InstructorViews].vw_InstructorExams
+
 as
     select
         -- exam info
@@ -119,7 +121,7 @@ as
     inner join [exams].Exam              e  on ci.CourseInstanceId  = e.CourseInstanceId
 
     -- each instructor sees only their own exams
-    where  ua.UserName = replace(suser_name(), 'login', 'user')
+    where  ua.UserName =  suser_name()
       and  ua.isActive = 1
       and  i.isActive  = 1;
 go
@@ -127,6 +129,7 @@ go
 --------------------------------------------------------------
 
 use [ExaminationSystemDB]
+
 go
 
 create or alter procedure [InstructorStp].stp_InstructorStudentResultsPassOrFail
@@ -146,7 +149,7 @@ begin
         inner join [userAcc].Instructor i
             on ua.UserId  = i.UserId
            and i.isActive = 1
-        where  ua.UserName = replace(suser_name(), 'login', 'user')
+        where  ua.UserName =  suser_name()
           and  ua.isActive = 1;
 
         if @CurrentInsId is null

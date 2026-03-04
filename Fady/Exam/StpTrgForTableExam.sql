@@ -28,9 +28,7 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua
         inner join [useracc].instructor i on ua.userid = i.userid
-        where ua.username = suser_name()
-          and i.isactive = 'true';
-
+        where ua.username = replace(suser_name() ,'login' , 'user')  and i.isactive = 1;
         if @currentinsid is null
             throw 50001, 'access denied. only active instructors can create exams.', 1;
 
@@ -44,7 +42,20 @@ begin
           and ci.intakeid = @intakeid;
 
         if @courseid is null
-            throw 50002, 'invalid course instance or mismatch in branch/track/intake data.', 1;
+            throw 50002, 'you canot put this exam for course beacuse you dont have this course ', 1;
+
+        if @examtype = 'corrective'
+        begin
+            if not exists (
+                select 1
+                from   [exams].Exam
+                where  CourseInstanceId = @courseinstanceid
+                and  ExamType         = 'Regular'
+                and  IsDeleted        = 0
+            )
+                throw 50010, 'Cannot create a Corrective exam without
+                a prior Regular exam for this course instance.', 1;
+        end
 
         if len(@examtitle) < 3 
             throw 50003, 'exam title must be at least 3 characters.', 1;
@@ -160,6 +171,7 @@ create or alter procedure [InstructorStp].stp_updateexam
     @trackid          int,
     @intakeid         int,
     @isdeleted        bit = 0
+    with execute as owner
 as
 begin
     set nocount on;
@@ -174,7 +186,7 @@ begin
         select  @currentinsid = i.insid
         from [useracc].useraccount ua
         join [useracc].instructor i on ua.userid = i.userid and i.isactive = 1
-        where ua.username = suser_name();
+        where ua.username = replace(suser_name() ,'login' , 'user') 
 
         if @currentinsid is null 
             throw 50001, 'access denied: instructor profile not found or inactive.', 1;
@@ -258,6 +270,7 @@ end;
 go
 create or alter procedure [InstructorStp].stp_deleteexam
     @examid int
+    with execute as owner
 as
 begin
     set nocount on;
@@ -269,7 +282,7 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua
         join [useracc].instructor i on ua.userid = i.userid and i.isactive = 1
-        where ua.username = suser_name();
+        where ua.username = replace(suser_name() ,'login' , 'user')  
 
         if @currentinsid is null 
             throw 50001, 'access denied: you must be an active instructor to perform this action.', 1;

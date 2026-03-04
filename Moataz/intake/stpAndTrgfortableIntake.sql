@@ -66,7 +66,7 @@ begin
     end catch
 end
 go
-create or alter proc [TrainingMangerStp].stp_DeleteIntack @IntakeId int 
+create or alter proc [TrainingMangerStp].stp_DeleteIntack @IntakeId int
 as
 begin
     begin try

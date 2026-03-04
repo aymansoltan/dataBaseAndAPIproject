@@ -1,4 +1,7 @@
+EXECUTE AS USER = 'hassanuser';
 
+select SUSER_SNAME()
+select * from [userAcc].[UserAccount]
 go
 EXEC [InstructorStp].stp_createquestion
 @questiontext='CSS is used to style web pages.',
@@ -444,10 +447,13 @@ EXEC [InstructorStp].stp_createquestion
     @courseid=2
 GO
 
-
+revert
 ----------------------------------------
 -----------Courseid=3-------------------
 ----------------------------------------
+
+EXECUTE AS USER = 'mariamuser';
+
 
 EXEC [InstructorStp].stp_createquestion
     @questiontext='Linux is an open-source operating system.',
@@ -968,10 +974,15 @@ EXEC [InstructorStp].stp_createquestion
 @bestanswer='Cloud based identity and access management service',
 @points=4,
 @courseid=4
-
+revert
 -------------------------------------------------
 --------------Exam-------------------------------
 -------------------------------------------------
+
+
+EXECUTE AS USER = 'hassanuser';
+
+
 EXEC [InstructorStp].stp_CreateExam
     @ExamTitle = 'Html&Css', @ExamType = 'Regular',
     @StartTime = '2026-06-01 09:00', @EndTime = '2026-06-01 11:00',
@@ -983,6 +994,10 @@ EXEC [InstructorStp].stp_CreateExam
     @StartTime = '2026-06-02 09:00', @EndTime = '2026-06-02 11:00',
     @CourseInstanceId = 2, @BranchId = 1, @TrackId = 1, @IntakeId = 1,
     @Mode = 'Manual', @QuestionIds = '29,33,34,36,40,45,50,55';
+revert
+-------------------------------------------------------------
+EXECUTE AS USER = 'mariamuser';
+select  
 
     EXEC [InstructorStp].stp_CreateExam
     @ExamTitle = 'linux', @ExamType = 'Regular',
@@ -997,12 +1012,7 @@ EXEC [InstructorStp].stp_CreateExam
     @Mode = 'Random',@questioncount =5 , @mcqcount=2 , @tfcount =2 ,@textcount =1 ;
 GO
 
-exec [InstructorStp].stp_InstructorGradeText
-    @ExamId   =   4   ,
-    @StudentId = 4    ,
-    @QuestionId =113     ,
-    @InstructorGrade =2
-
+revert
           
       
 

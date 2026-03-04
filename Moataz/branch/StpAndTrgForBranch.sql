@@ -1,6 +1,7 @@
 use [ExaminationSystemDB]
 go
 create proc [TrainingMangerStp].stp_AddBranch @BranchName nvarchar(50)
+
 as 
 begin
     begin try
@@ -30,6 +31,8 @@ begin
 end
 go
 create proc [TrainingMangerStp].stp_UpdateBranch @BranchId int ,@BranchName nvarchar(50) , @IsActive bit = 1
+
+
 as
 begin
     begin try
@@ -66,6 +69,7 @@ begin
 end
 go
 create proc [TrainingMangerStp].stp_DeleteBranch @BranchId int 
+
 as
 begin
     begin try
@@ -109,6 +113,7 @@ begin
 end 
 go
 create or alter proc [TrainingMangerStp].stp_ActivateBranch @BranchId int 
+
 as
 begin
     begin try
