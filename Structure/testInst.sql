@@ -975,6 +975,9 @@ EXEC [InstructorStp].stp_createquestion
 @points=4,
 @courseid=4
 revert
+
+
+---------------------------------------------------
 -------------------------------------------------
 --------------Exam-------------------------------
 -------------------------------------------------
@@ -1015,5 +1018,33 @@ GO
 revert
           
       
+      
+----------------------------------------------------------
+EXECUTE AS USER = 'Asmaauser';
+
+EXEC [InstructorStp].stp_createquestion
+@questiontext='Do you know netwok ?',
+@questiontype='t/f',
+@correctanswer='false',
+@bestanswer='false',
+@points=4,
+@courseid=5
+
+revert;
+--------------------------------
+EXEC [InstructorStp].stp_createquestion
+@questiontext='test    test.',
+@questiontype='text',
+@bestanswer='test',
+@points=2,
+@courseid=5
+------------------------------
 
 
+EXEC [InstructorStp].stp_CreateExam
+    @ExamTitle = 'Network', @ExamType = 'Regular',
+    @StartTime = '2026-03-06 09:00', @EndTime = '2026-03-06 11:00',
+    @CourseInstanceId = 5, @BranchId = 2, @TrackId = 3, @IntakeId = 2,
+    @Mode = 'Random' @questioncount =10 , @mcqcount=3 , @tfcount =5 , @textcount =2;;
+
+    -------------------------------------------------

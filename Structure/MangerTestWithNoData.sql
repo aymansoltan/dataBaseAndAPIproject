@@ -12,9 +12,12 @@ GO
 ------------------------------------------------
 --Stp
 exec [TrainingMangerStp].stp_AddBranch @BranchName = 'cairo'
-exec [TrainingMangerStp].stp_UpdateBranch @BranchId = 12 ,@BranchName =Alex , @IsActive  = 1
-exec [TrainingMangerStp].stp_DeleteBranch @BranchId =12
-exec [TrainingMangerStp].stp_ActivateBranch @BranchId =7
+------------------------------------------------------------
+exec [TrainingMangerStp].stp_AddBranch @BranchName = 'Alex'
+--------------------------------------------------------------
+exec [TrainingMangerStp].stp_UpdateBranch @BranchId = 1,@BranchName ='assuit' , @IsActive  = 1
+exec [TrainingMangerStp].stp_DeleteBranch @BranchId =1
+exec [TrainingMangerStp].stp_ActivateBranch @BranchId =1
 --trg
 --create trigger [orgnization].trg_SoftDeleteBranch on [orgnization].[Branch]
 --create trigger [orgnization].trg_inactivateDepartmentWhenInActiveBranch on [orgnization].[branch] after update
@@ -24,6 +27,13 @@ exec [TrainingMangerStp].stp_ActivateBranch @BranchId =7
 --Stp
 
 exec [TrainingMangerStp].stp_AddDepartment @Deptname ='Full Stack', @BranchId =1
+--------------------------------------------------------------
+-------------------
+---------
+
+exec [TrainingMangerStp].stp_AddDepartment @Deptname ='Computer Science', @BranchId =2
+--------------------------------------------------------------
+
 exec [TrainingMangerStp].stp_UpdateDepartment @DeptId =1 , @DeptName='Full Stack' ,@BranchId =1
 exec [TrainingMangerStp].stp_DeleteDepartment @DeptId =2
 
@@ -36,6 +46,11 @@ exec [TrainingMangerStp].stp_DeleteDepartment @DeptId =2
 ------------------------------------------------
 --Stp
 exec [TrainingMangerStp].stp_AddTrack @TrackName='.NET' ,@DeptId =1
+--------------------------------------------------------------
+
+exec [TrainingMangerStp].stp_AddTrack @TrackName='Network' ,@DeptId =2
+--------------------------------------------------------------
+
 exec [TrainingMangerStp].stp_AddTrack @TrackName='Mern' ,@DeptId =1
 
 exec [TrainingMangerStp].stp_UpdateTrack @TrackId =1 ,@TrackName ='Full Stack .NET' ,@DeptId =1
@@ -49,6 +64,9 @@ exec [TrainingMangerStp].stp_DeleteTrack @trackid =5
 ------------------------------------------------
 --Stp
 exec [TrainingMangerStp].stp_AddIntake @IntakeName='Intake 46'
+----------------------------------------------------------------
+exec [TrainingMangerStp].stp_AddIntake @IntakeName='Intake 47'
+----------------------------------------------------------------
 exec [TrainingMangerStp].stp_UpdateIntake @IntakeId =5 ,@IntakeName ='sssssssss' 
 exec [TrainingMangerStp].stp_DeleteIntack @IntakeId =5
 --trg
@@ -59,6 +77,9 @@ exec [TrainingMangerStp].stp_DeleteIntack @IntakeId =5
 ------------------------------------------------
 --Stp
 exec [TrainingMangerStp].stp_addIntakeTrack @intakeid =1 ,@trackid=1
+-------------------------------------------------------------
+exec [TrainingMangerStp].stp_addIntakeTrack @intakeid =2 ,@trackid=3
+----------------------------------------------------------------
 exec [TrainingMangerStp].stp_addIntakeTrack @intakeid =1 ,@trackid=2
 
 exec [TrainingMangerStp].stp_ToggleIntakeTrack @intakeid  ,@trackid ,@status
@@ -79,7 +100,11 @@ exec [TrainingMangerStp].[stp_createsystemuser] 'Fady', 'Std@123', 'Fady@exam.co
 exec [TrainingMangerStp].[stp_createsystemuser] 'Omar', 'Std@123', 'Omar@exam.com', 'student';
 exec [TrainingMangerStp].[stp_createsystemuser] 'Marco', 'Std@123', 'Marco@exam.com', 'student';
 exec [TrainingMangerStp].[stp_createsystemuser] 'Ragab', 'Std@123', 'Ragab@exam.com', 'student';
+--------------------------------------------------------------------------------
+exec [TrainingMangerStp].[stp_createsystemuser] 'Hossam', 'Std@123', 'Hossam@exam.com', 'student';
+exec [TrainingMangerStp].[stp_createsystemuser] 'Asmaa', 'Ins@123', 'Asmaa@exam.com', 'instructor';
 
+----------------------------------------------------------------------------------
 
 
 exec [TrainingMangerStp].[sp_updateuseraccount] @userid ,@username ,@email ,@userpassword ,@isactive ,@roleid 
@@ -96,6 +121,12 @@ exec [TrainingMangerStp].[stp_addstudent] @firstname ='Fady' ,@lastname='Sameh' 
 exec [TrainingMangerStp].[stp_addstudent] @firstname ='Omar' ,@lastname='Kotb'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650213',@nationalid='30108222501477',@userid=7,@branchid=1,@intakeid=1,@trackid=1 
 exec [TrainingMangerStp].[stp_addstudent] @firstname ='Marco' ,@lastname='Samh'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650215',@nationalid='30108222501475',@userid=8,@branchid=1,@intakeid=1,@trackid=2
 exec [TrainingMangerStp].[stp_addstudent] @firstname ='Ragab' ,@lastname='Ahmed'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650218',@nationalid='30108222501478',@userid=9,@branchid=1,@intakeid=1,@trackid=2 
+--------------------------------------------------------------
+
+exec [TrainingMangerStp].[stp_addstudent] @firstname ='Hossam' ,@lastname='Ahmed'  ,@gender='M'    ,@birthdate='1986-05-20' ,@stuaddress='6th of october, giza',@phone='01146650281',@nationalid='30108222501481',@userid=10,@branchid=2,@intakeid=2,@trackid=3
+--------------------------------------------------------------
+
+
 
 exec [TrainingMangerStp].[stp_updatestudent] @studentid = 1,@stuaddress = '6th of october, giza', @phone = '01122334455';
 exec [TrainingMangerStp].[stp_deletestudent] @studentid = 5;
@@ -128,13 +159,26 @@ exec [TrainingMangerStp].stp_addinstructor
     @specialization = 'Node js', 
     @userid     = 4,  
     @deptid     = 1 
-    
 
+    ----------------------------------------------
+        exec [TrainingMangerStp].stp_addinstructor 
+    @firstname = 'Asmaa', 
+    @lastname  = 'Ahmed', 
+    @birthdate = '1985-05-20', 
+    @insaddress = 'nasr city, cairo', 
+    @phone      = '01012345611', 
+    @nationalid = '28505201234511', 
+    @salary     = 7500.00, 
+    @specialization = 'Network', 
+    @userid     = 11,  
+    @deptid     = 2
+    
+------------------------------------------
 
 exec [TrainingMangerStp].stp_updateinstructor 
-    @insid = 1,                 -- ÑÞã ÇáãÏÑÓ Ýí ÇáÌÏæá
-    @salary = 9500.50,          -- ÇáÑÇÊÈ ÇáÌÏíÏ (áÇÒã > 4000)
-    @specialization = 'Data Science'; -- ÇáÊÎÕÕ ÇáÌÏíÏ
+    @insid = 1,                 -- ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    @salary = 9500.50,          -- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ > 4000)
+    @specialization = 'Data Science'; -- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 exec [trainingmangerstp].stp_deleteinstructor @instructoid
 
@@ -146,7 +190,9 @@ EXEC [TrainingMangerStp].stp_AddCourse 'Web Fundamentals (HTML/CSS)', 100, 50, '
 EXEC [TrainingMangerStp].stp_AddCourse 'JavaScript & ES6', 100, 50, 'Modern JavaScript for Web Development';
 EXEC [TrainingMangerStp].stp_AddCourse 'Introduction to Linux', 100, 50, 'Linux Administration and Shell Scripting';
 EXEC [TrainingMangerStp].stp_AddCourse 'Cloud Computing (Azure)', 100, 60, 'Deploying and managing cloud resources';
-
+--------------------------------------------------------------
+EXEC [TrainingMangerStp].stp_AddCourse 'Network', 100, 60, 'Network netwok';
+------------------------------------------------------------
 --CourseInstance--------------------
 EXEC [TrainingMangerStp].stp_addCourseInstance
     @courseid=1     ,
@@ -180,8 +226,16 @@ EXEC [TrainingMangerStp].stp_addCourseInstance
     @trackid=2      ,
     @intakeid=1     ,
     @academicyear=2026 
+--------------------------------------------------------
+          EXEC [TrainingMangerStp].stp_addCourseInstance
+    @courseid=5     ,
+    @instructorid=11 ,
+    @branchid=2    ,
+    @trackid=3      ,
+    @intakeid=2     ,
+    @academicyear=2026 
 
-
+------------------------------------------------
 
 ---------------------------------------------
 --------------VIEWS--------------------------

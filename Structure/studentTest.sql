@@ -42,3 +42,16 @@ exec [InstructorStp].stp_InstructorGradeText --marco 4 points
     @StudentId = 8    ,
     @QuestionId =113     ,
     @InstructorGrade =2
+
+    -------------------------------------------------------------------
+
+    exec [StudentStp].stp_StudentSubmitAnswer 
+    @ExamId=,
+    @QuestionId =,
+    @StudentResponse ='true' -- text
+-----------------------------------------------------
+exec [InstructorStp].stp_InstructorGradeText --
+    @ExamId   =   4  ,
+    @StudentId = 8    ,
+    @QuestionId =113     ,
+    @InstructorGrade =2
