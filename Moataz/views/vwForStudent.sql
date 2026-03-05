@@ -299,3 +299,202 @@ end
 go
 
 
+
+-------------------------------------------------------------------------------------
+use [ExaminationSystemDB]
+go
+
+create or alter procedure [StudentStp].stp_GetMyExamQuestions
+    @ExamId int
+as
+begin
+    set nocount on;
+    begin try
+
+        -- ══════════════════════════════════════════════════════════════
+        -- STEP 1: Get current student from SQL Server login
+        -- ══════════════════════════════════════════════════════════════
+        declare @CurrentStudentId int;
+
+        select @CurrentStudentId = s.StudentId
+        from   [userAcc].UserAccount ua
+        inner join [userAcc].Student s
+            on ua.UserId  = s.UserId
+           and s.isActive = 1
+        where  ua.UserName = replace(suser_name(), 'login', 'user')
+          and  ua.isActive = 1;
+
+        if @CurrentStudentId is null
+        begin
+            raiserror('Access Denied. Only active students can view exam questions.', 16, 1);
+            return;
+        end
+
+        -- ══════════════════════════════════════════════════════════════
+        -- STEP 2: Check exam exists and is not deleted
+        --         get StartTime, EndTime, TrackId, IntakeId, BranchId
+        --         + ExamType + CourseInstanceId for corrective check
+        -- ══════════════════════════════════════════════════════════════
+        declare @StartTime        datetime,
+                @EndTime          datetime,
+                @TrackId          int,
+                @IntakeId         int,
+                @BranchId         int,
+                @ExamType         nvarchar(20),
+                @CourseInstanceId int;
+
+        select @StartTime        = e.StartTime,
+               @EndTime          = e.EndTime,
+               @TrackId          = e.TrackId,
+               @IntakeId         = e.IntakeId,
+               @BranchId         = e.BranchId,
+               @ExamType         = e.ExamType,
+               @CourseInstanceId = e.CourseInstanceId
+        from   [exams].Exam e
+        where  e.ExamId    = @ExamId
+          and  e.IsDeleted = 0;
+
+        if @StartTime is null
+        begin
+            raiserror('Exam not found or has been deleted.', 16, 1);
+            return;
+        end
+
+        -- ══════════════════════════════════════════════════════════════
+        -- STEP 3: Check exam is currently active (within time window)
+        -- ══════════════════════════════════════════════════════════════
+        if getdate() < @StartTime
+        begin
+            raiserror('Exam has not started yet.', 16, 1);
+            return;
+        end
+
+        if getdate() > @EndTime
+        begin
+            raiserror('Exam has already ended.', 16, 1);
+            return;
+        end
+
+        -- ══════════════════════════════════════════════════════════════
+        -- STEP 4: Check student is allowed to take this exam
+        --
+        -- Regular    → student must belong to same Track/Intake/Branch
+        -- Corrective → student must have failed or not taken
+        --              the Regular exam of the same CourseInstance
+        -- ══════════════════════════════════════════════════════════════
+        if @ExamType = 'Regular'
+        begin
+            if not exists (
+                select 1
+                from   [userAcc].Student s
+                where  s.StudentId = @CurrentStudentId
+                  and  s.TrackId   = @TrackId
+                  and  s.IntakeId  = @IntakeId
+                  and  s.BranchId  = @BranchId
+            )
+            begin
+                raiserror('Access Denied. You are not enrolled in the track/intake/branch for this exam.', 16, 1);
+                return;
+            end
+        end
+        else if @ExamType = 'Corrective'
+        begin
+            -- get the Regular exam for the same CourseInstance
+            declare @RegularExamId int;
+
+            select @RegularExamId = ExamId
+            from   [exams].Exam
+            where  CourseInstanceId = @CourseInstanceId
+              and  ExamType         = 'Regular'
+              and  IsDeleted        = 0;
+
+            if @RegularExamId is null
+            begin
+                raiserror('No Regular exam found for this course instance.', 16, 1);
+                return;
+            end
+
+            -- block student if they passed the Regular exam
+            if exists (
+                select 1
+                from   [exams].Student_Exam_Result
+                where  StudentId = @CurrentStudentId
+                  and  ExamId    = @RegularExamId
+                  and  IsPassed  = 1
+            )
+            begin
+                raiserror('Access Denied. You passed the Regular exam and cannot take the Corrective exam.', 16, 1);
+                return;
+            end
+
+            -- student must still belong to same Track/Intake/Branch
+            if not exists (
+                select 1
+                from   [userAcc].Student s
+                where  s.StudentId = @CurrentStudentId
+                  and  s.TrackId   = @TrackId
+                  and  s.IntakeId  = @IntakeId
+                  and  s.BranchId  = @BranchId
+            )
+            begin
+                raiserror('Access Denied. You are not enrolled in the track/intake/branch for this exam.', 16, 1);
+                return;
+            end
+        end
+
+        -- ══════════════════════════════════════════════════════════════
+        -- STEP 5: Return exam questions with options
+        --
+        -- CTE adds a letter (A, B, C...) before each option
+        -- using ROW_NUMBER partitioned by QuestionId
+        -- then STRING_AGG combines all options into one cell
+        --
+        -- example: 'A- Python / B- Java / C- C++'
+        -- T/F and Text questions → Options column is NULL
+        --
+        -- never expose CorrectAnswer or BestAnswer
+        -- ══════════════════════════════════════════════════════════════
+        ;with OptionsCTE as (
+            select
+                q.QuestionId,
+                char(64 + row_number() over (
+                    partition by q.QuestionId
+                    order by qo.QuestionOptionId
+                )) + '- ' + qo.QuestionOptionText   as OptionText
+            from   [exams].ExamQuestion       eq
+            inner join [exams].Question       q  on eq.QuestionId = q.QuestionId
+            inner join [exams].QuestionOption qo on q.QuestionId  = qo.QuestionId
+            where  eq.ExamId      = @ExamId
+              and  q.QuestionType = 'MCQ'
+              and  q.IsDeleted    = 0
+        )
+        select
+            q.QuestionId,
+            q.QuestionText,
+            q.QuestionType,
+            
+            string_agg(o.OptionText, ' / ')  as Options,
+            q.Points
+
+        from   [exams].ExamQuestion   eq
+        inner join [exams].Question   q  on eq.QuestionId = q.QuestionId
+        left join  OptionsCTE         o  on q.QuestionId  = o.QuestionId
+
+        where  eq.ExamId   = @ExamId
+          and  q.IsDeleted = 0
+
+        group by
+            q.QuestionId,
+            q.QuestionText,
+            q.QuestionType,
+            q.Points
+
+        order by q.QuestionType;
+
+    end try
+    begin catch
+        declare @ErrMsg nvarchar(2000) = error_message();
+        raiserror(@ErrMsg, 16, 1);
+    end catch
+end
+go

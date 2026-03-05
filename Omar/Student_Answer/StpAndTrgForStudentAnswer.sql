@@ -409,18 +409,31 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM [Courses].CourseInstance WHERE CourseInstanceId = @ExamCourseInstId AND InstructorId = @CurrentInsId)
             THROW 50005, 'Access Denied. Not your course.', 1;
 
+
+                    IF NOT EXISTS (
+                SELECT 1
+                FROM   [exams].ExamQuestion
+                WHERE  ExamId     = @ExamId
+                AND  QuestionId = @QuestionId
+            )
+                THROW 50006, 'This question does not belong to the specified exam.', 1;
+
         DECLARE @Points INT;
         SELECT @Points = Points FROM [exams].Question WHERE QuestionId = @QuestionId AND QuestionType = 'Text' AND IsDeleted = 0;
         
-        IF @Points IS NULL THROW 50006, 'Invalid or non-text question.', 1;
+        IF @Points IS NULL THROW 50007, 'Invalid or non-text question.', 1;
 
         DECLARE @CurrentInstructorGrade INT, @AnswerExists bit = 0;
         SELECT @CurrentInstructorGrade = InstructorGrade, @AnswerExists = 1 
         FROM [exams].Student_Answer WHERE StudentId = @StudentId AND ExamId = @ExamId AND QuestionId = @QuestionId;
 
-        IF @AnswerExists = 0 THROW 50007, 'No answer found.', 1;
-        IF @CurrentInstructorGrade = 0 THROW 50008, 'Already auto-graded as zero.', 1;
-        IF @InstructorGrade < 0 OR @InstructorGrade > @Points THROW 50009, 'Invalid Grade range.', 1;
+        IF @AnswerExists = 0 THROW 50008, 'No answer found.', 1;
+        IF @CurrentInstructorGrade = 0 THROW 50009, 'Already auto-graded as zero.', 1;
+        IF @InstructorGrade < 0
+            THROW 50010, 'Instructor grade cannot be negative.', 1;
+
+        IF @InstructorGrade > @Points
+            THROW 50011, 'Instructor grade exceeds question points.', 1;
 
         UPDATE [exams].Student_Answer SET InstructorGrade = @InstructorGrade 
         WHERE StudentId = @StudentId AND ExamId = @ExamId AND QuestionId = @QuestionId;
@@ -454,6 +467,7 @@ BEGIN
         RAISERROR(@ErrMsg, 16, 1);
     END CATCH
 END
+go
 ------------------------- ----------------------------------------------
 CREATE or ALTER PROCEDURE [InstructorStp].stp_deletstudentanswer 
     @studentid INT,
