@@ -1,161 +1,140 @@
 use [ExaminationSystemDB]
 go
-create proc [TrainingMangerStp].stp_AddDepartment 
-    @Deptname nvarchar(50), 
-    @BranchId int
+create or alter proc [TrainingMangerStp].stp_AddDepartment 
+    @Deptname varchar(20), 
+    @BranchId tinyint
 as
 begin
+    set nocount on;
     begin try
+        if not exists (select 1 from [Branch] where [BranchId] = @BranchId and [isActive] = 1 and [isDeleted] = 0)
+            throw 50002, 'Error: Branch not found, inactive, or it has been deleted.', 1;
+
         if len(trim(@Deptname)) < 2
-        begin
-            raiserror('Department name must be at least 2 characters long.', 16, 1);
-            return;
-        end
+            throw 50001,'Error: Department name must be at least 2 characters long.',1;
+         
+        if exists (select 1 from [Department] where [DeptName] = @Deptname and [BranchId] = @BranchId and [isDeleted] = 0 )
+            throw 50003, 'Error: A department with this name already exists in the specified branch.', 1;
 
-        if not exists (select 1 from [orgnization].[Branch] where [BranchId] = @BranchId)
-        begin
-            raiserror('error: this branch id does not exist.', 16, 1);
-            return;
-        end
 
-        if exists (select 1 from [orgnization].[Department] where [DeptName] = @Deptname and [BranchId] = @BranchId)
-        begin
-            raiserror('this department name already exists in this branch.', 16, 1);
-            return;
-        end
-
-        insert into [orgnization].[Department]([DeptName], [BranchId])
+        insert into [Department] ([DeptName], [BranchId])
         values (trim(@Deptname), @BranchId);
-
-        print 'Department "' + @Deptname + '" added successfully.';
+        select SCOPE_IDENTITY() as NewDepartmentId , 1 as Success, 'Department added successfully' as Message;
+        
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+        throw;
     end catch
 end
-go
-create trigger [orgnization].trg_CheckBranchStatusBeforeInsert
-on [orgnization].[Department]
-after insert
+
+create or alter proc [TrainingMangerStp].stp_UpdateDepartment
+    @DeptId tinyint,
+    @DeptName varchar(20),
+    @BranchId tinyint
 as
 begin
-
-    if exists (
-        select 1 
-        from inserted i
-        join [orgnization].[Branch] b on i.branchid = b.[BranchId]
-        where b.[isActive] = 0
-    )
-    begin
-        rollback transaction;
-        raiserror('operation cancelled: cannot add a department to an inactive branch.', 16, 1);
-    end
-end
-go
-create proc [TrainingMangerStp].stp_UpdateDepartment
-    @DeptId int,
-    @DeptName nvarchar(50),
-    @BranchId int
-
-as
-begin
+    set nocount on;
     begin try
-        if not exists (select 1 from [orgnization].[Department] where [DeptId] = @DeptId)
-        begin
-            raiserror('error: Department id not found.', 16, 1);
-            return;
-        end
+        if not exists (select 1 from [Department] where [DeptId] = @DeptId and [isDeleted] = 0 and [isActive] = 1)
+            throw 50004, 'Error: Department not found or it has been deleted.', 1;
 
-        if not exists (select 1 from [orgnization].[Branch] where [BranchId] = @BranchId and [isActive] = 1)
-        begin
-            raiserror('error: Branch id not found or is inactive.', 16, 1);
-            return;
-        end
+        if not exists (select 1 from [Branch] where [BranchId] = @BranchId and [isActive] = 1 and [isDeleted] = 0)
+            throw 50002, 'Error: Branch not found, inactive, or it has been deleted.', 1;
+            
 
-        if exists (select 1 from [orgnization].[Department] 
-                   where [DeptName] = @DeptName and BranchId = @BranchId and DeptId <> @DeptId)
-        begin
-            raiserror('this department name already exists in this branch.', 16, 1);
-            return;
-        end
+        if exists (select 1 from [Department] where [DeptName] = @DeptName and BranchId = @BranchId and DeptId <> @DeptId)
+            throw 50003, 'Error: A department with this name already exists in the specified branch.', 1;
 
-        update [orgnization].Department
+        update [Department]
         set DeptName = trim(@DeptName),
             BranchId = @BranchId
         where DeptId = @DeptId;
-
-        print 'Department updated successfully.';
+        select @DeptId as UpdateDepartmentId , 1 as Success , 'Department Updated successfully' as Message;
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+        throw;
     end catch
 end
 go
 
-create proc [TrainingMangerStp].stp_DeleteDepartment
-    @DeptId int
-
+create or alter proc [TrainingMangerStp].stp_DeleteDepartment
+    @DeptId tinyint 
 as
 begin
+    set nocount on;
     begin try
-        if not exists (select 1 from [orgnization].[Department] where [DeptId] = @DeptId)
-        begin
-            raiserror('error: Department id not found.', 16, 1);
-            return;
-        end
+        if not exists (select 1 from [Department] where [DeptId] = @DeptId and [isDeleted] = 0)
+            throw 50004, 'Error: Department not found or it has been deleted.', 1;
 
-        delete from [orgnization].[Department] where [DeptId] = @DeptId;
-        print 'operation completed successfully.';
+        delete from [Department]where [DeptId] = @DeptId;
+        select 1 as Success , 'Department deleted successfully.' as Message;
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+        throw;
     end catch
 end
 
-go
-create trigger [orgnization].trg_SoftDeleteDepartment
-on [orgnization].[Department]
+create or alter trigger [orgnization].trg_SoftDeleteDepartment
+on [Department]
 instead of delete
 as
 begin
-    declare @Id int;
-    select @Id = [DeptId] from deleted;
+    set nocount on;
+    declare @DeptId tinyint;
+    select @DeptId = [DeptId] from deleted;
 
-    if exists (select 1 from [orgnization].[Track] where[DeprtmentId]  = @Id)
-        or exists (select 1 from [userAcc].[Instructor]  where [DeptId] = @Id)
+    if exists (select 1 from [Track] where[DeprtmentId]  = @DeptId)
+        or exists (select 1 from [Instructors]  where [DeptId] = @DeptId)
     begin
-        update [orgnization].[Department]
-        set[isActive]  = 0
-        where [DeptId] = @Id;
-        
-        print 'caution: Department linked to other data. status changed to inactive instead of deletion.';
+        update [Department]
+        set[isActive]  =  0 , [isDeleted] = 1
+        where [DeptId] = @DeptId;       
     end
     else 
     begin
-        delete from [orgnization].[Department] where [DeptId] = @Id;
-        print 'success: Department deleted from database.';
+        delete from [Department] where [DeptId] = @DeptId;
+    end
+end
+
+go
+create or alter trigger [orgnization].trg_CheckBranchStatusBeforeInsert
+on [Department]
+after insert
+as
+begin
+    set nocount on;
+    if exists (
+        select 1 
+        from inserted i
+        join [Branch] b on i.[BranchId] = b.[BranchId]
+        where b.[isActive] = 0 or b.[isDeleted] = 1
+    )
+    begin
+        rollback transaction;
+        throw 50002, 'Error: Cannot add department to an inactive or deleted branch.', 1;
     end
 end
 go
+
+
+go
+
+go
 create trigger [orgnization].trg_inactivateTracksWhenInActiveDerpartment
-on [orgnization].[Department]
+on [Department]
 after update
 as
 begin
-  
+    set nocount on;
     if exists (select 1 from inserted i join deleted d on i.DeptId = d.DeptId 
                where i.isActive = 0 and d.isActive = 1)
     begin
-        declare @deptid int;
+        declare @deptid tinyint;
         select @deptid = DeptId from inserted;
 
-        update [orgnization].[Track]
-        set [isActive] = 0
+        update [Track]
+        set [isActive] = 0 
         where [DeprtmentId]  = @deptid;
 
-        print 'department deactivated: all related tracks have been notified.';
     end
 end

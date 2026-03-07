@@ -2,7 +2,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [studentViews].vw_StudentProfile
-with execute as owner
+
 as
     select
         -- personal info
@@ -32,7 +32,7 @@ as
     inner join [orgnization].Intake     i  on s.IntakeId = i.IntakeId
 
     -- each student sees only their own data
-    where  ua.UserName = suser_name()
+    where  ua.UserName = replace(SUSER_SNAME(),'login','user')
       and  ua.isActive = 1
       and  s.isActive  = 1;
 go
@@ -44,7 +44,6 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [studentViews].vw_StudentCourses
-with execute as owner
 as
     select
         -- course info
@@ -68,7 +67,7 @@ as
     inner join [orgnization].Track       t  on ci.TrackId        = t.TrackId
     inner join [orgnization].Intake      it on ci.IntakeId       = it.IntakeId
 
-    where  ua.UserName = suser_name()
+    where  ua.UserName = replace(SUSER_SNAME(),'login','user')
       and  ua.isActive = 1
       and  s.isActive  = 1
       and  c.isActive  = 1;
@@ -80,7 +79,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [studentViews].vw_StudentExamResults
-with execute as owner
+
 as
     select
         -- exam info
@@ -125,7 +124,7 @@ as
     inner join [userAcc].Student         s  on r.StudentId        = s.StudentId
     inner join [userAcc].UserAccount     ua on s.UserId           = ua.UserId
 
-    where  ua.UserName = suser_name()
+    where  ua.UserName = replace(SUSER_SNAME(),'login','user')
       and  ua.isActive = 1
       and  s.isActive  = 1
       and  e.IsDeleted = 0;
@@ -137,7 +136,7 @@ use [ExaminationSystemDB]
 go
 
 create or alter view [studentViews].vw_StudentUpcomingExams
-with execute as owner
+
 as
     select
         -- exam info
@@ -162,7 +161,7 @@ as
                                            and s.BranchId         = e.BranchId
     inner join [userAcc].UserAccount     ua on s.UserId           = ua.UserId
 
-    where  ua.UserName =suser_name()
+    where  ua.UserName =replace(SUSER_SNAME(),'login','user')
       and  ua.isActive = 1
       and  s.isActive  = 1
       and  e.IsDeleted = 0
@@ -178,7 +177,7 @@ go
 
 create or alter procedure [StudentStp].stp_StudentExamResultsFailorPass
     @Filter nvarchar(10)  -- 'Pass' or 'Fail'
-    with execute as owner
+    
 as
 begin
     set nocount on;
@@ -191,7 +190,7 @@ begin
         inner join [userAcc].Student s
             on ua.UserId  = s.UserId
            and s.isActive = 1
-        where  ua.UserName = suser_name()
+        where  ua.UserName = replace(SUSER_SNAME(),'login','user')
           and  ua.isActive = 1;
 
         if @CurrentStudentId is null

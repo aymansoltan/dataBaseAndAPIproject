@@ -1,165 +1,140 @@
 use [ExaminationSystemDB]
 go
-create proc [TrainingMangerStp].stp_AddBranch @BranchName nvarchar(50)
-
+create or alter proc [TrainingMangerStp].stp_AddBranch @BranchName varchar(15)
 as 
 begin
+    set nocount on;
     begin try
         if len(trim(@BranchName))< 3
-        begin
-            raiserror('branch name must be at least 3 letters' , 16,1);
-            return;
-        end
+           throw 50001,'Error: Branch name must be at least 3 characters long.',1;      
 
-        insert into [orgnization].Branch (BranchName)
+        insert into [Branch] (BranchName)
         values (lower(trim(@BranchName)));
-        print 'Branch name added succsefully ' + @BranchName ;
+        select SCOPE_IDENTITY() as NewBranchId , 1 as Success ,'Branch added successfully' as Message;
     end try
     begin catch 
    
-        if error_number() = 2627
-        begin
-          raiserror ('Error : this Branch name already exist',16,1);
-          return;
-        end
+        if error_number() in (2627, 2601)
+            throw 50002,'Error: A branch with this name already exists. Please choose a different name.',1; 
         else
-        begin
-            print 'unexepected error' + ERROR_MESSAGE();
-            return;
-        end
+            throw;
     end catch
 end
 go
-create proc [TrainingMangerStp].stp_UpdateBranch @BranchId int ,@BranchName nvarchar(50) , @IsActive bit = 1
 
 
+create or alter proc [TrainingMangerStp].stp_UpdateBranch @BranchId tinyint  ,@BranchName varchar(15) 
 as
 begin
+    set nocount on;
     begin try
 
-        if not exists ( select 1 from [orgnization].[Branch] where [BranchId] =@BranchId)
-        begin
-            raiserror('this branch is not exists' ,16,1)
-            return;
-        end
-
+        if not exists ( select 1 from [Branch] where [BranchId] =@BranchId and [isDeleted] = 0)
+            throw 50003, 'Error: Branch not found or it has been deleted.', 1;  
+         
         if len(trim(@BranchName)) <3
-        begin
-            raiserror('sorry branch name must be at least 3 letters ' ,16,1)
-            return;
-        end
+            throw 50001,'Error: Branch name must be at least 3 characters long.',1;
 
-        update [orgnization].[Branch]
-        set [BranchName] =@BranchName ,[isActive] =@IsActive
-        where [BranchId] = @BranchId
-        print 'branch updated successfully id ' + cast(@BranchId as nvarchar(10));
+        update [Branch]
+        set [BranchName] =@BranchName 
+        where [BranchId] = @BranchId   
+        select @BranchId as UpdatedBranchId , 1 as Success, 'Branch updated successfully' as Message;
     end try
     begin catch
-        if ERROR_NUMBER() = 2627
-        begin
-            raiserror ('sorry this branch name already exists for another branch' , 16,1)
-        end
+        if error_number() in (2627, 2601)   
+            throw 50002,'Error: A branch with this name already exists. Please choose a different name.',1;
         else
-        begin
-            declare  @errorMessage nvarchar(2000) = ERROR_MESSAGE() 
-            raiserror(@errorMessage ,16,1)
-        end
+          throw;
     end catch
 
 end
 go
-create proc [TrainingMangerStp].stp_DeleteBranch @BranchId int 
 
+create or alter proc [TrainingMangerStp].stp_DeleteBranch @BranchId tinyint 
 as
 begin
+    set nocount on;
     begin try
-        if not exists(select 1 from [orgnization].[Branch] where [BranchId] = @BranchId)
-        begin
-            raiserror('wrong id : this branch not found',16,1)
-            return
-        end
+        if not exists(select 1 from [Branch] where [BranchId] = @BranchId and [isDeleted] = 0)
+            throw 50003, 'Error: Branch not found or it has been deleted.', 1;
 
-        delete from [orgnization].[Branch] where [BranchId] = @BranchId
-        print ' the opration is handel by the system triggre '
-
+        delete from [Branch] where [BranchId] = @BranchId
+        select 1 as Success , 'Branch deleted successfully.' as Message;
     end try
     begin catch
-        declare @errorMassege nvarchar(2000) = Error_Message()
-        raiserror(@errorMassege ,16,1)
+        throw;
     end catch
 end
 go
-create trigger [orgnization].trg_SoftDeleteBranch
-on [orgnization].[Branch]
+
+
+create  or alter trigger [orgnization].trg_SoftDeleteBranch
+on [Branch]
 instead of delete 
 as 
 begin 
-    declare @Id int ;
-    select @Id = [BranchId] from deleted;
-    if exists(select 1 from [orgnization].[Department] where [BranchId] =@Id)
-        or exists(select 1 from [userAcc].[Student] where [BranchId] =@Id)
-        or exists(select 1 from [Courses].[CourseInstance] where[BranchId] =@Id)
+    set nocount on;
+    declare @BranchId tinyint ;
+    select @BranchId = [BranchId] from deleted;
+
+    if exists(select 1 from [Department] where [BranchId] =@BranchId)
+        or exists(select 1 from [Students] where [BranchId] =@BranchId)
+        or exists(select 1 from [CourseInstance] where[BranchId] =@BranchId)
     begin
-        update [orgnization].[Branch]
-        set [isActive] = 0
-        where [BranchId] = @Id
-        print 'cannot delete this branch because it have department and student and course but the status changed to not active'
+        update  [Branch]
+        set [isActive] = 0 , [isDeleted] = 1
+        where [BranchId] = @BranchId
     end
     else 
     begin
-        delete from [orgnization].[Branch] where [BranchId] = @Id
-        print 'this branch deleted successfully from the data base'
+        delete from  [Branch]where [BranchId] = @BranchId;
     end
 end 
 go
-create or alter proc [TrainingMangerStp].stp_ActivateBranch @BranchId int 
 
+
+create or alter proc [TrainingMangerStp].stp_ActivateBranch @BranchId tinyint 
 as
 begin
+    set nocount on;
     begin try
-        if not exists (select 1 from [orgnization].[Branch] where [BranchId] = @BranchId)
-        begin
-            raiserror('Error: This branch ID was not found.', 16, 1);
-            return;
-        end 
-        if exists(select 1 from [orgnization].[Branch] where [BranchId] = @BranchId and [isActive] = 1)
-        begin
-            print 'Info: This branch is already active.';
-        end
+        if not exists (select 1 from  [Branch] where [BranchId] = @BranchId and [isDeleted] = 0)
+            throw 50003, 'Error: Branch not found or it has been deleted.', 1;
+
+        if exists(select 1 from  [Branch] where [BranchId] = @BranchId and [isActive] = 1)
+            throw 50004, 'Error: Branch is already active.', 1;
         else
         begin
-            update [orgnization].[Branch]
+            update [Branch]
             set [isActive] = 1
             where [BranchId] = @BranchId;
             
-            update [orgnization].[Department]
+            update [Department]
             set [isActive] =1
             where [BranchId] =@BranchId
-            print 'Success: Branch has been activated.';
+            select 1 as Success, 'Branch activated and its related departments have been synchronized.' as Message;   
         end
     end try
     begin catch
-        declare @errorMassege nvarchar(2000) = Error_Message()
-        raiserror(@errorMassege ,16,1)
+        throw;
      end catch
 end
 go
-create trigger [orgnization].trg_inactivateDepartmentWhenInActiveBranch
-on [orgnization].[branch]
+create or alter  trigger [orgnization].trg_inactivateDepartmentWhenInActiveBranch
+on [Branch]
 after update
 as
 begin
+    set nocount on;
     
-    if exists (select 1 from inserted i join deleted d on i.BranchId = d.BranchId 
-               where i.isActive = 0 and d.isActive = 1)
+    if exists (select 1 from inserted i join deleted d on i.BranchId = d.BranchId where i.isActive = 0 and d.isActive = 1)
     begin
-        declare @branchid int;
+        declare @branchid tinyint;
         select @branchid = BranchId from inserted;
 
-        update [orgnization].[Department]
+        update [Department]
         set [isActive] = 0
         where [BranchId] = @branchid;
-        print 'branch deactivated: all related departments have been notified.';
     end
 end
 

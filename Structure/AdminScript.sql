@@ -31,3 +31,7 @@ grant select on schema :: [studentViews] to studentRole;
 
 grant execute on schema :: [admin] to [adminrole];
 
+deny select , insert , delete , update on schema ::[Courses] to studentRole, instructoreRole ,trainningMangerRole  ,[adminrole]
+deny select , insert , delete , update on schema ::[exams] to studentRole, instructoreRole ,trainningMangerRole  ,[adminrole]
+deny select , insert , delete , update on schema ::[orgnization] to studentRole, instructoreRole ,trainningMangerRole  ,[adminrole]
+deny select , insert , delete , update on schema ::[userAcc] to studentRole, instructoreRole ,trainningMangerRole  ,[adminrole]

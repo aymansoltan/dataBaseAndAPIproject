@@ -7,31 +7,31 @@ create or alter proc [TrainingMangerStp].stp_addIntakeTrack
 
 as
 begin
+    set nocount on;
     begin try
-        if not exists (select 1 from [orgnization].[Intake] where [IntakeId] = @intakeid and [isActive] = 1)
-        begin
-            raiserror('error: intake not found or is inactive.', 16, 1);
-            return;
-        end
 
-        if not exists (select 1 from [orgnization].[Track] where [TrackId] = @trackid and [isActive] = 1)
-        begin
-            raiserror('error: track not found or is inactive.', 16, 1);
-            return;
-        end
+        if not exists (select 1 from [orgnization].[Intake] where [IntakeId] = @intakeid and [isActive] = 1 and [isDeleted] = 0)
+            throw 50006, 'Error: Intake not found, inactive, or it has been deleted.', 1;
 
-       
+        if not exists (select 1 from [orgnization].[Track] where [TrackId] = @trackid and [isActive] = 1 and [isDeleted] = 0)
+            throw 50007, 'Error: Track not found, inactive, or it has been deleted.', 1;
+
+        if exists (select 1 from [orgnization].[IntakeTrack] where [IntakeId] = @intakeid and [TrackId] = @trackid)
+            throw 50008, 'Error: This intake-track relation already exists.', 1;    
+
         insert into [orgnization].[IntakeTrack] ([IntakeId], [TrackId])
         values (@intakeid, @trackid);
 
-        print 'track assigned to intake successfully.';
+
+
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+        throw;  
     end catch
 end
+
 go
+
 create or alter proc [TrainingMangerStp].stp_ToggleIntakeTrack
     @intakeid int,
     @trackid int,
@@ -40,17 +40,15 @@ create or alter proc [TrainingMangerStp].stp_ToggleIntakeTrack
 as
 begin
     set nocount on;
-    if not exists (select 1 from [orgnization].[IntakeTrack] where [IntakeId] = @intakeid and [TrackId] = @trackid)
-    begin
-        raiserror('error: this relation does not exist.', 16, 1);
-        return;
-    end
+    if not exists (select 1 from [orgnization].[IntakeTrack] where [IntakeId] = @intakeid and [TrackId] = @trackid and [isDeleted] = 0 and [isActive] = 1)
+        throw 50008, 'Error: This intake-track relation not found, inactive, or it has been deleted.', 1;   
 
     update [orgnization].[IntakeTrack]
-    set [isActive] = @status
+    set [isActive] = @status , [isDeleted] = case when @status = 0 then 1 else 0 end
     where [IntakeId] = @intakeid and [TrackId] = @trackid;
 
-    print 'intaketrack status updated.';
+    select @intakeid as IntakeId, @trackid as TrackId, @status as NewStatus;
+
 end
 go
 create or alter proc [TrainingMangerStp].stp_DeleteIntakeTrack
@@ -59,21 +57,17 @@ create or alter proc [TrainingMangerStp].stp_DeleteIntakeTrack
 
 as
 begin
+    set nocount on;
     begin try
-        if not exists (select 1 from [orgnization].[IntakeTrack] 
-                       where [IntakeId] = @intakeid and [TrackId] = @trackid)
-        begin
-            raiserror('error: this relation was not found.', 16, 1);
-            return;
-        end
+        if not exists (select 1 from [orgnization].[IntakeTrack] where [IntakeId] = @intakeid and [TrackId] = @trackid and [isDeleted] = 0)
+             throw 50008, 'Error: This intake-track relation not found or it has been deleted.', 1;
 
         delete from [orgnization].[IntakeTrack] 
         where [IntakeId] = @intakeid and [TrackId] = @trackid;
 
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+throw;
     end catch
 end
 go
@@ -82,6 +76,7 @@ on [orgnization].[IntakeTrack]
 instead of delete
 as
 begin
+    set nocount on;
     declare @intakeid int, @trackid int;
     
     select @intakeid = [IntakeId], @trackid = [TrackId] from deleted;
@@ -90,16 +85,14 @@ begin
         or exists (select 1 from [Courses].[CourseInstance] where [IntakeId] = @intakeid and [TrackId] = @trackid)
     begin
         update [orgnization].[IntakeTrack]
-        set [isActive] = 0
+        set [isActive] = 0 , [isDeleted] =1
         where [IntakeId] = @intakeid and [TrackId] = @trackid;
         
-        print 'students are enrolled and exist asome courses . status changed to inactive instead of deletion.';
     end
     else 
     begin
         delete from [orgnization].[IntakeTrack] 
         where [IntakeId]= @intakeid and [TrackId] = @trackid;
         
-        print 'success: intaketrack relation deleted from database.';
     end
 end

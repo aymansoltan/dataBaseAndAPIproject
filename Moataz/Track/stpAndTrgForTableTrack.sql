@@ -1,144 +1,121 @@
 use [ExaminationSystemDB]
 go
 create or alter proc  [TrainingMangerStp].stp_AddTrack
-    @TrackName nvarchar(50),
-    @DeptId int
+    @TrackName varchar(40),
+    @DeptId tinyint
 as
 begin
+    set nocount on;
     begin try
+        if not exists (select 1 from [Department] where [DeptId] = @DeptId and [isActive] = 1 and [isDeleted] = 0)
+            throw 50004, 'Error: Department not found, inactive, or it has been deleted.', 1;
+
         if len(trim(@TrackName)) < 3
-        begin
-            raiserror('Track name is too short. must be at least 3 characters.', 16, 1);
-            return;
-        end
+            throw 50005, 'Error: Track name must be at least 3 characters long.', 1;
 
-        if not exists (select 1 from [orgnization].[Department] where [DeptId] = @DeptId and [isActive] = 1)
-        begin
-            raiserror('cannot Add track: Department not found or is currently inactive.', 16, 1);
-            return;
-        end
+        if exists (select 1 from [Track] where [TrackName] = @TrackName and [DeprtmentId] = @DeptId)
+            throw 50006, 'Error: A track with this name already exists in the specified department.', 1;
 
-        if exists (select 1 from [orgnization].[Track] where [TrackName] = @TrackName and [DeprtmentId] = @DeptId)
-        begin
-            raiserror('this track name already exists in this department.', 16, 1);
-            return;
-        end
-
-   
-        insert into [orgnization].[Track] ([TrackName], [DeprtmentId])
+        insert into [Track] ([TrackName], [DeprtmentId])
         values (trim(@TrackName), @DeptId);
-
-        print 'track added successfully.';
-
+        select SCOPE_IDENTITY() as NewTrackId ,1 as Success , 'track added Successfully' as Message;
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+        throw;  
     end catch
 end
 go
 create or alter proc [TrainingMangerStp].stp_UpdateTrack
-    @TrackId int,
-    @TrackName nvarchar(50),
-    @DeptId int
+    @TrackId smallint,
+    @TrackName varchar(40),
+    @DeptId tinyint
 as
 begin
+    set nocount on;
     begin try
-        if not exists (select 1 from [orgnization].[Track] where [TrackId] = @TrackId)
-        begin
-            raiserror('error: track id not found.', 16, 1);
-            return;
-        end
 
-        if not exists (select 1 from [orgnization].[Department] where [DeptId] = @DeptId and [isActive] = 1)
-        begin
-            raiserror('cannot update: target department is invalid or inactive.', 16, 1);
-            return;
-        end
+        if not exists (select 1 from [Track] where [TrackId] = @TrackId and [isDeleted] = 0 and [isActive] = 1)
+            throw 50007, 'Error: Track not found, inactive, or it has been deleted.', 1;
 
-        if exists (select 1 from [orgnization].[Track] 
-                   where [TrackName] = @TrackName and [DeprtmentId] = @DeptId and [TrackId] <> @TrackId)
-        begin
-            raiserror('this track name already exists in this department.', 16, 1);
-            return;
-        end
+        if not exists (select 1 from [Department] where [DeptId] = @DeptId and [isActive] = 1 and [isDeleted] = 0 )
+            throw 50004, 'Error: Department not found, inactive, or it has been deleted.', 1;
 
-        update [orgnization].[Track]
+        if exists (select 1 from [Track] where [TrackName] = @TrackName and [DeprtmentId] = @DeptId and [TrackId] <> @TrackId)
+            throw 50006, 'Error: A track with this name already exists in the specified department.', 1;
+
+        update [Track]
         set [TrackName] = trim(@TrackName),
           [DeprtmentId] = @DeptId
         where [TrackId] = @TrackId;
 
-        print 'track updated successfully.';
+        select @TrackId as UpdatedTrackId , 1 as Success , 'Track updated Successfully' as Message;
+
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+        throw;
     end catch
 end
 go
 
 
 create or alter proc  [TrainingMangerStp].stp_DeleteTrack
-    @trackid int
+    @trackid smallint
 as
 begin
+    set nocount on;
     begin try
-        if not exists (select 1 from [orgnization].[Track] where [TrackId] = @trackid)
-        begin
-            raiserror('error: track id not found.', 16, 1);
-            return;
-        end
-
-        delete from [orgnization].[Track] where [TrackId] = @trackid;
+        if not exists (select 1 from [Track] where [TrackId] = @trackid and [isDeleted] = 0 and [isActive] = 1)
+            throw 50007, 'Error: Track not found, inactive, or it has been deleted.', 1;
+        delete from [Track] where [TrackId] = @trackid;
+        select 1 as Success ,'track deleted Successfully' as Message;
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);   
+        throw;
     end catch
 end
 go
 
+
+
 create or alter trigger [orgnization].trg_SoftDeleteTrack
-on [orgnization].[Track]
+on [Track]
 instead of delete
 as
 begin
-    declare @id int;
-    select @id = [TrackId] from deleted;
+    set nocount on;
+    declare @Trackid smallint;
+    select @Trackid = [TrackId] from deleted;
 
-    if exists (select 1 from [userAcc].[Student] where [TrackId] = @id)
-       or exists (select 1 from [Courses].[CourseInstance] where [TrackId] = @id)
+    if exists (select 1 from [Students] where [TrackId] = @Trackid)
+       or exists (select 1 from [CourseInstance] where [TrackId] = @Trackid)
     begin
-        update [orgnization].[Track]
-        set [isActive] = 0
-        where [TrackId] = @id;
-        
-        print 'caution: track is linked to students or courses. changed to inactive.';
+        update [Track]
+        set [isActive] = 0 , [isDeleted] = 1
+        where [TrackId] = @Trackid;
     end
     else 
     begin
-        delete from [orgnization].[Track] where [TrackId] = @id;
-        print 'success: track deleted from database.';
+        delete from [Track] where [TrackId] = @Trackid;
     end
 end
+
 go
 create or alter trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveTrack
-on [orgnization].[Track]
+on [Track]
 after update
 as
 begin
-
+    set nocount on;
     if exists (select 1 from inserted i join deleted d on i.TrackId = d.TrackId 
                where i.isActive = 0 and d.isActive = 1)
     begin
-        declare @trackid int;
+        declare @trackid smallint;
         select @trackid = TrackId from inserted;
 
    
-        update [orgnization].[IntakeTrack]
+        update [IntakeTrack]
         set [isActive] = 0
         where [TrackId] = @trackid;
 
-        print 'track deactivated: all related intaketracks are now inactive.';
     end
 end

@@ -1,18 +1,17 @@
 go
 create or alter proc [TrainingMangerStp].stp_AddCourse 
-    @CourseName nvarchar(50),
+    @CourseName varchar(20),
     @MaxDegree  int,
     @MinDegree  int,
     @Description nvarchar(max) = null 
 as 
 begin
-      set nocount on;
+set nocount on;
     begin try
         
-        if ltrim(rtrim(@coursename)) = '' or len(ltrim(rtrim(@coursename))) < 2
+        if trim(@coursename) = '' or len(trim(@coursename)) < 2
             throw 53001, 'error: course name cannot be empty and must be at least 2 characters.', 1;
 
-      
         if exists (select 1 from[Courses].[Course] where [CourseName] = lower(trim(@coursename)))
             throw 53002, 'error: course name already exists.', 1;
 
@@ -22,14 +21,13 @@ begin
         if @mindegree >= @maxdegree
             throw 53004, 'error: min degree must be strictly less than max degree.', 1;
 
-   
         if @mindegree <= (@maxdegree * 1.0 / 3.0)
             throw 53005, 'error: min degree must be greater than one-third of the max degree.', 1;
 
         insert into [Courses].[Course] ([CourseName] , [MaxDegree] , [MinDegree] , [CourseDescription]   )
         values (lower(trim(@coursename)), @maxdegree, @mindegree, ltrim(rtrim(@description)));
 
-        print 'course added successfully.';
+        select SCOPE_IDENTITY() as NewCourseId;
     end try
     begin catch
         throw;
@@ -38,18 +36,21 @@ end
 go
 create or alter proc [TrainingMangerStp].stp_UpdateCourse
     @CourseId   int,
-    @CourseName nvarchar(50) = null,
+    @CourseName varchar(30) = null,
     @MaxDegree  int = null,
     @MinDegree  int = null,
-    @Description nvarchar(max) = null,
+    @Description varchar(max) = null,
     @IsActive   bit = null
 as 
 begin
     set nocount on;
     begin try
-        if not exists (select 1 from [Courses].[Course]  where [CourseId] = @CourseId)
-            throw 53020, 'error: course not found.', 1;
-
+        if not exists (select 1 from [Courses].[Course]  where [CourseId] = @CourseId and [isDeleted] = 0)
+            throw 53020, 'Error: Course not found or it has been deleted.', 1;
+        
+        if @CourseName is not null and (trim(@CourseName) = '' or len(trim(@CourseName)) < 2)
+            throw 53001, 'error: course name cannot be empty and must be at least 2 characters.', 1;
+        
         declare @CurrentMax int, @CurrentMin int;
 
         select @CurrentMax = MaxDegree, @CurrentMin = MinDegree 
@@ -58,9 +59,8 @@ begin
         set @CurrentMax = coalesce(@MaxDegree, @CurrentMax);
         set @CurrentMin = coalesce(@MinDegree, @CurrentMin);
 
-        if @CourseName is not null and exists (
-            select 1 from [Courses].[Course]
-            where [CourseName] = lower(trim(@CourseName)) and [CourseId] <> @CourseId
+        if @CourseName is not null and exists (select 1 from [Courses].[Course]
+            where [CourseName] = lower(trim(@CourseName)) and [CourseId] <> @CourseId and [isDeleted] = 0
         )
             throw 53021, 'error: course name already exists.', 1;
 
@@ -82,7 +82,8 @@ begin
             [isActive]    = coalesce(@IsActive, isActive)
         where [CourseId] = @CourseId;
 
-        print 'course updated successfully.';
+        select @CourseId as UpdatedCourseId;
+        
     end try 
     begin catch
         throw;
@@ -95,14 +96,14 @@ create or alter proc [TrainingMangerStp].stp_DeleteCourse
 as 
 begin
     set nocount on;
-        if not exists (select 1 from [Courses].[Course]  where [CourseId] = @CourseId)
-            throw  53030, 'Error: Course not found.', 1;
+        if not exists (select 1 from [Courses].[Course]  where [CourseId] = @CourseId and [isDeleted] = 0)
+            throw  53030, 'Error: Course not found or it has been deleted.', 1;
         
         delete from [Courses].[Course] where [CourseId] =@CourseId
-
-        print 'Course deactivated successfully (Soft Delete).';
+        
 end;
 go
+
 create or alter trigger [courses].trg_Softcoursedelete
 on [courses].[course]
 instead of delete
@@ -110,7 +111,7 @@ as
 begin
     set nocount on;
 
-    declare @courseid int, @coursename nvarchar(100);
+    declare @courseid int, @coursename varchar(20);
     
     select @courseid = CourseId, @coursename = CourseName from deleted;
 

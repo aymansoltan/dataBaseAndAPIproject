@@ -1,122 +1,108 @@
 use [ExaminationSystemDB]
 go
 create or alter proc [TrainingMangerStp].stp_AddIntake
-    @IntakeName nvarchar(50)
+    @IntakeName varchar(40)
 as
 begin
+    set nocount on;
     begin try
         if len(trim(@IntakeName))<2
-        begin
-            raiserror('error: this intake name  must be at least 2 letters.', 16, 1);
-            return;
-        end
+            throw 50001, 'Error: Intake name must be at least 2 characters long.', 1;
      
         if exists (select 1 from [orgnization].[Intake] where [IntakeName] = @IntakeName)
-        begin
-            raiserror('error: this intake name already exists.', 16, 1);
-            return;
-        end
+            throw 50002, 'Error: This intake name already exists.', 1;
 
         insert into [orgnization].[Intake] ([IntakeName])
         values (trim(@IntakeName));
 
-        print 'intake "' + @IntakeName + '" added successfully.';
+        select SCOPE_IDENTITY() as NewIntakeId;
     end try
     begin catch
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+        throw;  
     end catch
 end
+
 go
 create or alter proc [TrainingMangerStp].stp_UpdateIntake
     @IntakeId int,
-    @IntakeName nvarchar(50),
+    @IntakeName varchar(20),
     @IsActive bit =1
 as
 begin
+    set nocount on;
     begin try
-        if not exists (select 1 from [orgnization].[Intake] where [IntakeId] = @IntakeId)
-        begin
-            raiserror('error: intake id not found.', 16, 1);
-            return;
-        end
+        if not exists (select 1 from [orgnization].[Intake] where [IntakeId] = @IntakeId and [isDeleted] = 0)
+            throw 50003, 'Error: Intake not found or it has been deleted.', 1;
 
         if len(trim(@IntakeName)) <3
-        begin
-            raiserror('sorry Intake name must be at least 3 letters ' ,16,1)
-            return;
-        end
+            throw 50001, 'Error: Intake name must be at least 2 characters long.', 1;
 
-        if exists (select 1 from [orgnization].[Intake] where [IntakeName] = @IntakeName and [IntakeId] <> @IntakeId)
-        begin
-            raiserror('error: another intake already has this name.', 16, 1);
-            return;
-        end
+         if exists (select 1 from [orgnization].[Intake] where [IntakeName] = @IntakeName and [IntakeId] <> @IntakeId)
+            throw 50002, 'Error: This intake name already exists.', 1;
 
         update [orgnization].[Intake]
         set [IntakeName] = trim(@IntakeName),
             [isActive] = @IsActive
         where [IntakeId] = @IntakeId;
 
-        print 'intake updated successfully.';
+        select @IntakeId as UpdatedIntakeId;
     end try
     begin catch
-        declare  @errorMessage nvarchar(2000) = ERROR_MESSAGE() 
-        raiserror(@errorMessage ,16,1)    
+        throw;  
     end catch
 end
+
 go
+
 create or alter proc [TrainingMangerStp].stp_DeleteIntack @IntakeId int
 as
 begin
+    set nocount on;
     begin try
-        if not exists(select 1 from [orgnization].[Intake] where [IntakeId] = @IntakeId)
-        begin
-            raiserror('wrong id : this branch not found',16,1)
-            return
-        end
+        if not exists(select 1 from [orgnization].[Intake] where [IntakeId] = @IntakeId and [isDeleted] = 0 )
+            throw 50003, 'Error: Intake not found or it has been deleted.', 1;
 
         delete from [orgnization].[Intake] where [IntakeId] = @IntakeId
-        print ' the opration is handel by the system triggre '
 
     end try
     begin catch
-        declare @errorMassege nvarchar(2000) = Error_Message()
-        raiserror(@errorMassege ,16,1)
+        throw;  
     end catch
 end
 go
+
 create or alter trigger [orgnization].trg_SoftDeleteIntake
 on [orgnization].[Intake]
 instead of delete
 as
 begin
-    declare @id int;
-    select @id = [IntakeId] from deleted;
+    set nocount on;
+    declare @Intakeid int;
+    select @Intakeid = [IntakeId] from deleted;
 
-    if exists (select 1 from [userAcc].[Student] where [IntakeId] = @id)
-        or exists(select 1 from [orgnization].[IntakeTrack] where [IntakeId] = @id )
-        or exists(select 1 from [Courses].[CourseInstance] where [IntakeId] = @id )
+    if exists (select 1 from [userAcc].[Student] where [IntakeId] = @Intakeid)
+        or exists(select 1 from [orgnization].[IntakeTrack] where [IntakeId] = @Intakeid )
+        or exists(select 1 from [Courses].[CourseInstance] where [IntakeId] = @Intakeid )
 
     begin
         update [orgnization].[Intake]
-        set [isActive] = 0
-        where [IntakeId] = @id;
+        set [isActive] = 0 , [isDeleted] = 1
+        where [IntakeId] = @Intakeid;
         
-        print 'caution: intake is linked to students and courses. status changed to inactive instead of delete.';
     end
     else 
     begin
-        delete from [orgnization].[Intake] where [IntakeId] = @id;
-        print 'success: intake deleted completely.';
+        delete from [orgnization].[Intake] where [IntakeId] = @Intakeid;
     end
 end
 go
+
 create or alter trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveIntake
 on [orgnization].[Intake]
 after update
 as
 begin
+    set nocount on;
     if exists (select 1 from inserted i join deleted d on i.IntakeId = d.IntakeId 
                where i.isActive = 0 and d.isActive = 1)
     begin
@@ -125,9 +111,7 @@ begin
 
   
         update [orgnization].[IntakeTrack]
-        set [isActive] = 0
+        set [isActive] = 0 , [isDeleted] = 1
         where [IntakeId] = @intakeid;
-
-        print 'intake deactivated: all tracks within this intake are now inactive.';
     end
 end

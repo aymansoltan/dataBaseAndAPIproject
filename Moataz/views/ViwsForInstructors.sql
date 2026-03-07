@@ -31,7 +31,7 @@ as
     inner join [orgnization].Branch      b  on d.BranchId = b.BranchId
 
     -- each instructor sees only their own data
-    where  ua.UserName = suser_name()
+    where  ua.UserName = replace(SUSER_SNAME(),'login','user')
       and  ua.isActive = 1
       and  i.isActive  = 1;
 go
@@ -72,7 +72,7 @@ as
     inner join [orgnization].Branch      b  on ci.BranchId          = b.BranchId
 
     -- each instructor sees only their own courses
-    where  ua.UserName =  suser_name()
+    where  ua.UserName = replace(SUSER_SNAME(),'login','user')
       and  ua.isActive = 1
       and  i.isActive  = 1
       and  c.isActive  = 1;
@@ -121,7 +121,7 @@ as
     inner join [exams].Exam              e  on ci.CourseInstanceId  = e.CourseInstanceId
 
     -- each instructor sees only their own exams
-    where  ua.UserName =  suser_name()
+    where  ua.UserName =  replace(SUSER_SNAME(),'login','user')
       and  ua.isActive = 1
       and  i.isActive  = 1;
 go
@@ -149,7 +149,7 @@ begin
         inner join [userAcc].Instructor i
             on ua.UserId  = i.UserId
            and i.isActive = 1
-        where  ua.UserName =  suser_name()
+        where  ua.UserName =  replace(SUSER_SNAME(),'login','user')
           and  ua.isActive = 1;
 
         if @CurrentInsId is null

@@ -73,13 +73,13 @@ go
 create schema [admin]
 go
 
-
-create table [orgnization].Branch
+create  or alter table [orgnization].Branch
 (
-    BranchId int identity(1,1),
-    BranchName nvarchar(50) not null,
+    [Department] tinyint identity(1,1),
+    BranchName varchar(15) not null,
     isActive bit constraint branchActiveDefault default 1,
-    createdAt datetime constraint createdAtDefault default getdate(),
+    isDeleted bit constraint branchDeleteDefault default 0,
+    createdAt date constraint createdAtDefault default getdate(),
 
     constraint BranchPK primary key (BranchId),
     constraint BranchNameUniqe unique (BranchName),
@@ -87,12 +87,13 @@ create table [orgnization].Branch
     constraint BranchNameFormatCheck check (BranchName NOT like '[0-9]%' AND BranchName NOT like '[!@#$%^&*]%'),
 ) on [primary]
 go
-create table [orgnization].Department(
-    DeptId int identity(1,1),
-    DeptName nvarchar(50) not null,
+create or alter table [orgnization].Department(
+    DeptId tinyint identity(1,1),
+    DeptName varchar(20) not null,
     isActive bit constraint DepartmentActiveDefault default 1 ,
-    createdAt datetime constraint deptcreatedAtDefault default getdate(),
-    BranchId int,
+    isDeleted bit constraint DepartmentDeleteDefault default 0,
+    createdAt date constraint deptcreatedAtDefault default getdate(),
+    BranchId tinyint,
 
     constraint DepartmentPK primary key (DeptId),
     constraint DepartmentName_branchUniqe unique (DeptName ,BranchId ),
@@ -101,12 +102,13 @@ create table [orgnization].Department(
     constraint DepartmentBranchFK foreign key (BranchId) references [orgnization].[Branch](BranchId)
 ) on [primary]
 go
-create table [orgnization].Track(
-    TrackId int identity(1,1),
-    TrackName nvarchar(50) not null,
+create or alter table [orgnization].Track(
+    TrackId smallint identity(1,1),
+    TrackName varchar(40) not null,
     isActive bit constraint TrackActiveDefault default 1,
-    createdAt datetime constraint TrackCreatedAtDefault default getdate(),
-    DeprtmentId int,
+    isDeleted bit constraint TrackDeleteDefault default 0,
+    createdAt date constraint TrackCreatedAtDefault default getdate(),
+    DeprtmentId tinyint,
 
     constraint TrackPK primary key (TrackId),
     constraint TrackName_DeptUniqe unique (TrackName ,DeprtmentId ),
@@ -115,11 +117,12 @@ create table [orgnization].Track(
     constraint TrackDepartmentFK foreign key (DeprtmentId) references [orgnization].[Department](DeptId)
 ) on [primary]
 go
-create table [orgnization].Intake(
-    IntakeId int identity(1,1),
-    IntakeName nvarchar(50) not null,
+create or alter table [orgnization].Intake(
+    IntakeId tinyint identity(1,1),
+    IntakeName varchar(10) not null,
     isActive bit constraint IntakeActiveDefault default 1,
-    createdAt datetime constraint IntakeCreatedAtDefault default getdate(),
+    isDeleted bit constraint IntakeDeleteDefault default 0,
+    createdAt date constraint IntakeCreatedAtDefault default getdate(),
 
     constraint IntakePK primary key (IntakeId),
     constraint IntakeNameUniqe unique (IntakeName),
@@ -127,19 +130,23 @@ create table [orgnization].Intake(
     constraint IntakeNameFormatCheck check (IntakeName NOT like '[0-9]%' AND IntakeName NOT like '[!@#$%^&*]%'),
 ) on [primary]
 go
-create table [orgnization].IntakeTrack(
-    IntakeId int,
-    TrackId int,
+create or alter table [orgnization].IntakeTrack(
+    IntakeId tinyint,
+    TrackId smallint,
     isActive bit constraint IntakeTrackActiveDefault default 1,
+    isDeleted bit constraint IntakeTrackDeleteDefault default 0,
+    createdAt date constraint IntakeTrackCreatedAtDefault default getdate(),
 
     constraint IntakeTrackPK primary key (IntakeId ,TrackId),
     constraint IT_IntackFK foreign key (IntakeId) references [orgnization].Intake(IntakeId),
     constraint IT_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId)
 ) on [primary]
 go
-create table [userAcc].UserRole(
-    RoleId int identity(1,1),
-    RoleName nvarchar(20) not null,
+
+-- ===========================================================
+create or alter table [userAcc].UserRole(
+    RoleId tinyint identity(1,1),
+    RoleName varchar(20) not null,
 
     constraint RolePK primary key (RoleId),
     constraint RoleNameUniqe unique (RoleName),
@@ -147,14 +154,15 @@ create table [userAcc].UserRole(
     constraint RoleNameCheck check (RoleName in ('admin' , 'instructor','student','Training Manager'))
 ) on [FG_Users]
 go
-create table [userAcc].UserAccount(
+create or alter table [userAcc].UserAccount(
     UserId int identity(1,1),
-    UserName nvarchar(50) not null,
-    Email nvarchar(100) not null,
+    UserName varchar(50) not null,
+    Email varchar(100) not null,
     UserPassword nvarchar(250) not null,
     isActive bit constraint UserActiveDefault default 1,
-    createdAt datetime constraint UserCreatedAtDefault default getdate(),
-    RoleId int,
+    isDeleted bit constraint UserDeleteDefault default 0,
+    createdAt date constraint UserCreatedAtDefault default getdate(),
+    RoleId tinyint,
 
     constraint UserPK primary key (UserId),
     constraint UserNameUnique unique (UserName),
@@ -166,21 +174,22 @@ create table [userAcc].UserAccount(
     constraint UserRoleFK foreign key (RoleId) references [userAcc].UserRole(RoleId)
 )on [FG_Users]
 go
-create table [userAcc].Student (
+create or alter table [userAcc].Student (
     StudentId int identity(1,1),
-    FirstName nvarchar(50) not null,
-    LastName nvarchar(50) not null,
+    FirstName varchar(20) not null,
+    LastName varchar(20) not null,
     Gender char(1) not null,
     BirthDate date not null,
-    StuAddress nvarchar(150) not null,
-    Phone nvarchar(11) not null,
-    NationalID nchar(14) not null,
-    Age as (datediff(year, BirthDate, getdate())), 
+    StuAddress varchar(150) not null,
+    Phone char(11) not null,
+    NationalID char(14) not null,
+    Age as (datediff(year, BirthDate, getdate())) persisted,
     UserId int not null,
-    BranchId int not null,
-    IntakeId int not null,
-    TrackId int not null,
+    BranchId tinyint not null,
+    IntakeId tinyint not null,
+    TrackId smallint not null,
     isActive bit default 1,
+    isDeleted bit default 0,
     constraint StudentPK primary key (StudentId),
     constraint FirstNamelenCheck check(len(FirstName) >= 3),
     constraint FirstNameFormatCheck check (FirstName NOT like '[0-9]%' AND FirstName NOT like '[!@#$%^&*]%'),
@@ -204,21 +213,23 @@ create table [userAcc].Student (
     constraint StudentTrackFK foreign key (TrackId) references [orgnization].Track(TrackId)
 ) on [FG_Users];
 go
-create table [userAcc].Instructor (
+create or alter table [userAcc].Instructor (
     InsId int identity(1,1),
-    FirstName nvarchar(50) not null,
-    LastName nvarchar(50) not null,
+    FirstName varchar(20) not null,
+    LastName varchar(20) not null,
     BirthDate date,
-    Age as (datediff(year, BirthDate, getdate())), 
-    InsAddress nvarchar(150),
-    Phone nvarchar(11) not null,
-    NationalID nchar(14) not null,
+    Age as (datediff(year, BirthDate, getdate())) persisted, 
+    InsAddress varchar(150),
+    Phone char(11) not null,
+    NationalID char(14) not null,
     Salary decimal(10,2) not null,
     HireDate date constraint InsHireDateDefault default getdate(),
-    Specialization nvarchar(50) not null,
+    Specialization varchar(50) not null,
     UserId int not null,
-    DeptId int not null,
-    isActive bit default 1
+    DeptId tinyint not null,
+    isActive bit default 1,
+    isDeleted bit default 0,
+
     constraint InstructorPK primary key (InsId),
     constraint InstructorFirstNamelenCheck check(len(FirstName) >= 3),
     constraint InstructorFirstNameFormatCheck check (FirstName NOT like '[0-9]%' AND FirstName NOT like '[!@#$%^&*]%'),
@@ -240,75 +251,86 @@ create table [userAcc].Instructor (
     constraint InstructorUserFK foreign key (UserId) references [userAcc].UserAccount(UserId),
     constraint InstructorDeptFK foreign key (DeptId) references [orgnization].Department(DeptId)
 ) on [FG_Users];
+-- ==========================================================
 go
-create table [Courses].Course(
-    CourseId int identity(1,1),
-    CourseName nvarchar(50) not null,
-    CourseDescription nvarchar(max),
+create or alter table [Courses].Course(
+    CourseId smallint identity(1,1),
+    CourseName varchar(30) not null,
+    CourseDescription varchar(max),
     MinDegree int constraint MinDegreeDefault default 50,
     MaxDegree int constraint MaxDegreeDefault default 100,
-    isActive bit default 1
+    isDeleted bit constraint courseDeleteDefault default 0,
+    isActive bit default 1,
+    
+
     constraint CoursePK primary key (CourseId),
     constraint CourseNameUnique unique (CourseName),
     constraint CourseNameFormatCheck check (CourseName NOT like '[0-9]%' AND CourseName NOT like '[!@#$%^&*]%'),
     constraint MinDegreeCheck check (MinDegree >= (MaxDegree * 0.3)) 
 ) on [FG_Courses];
 go
-create table [Courses].CourseInstance(
-CourseInstanceId int identity(1,1),
-CourseId int not null,
-InstructorId int not null , 
-BranchId int not null,
-TrackId int not null,
-IntakeId int not null,
-AcademicYear int not null,
 
-constraint CourseInstancePK primary key (CourseInstanceId),
+create or alter table [Courses].CourseInstance(
+    CourseInstanceId smallint identity(1,1),
+    CourseId smallint not null,
+    InstructorId int not null , 
+    BranchId tinyint not null,
+    TrackId smallint not null,
+    IntakeId tinyint not null,
+    AcademicYear smallint not null,
+    isDeleted bit constraint courseInstanceDeleteDefault default 0,
+    isActive bit default 1
+    constraint CourseInstancePK primary key (CourseInstanceId),
 
-constraint CI_CourseFK foreign key (CourseId) references [Courses].Course(CourseId),
-constraint CI_InstructorFK foreign key (InstructorId) references [userAcc].Instructor(InsId),
-constraint CI_BranchFK foreign key (BranchId) references [orgnization].Branch(BranchId),
-constraint CI_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
-constraint CI_IntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId),
+    constraint CI_CourseFK foreign key (CourseId) references [Courses].Course(CourseId),
+    constraint CI_InstructorFK foreign key (InstructorId) references [userAcc].Instructor(InsId),
+    constraint CI_BranchFK foreign key (BranchId) references [orgnization].Branch(BranchId),
+    constraint CI_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
+    constraint CI_IntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId),
 ) on [FG_Courses];
-go
-create table [exams].Question(
-QuestionId int identity(1,1),
-QuestionText nvarchar(max) not null,
-QuestionType nvarchar(20) not null,
-CorrectAnswer nvarchar(max) ,
-BestAnswer nvarchar(max) not null, 
-Points int default 1,
-CourseId int not null,
-IsDeleted BIT DEFAULT 0,
 
-constraint QuestionPK primary key (QuestionId),
-constraint QuestionTypeCheck check (QuestionType in ('MCQ', 'T/F','Text')),
-constraint FK_Question_Course foreign key (CourseId) references [Courses].Course(CourseId)
-)on [FG_Questions] 
+-- ====================================================================
 go
-create table [exams].QuestionOption (
-    QuestionOptionId int identity(1,1),
-    QuestionOptionText nvarchar(max) not null,
-    QuestionId int not null,
+create or alter table [exams].Question(
+    QuestionId smallint identity(1,1),
+    QuestionText varchar(max) not null,
+    QuestionType varchar(5) not null,
+    CorrectAnswer char(1) ,
+    BestAnswer varchar(max) not null, 
+    Points tinyint default 1,
+    CourseId smallint not null,
+    isActive bit default 1,
+    isDeleted BIT DEFAULT 0,
+
+    constraint QuestionPK primary key (QuestionId),
+    constraint QuestionTypeCheck check (QuestionType in ('MCQ', 'T/F','Text')),
+    constraint FK_Question_Course foreign key (CourseId) references [Courses].Course(CourseId)
+)on [FG_Questions] 
+
+go
+create or alter table [exams].QuestionOption (
+    QuestionOptionId smallint identity(1,1),
+    QuestionOptionText varchar(max) not null,
+    QuestionId smallint not null,
 
     constraint QuestionOptionPK primary key (QuestionOptionId),
     constraint OQ_QuestionFK foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Questions];
+
 go
-create  table [exams].Exam (
-    ExamId int identity(1,1),
-    ExamTitle nvarchar(100) not null ,
-    ExamType nvarchar(20) not null default 'Regular', 
-    StartTime datetime not null,
-    EndTime datetime not null,
-    DurationMinutes AS (datediff(minute, StartTime, EndTime)),
-    CourseInstanceId int not null ,
-    BranchId int not null ,
-    TrackId int not null ,
-    IntakeId int not null ,
+create or alter table [exams].Exam (
+    ExamId smallint identity(1,1),
+    ExamTitle varchar(100) not null ,
+    ExamType varchar(11) not null default 'Regular', 
+    StartTime datetime2(0) not null,
+    EndTime datetime2(0) not null,
+    DurationMinutes AS (datediff(minute, StartTime, EndTime)) persisted,
+    CourseInstanceId smallint not null ,
+    BranchId tinyint not null ,
+    TrackId smallint not null ,
+    IntakeId tinyint not null ,
     IsDeleted bit default 0,
-    TotalGrade int 
+    TotalGrade tinyint 
 
     constraint ExamPK primary key (ExamId),
     constraint ExamTypeCheck check (ExamType IN ('Regular', 'Corrective')),
@@ -321,23 +343,24 @@ create  table [exams].Exam (
     constraint Exam_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
     constraint Exam_IntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId)
 ) on [FG_Exams];
+
 go
-create table [exams].ExamQuestion (
-    ExamId int not null,
-    QuestionId int not null,
+create or alter table [exams].ExamQuestion (
+    ExamId smallint not null,
+    QuestionId smallint not null,
 
     constraint ExamQuestionPK primary key (ExamId, QuestionId),
     constraint EQ_ExamFK foreign key (ExamId) references [exams].Exam(ExamId),
     constraint EQ_QuestionFK foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Exams];
 go
-create table [exams].Student_Answer (
+create or alter table [exams].Student_Answer (
     StudentId int not null,
-    ExamId int not null,
-    QuestionId int not null,
-    StudentResponse nvarchar(max), 
-    SystemGrade int default 0,        
-    InstructorGrade int,             
+    ExamId smallint not null,
+    QuestionId smallint not null,
+    StudentResponse varchar(max), 
+    SystemGrade tinyint default 0,        
+    InstructorGrade tinyint,             
     
     constraint StudentAnswerPK primary key (StudentId, ExamId, QuestionId),
     constraint FK_Ans_Student foreign key (StudentId) references [userAcc].Student(StudentId),
@@ -345,10 +368,10 @@ create table [exams].Student_Answer (
     constraint FK_Ans_Question foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Exams];
 go
-create table [exams].Student_Exam_Result (
+create or alter table [exams].Student_Exam_Result (
     StudentId int not null,
-    ExamId int not null,
-    TotalGrade int,                 
+    ExamId smallint not null,
+    TotalGrade tinyint,                 
     IsPassed bit default 0,                  
     
     constraint StudentResultPK primary key (StudentId, ExamId),
@@ -358,7 +381,7 @@ create table [exams].Student_Exam_Result (
 go
 create synonym Branch for [orgnization].Branch;
 go
-create synonym Dept for [orgnization].Department;
+create synonym Department for [orgnization].Department;
 go
 create synonym Track for [orgnization].Track;
 go
