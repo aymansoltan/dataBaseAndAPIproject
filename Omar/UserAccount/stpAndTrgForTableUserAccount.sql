@@ -1,93 +1,98 @@
 USE [ExaminationSystemDB]
 GO
-
-create or alter procedure [TrainingMangerStp].[stp_createsystemuser]
-    @username nvarchar(50),
-    @password nvarchar(250),
-    @email    nvarchar(100),
-    @roletype nvarchar(20) 
+create or alter proc [TrainingMangerStp].[stp_RegisterMemberByType]
+    @UserName varchar(50),
+    @Email varchar(100),
+    @Password varchar(250),
+    @TargetType varchar(5),
+    @FirstName varchar(20),
+    @LastName varchar(20),
+    @Gender char(1),
+    @BirthDate date,
+    @Address varchar(150),
+    @Phone char(11),
+    @NationalID char(14),
+    @BranchId tinyint = null,
+    @IntakeId tinyint = null,
+    @TrackId smallint = null,
+    @Salary decimal(10,2) = null,
+    @Specialization varchar(50) = null,
+    @DeptId tinyint = null
 as
 begin
     set nocount on;
+    declare @NewUserId int;
+    declare @RoleId tinyint;
+
     begin try
+            if len( @UserName) <10
+                throw 50001, 'Error: UserName must be at least 10 characters long.', 1;
+
+            if len(@Password) < 8
+                throw 50005, 'Error: Password must be at least 8 characters long.', 1;
+
+            if len(@FirstName) <2
+                throw 50006, 'Error: FirstName must be at least 2 characters long.', 1;
         begin transaction;
+            if lower(trim(@TargetType)) = 'std'
+                select @RoleId = RoleId from Roles where RoleName = 'student';
+            else if lower(trim(@TargetType)) = 'ins'
+                select @RoleId = RoleId from Roles where RoleName = 'instructor';
+            else
+                throw 50020, 'Error: Invalid TargetType. Use (std) or (ins).', 1;
 
-      
-        declare @cleanname nvarchar(50) = lower(trim(@username));
-        declare @cleanrole nvarchar(20) = lower(trim(@roletype));
-        declare @mappedrolename nvarchar(50) = (case when @cleanrole = 'manager' then 'training manager' else @cleanrole end);
+    
+            insert into [userAcc].[UserAccount] (UserName, Email, UserPassword, RoleId)
+            values (trim(@UserName), lower(trim(@Email)), @Password, @RoleId);
 
-        declare @targetroleid int;
-        select @targetroleid = [RoleId] from [userAcc].[UserRole] where [RoleName] = @mappedrolename;
+            set @NewUserId = SCOPE_IDENTITY();
 
-        if @targetroleid is null
-        begin
-            throw 50001, 'error: the specified role type does not exist in userrole table.', 1;
-        end
-
-        if @cleanrole in ('admin', 'manager')
-        begin
-            if exists (
-                select 1 
-                from [userAcc].[UserAccount] ua 
-                join [userAcc].[UserRole] r on ua.[RoleId] = r.[RoleId] 
-                where r.[RoleName] = @mappedrolename
-            )
+            if lower(@TargetType) = 'std'
             begin
-                declare @msg nvarchar(100) = 'error: only one ' + @mappedrolename + ' account is allowed.';
-                throw 50002, @msg, 1;
+                insert into [orgnization].[Students] (
+                    FirstName, LastName, Gender, BirthDate, StuAddress, 
+                    Phone, NationalID, UserId, BranchId, IntakeId, TrackId
+                )
+                values (
+                    @FirstName, @LastName, @Gender, @BirthDate, @Address, 
+                    @Phone, @NationalID, @NewUserId, @BranchId, @IntakeId, @TrackId
+                );
             end
-        end
-
-  
-        declare @loginname nvarchar(100) = @cleanname + 'login';
-        declare @dbusername nvarchar(100) = @cleanname + 'user';
-        
-        if exists (select 1 from sys.server_principals where name = @loginname)
-            throw 50003, 'error: login already exists on the server.', 1;
-
-   
-        declare @sqllogin nvarchar(max) = 'create login [' + @loginname + '] with password = ''' + @password + ''';';
-        declare @sqluser  nvarchar(max) = 'create user [' + @dbusername + '] for login [' + @loginname + '];';
-        
-        declare @dbrolename nvarchar(50) = case 
-            when @cleanrole = 'admin' then 'adminrole'
-            when @cleanrole = 'instructor' then 'instructorerole'
-            when @cleanrole = 'student' then 'studentrole'
-            when @cleanrole = 'manager' then 'trainningmangerrole'
-        end;
-
-        exec sp_executesql @sqllogin;
-        exec sp_executesql @sqluser;
-        
-
-        declare @sqladdrole nvarchar(max) = 'alter role [' + @dbrolename + '] add member [' + @dbusername + '];';
-        exec sp_executesql @sqladdrole;
-
-       
-        insert into [useracc].useraccount (username, email, userpassword, roleid)
-        values (@dbusername, lower(trim(@email)), @password, @targetroleid);
+            else if lower(@TargetType) = 'ins'
+            begin
+                insert into [orgnization].[Instructors] (
+                    InsName, Salary, Specialization, DeptId, UserId
+                )
+                values (
+                    @FullInsName, @Salary, @Specialization, @DeptId, @NewUserId
+                );
+            end
 
         commit transaction;
-        print 'user account and server login created successfully.';
+
+        select @NewUserId as UserId, 1 as Success, 'Registration completed for ' + @TargetType as Message;
+
     end try
     begin catch
         if @@trancount > 0 rollback transaction;
-        declare @errormessage nvarchar(4000) = error_message();
-        raiserror(@errormessage, 16, 1);
+        
+        -- Ù…Ø¹Ø§Ù„Ø¬Ø© ØªÙƒØ±Ø§Ø± Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„ÙØ±ÙŠØ¯Ø© (Unique Constraints)
+        if error_number() in (2627, 2601)
+            throw 50021, 'Error: UserName, Email, Phone, or NationalID already exists.', 1;
+        else
+            throw;
     end catch
-end;
+end
 go
-
 ------------------------------------------------------------
 -- 2) Update User (Fully Secured)
 ------------------------------------------------------------
 go
 create or alter procedure [TrainingMangerStp].[stp_updateuseraccount] 
     @userid int,
-    @username nvarchar(50) = null,     -- ÇáÇÓã ÇáÌÏíÏ (áæ ÍÇÈÈ ÊÛíÑå)
+    @username nvarchar(50) = null,     -- ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½)
     @email nvarchar(100) = null,
-    @password nvarchar(250) = null,   -- ßáãÉ ÇáÓÑ ÇáÌÏíÏÉ
+    @password nvarchar(250) = null,   -- ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     @isactive bit = null
 as
 begin
@@ -95,7 +100,7 @@ begin
     begin try
         begin transaction;
 
-        -- 1. ÇáÊÃßÏ ãä æÌæÏ ÇáíæÒÑ
+        -- 1. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if not exists (select 1 from [useracc].[useraccount] where userid = @userid)
             throw 50003, 'error: user id not found.', 1;
 
@@ -103,7 +108,7 @@ begin
         declare @oldloginname nvarchar(100);
         declare @rolename nvarchar(20);
 
-        -- ÌáÈ ÇáÈíÇäÇÊ ÇáÍÇáíÉ
+        -- ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         select 
             @olddbusername = ua.username,
             @rolename = r.rolename
@@ -111,21 +116,21 @@ begin
         join [useracc].userrole r on ua.roleid = r.roleid
         where ua.userid = @userid;
 
-        -- 2. ÍãÇíÉ ÇáÃÏãä (ããäæÚ ÇáÊÚÏíá Úáíå ãä åäÇ)
+        -- 2. ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½)
         if @rolename = 'admin'
             throw 50004, 'error: admin account cannot be modified via this procedure.', 1;
 
-        -- 3. ÊÍÏíË ßáãÉ ÇáÓÑ Úáì ÇáÓíÑİÑ (áæ ãÈÚæÊÉ)
+        -- 3. ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
         if @password is not null
         begin
-            -- ÈäÔÊŞ ÇÓã ÇááæÌä (ÇáÇÓã ÇáŞÏíã + login) Òí ãÇ ÚãáäÇ İí ÇáßÑíå
+            -- ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ + login) ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             set @oldloginname = replace(@olddbusername, 'user', 'login'); 
             
             declare @sqlpass nvarchar(max) = 'alter login [' + @oldloginname + '] with password = ''' + @password + ''';';
             exec sp_executesql @sqlpass;
         end
 
-        -- 4. ÊÍÏíË ÍÇáÉ ÇáÍÓÇÈ (active / inactive) Úáì ÇáÓíÑİÑ
+        -- 4. ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (active / inactive) ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if @isactive is not null
         begin
             set @oldloginname = replace(@olddbusername, 'user', 'login');
@@ -133,7 +138,7 @@ begin
             exec sp_executesql @sqlstatus;
         end
 
-        -- 5. ÊÍÏíË ÇáÌÏæá ÇáÏÇÎáí (useraccount)
+        -- 5. ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (useraccount)
         update [useracc].[useraccount]
         set 
             email = isnull(lower(trim(@email)), email),
