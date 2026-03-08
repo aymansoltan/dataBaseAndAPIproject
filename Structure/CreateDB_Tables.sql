@@ -214,7 +214,7 @@ create or alter table [userAcc].Student (
 ) on [FG_Users];
 go
 create or alter table [userAcc].Instructor (
-    InsId int identity(1,1),
+    InstructorId int identity(1,1),
     FirstName varchar(20) not null,
     LastName varchar(20) not null,
     BirthDate date,
@@ -230,7 +230,7 @@ create or alter table [userAcc].Instructor (
     isActive bit default 1,
     isDeleted bit default 0,
 
-    constraint InstructorPK primary key (InsId),
+    constraint InstructorPK primary key (InstructorId),
     constraint InstructorFirstNamelenCheck check(len(FirstName) >= 3),
     constraint InstructorFirstNameFormatCheck check (FirstName NOT like '[0-9]%' AND FirstName NOT like '[!@#$%^&*]%'),
 
@@ -283,7 +283,7 @@ create or alter table [Courses].CourseInstance(
     constraint CourseInstancePK primary key (CourseInstanceId),
 
     constraint CI_CourseFK foreign key (CourseId) references [Courses].Course(CourseId),
-    constraint CI_InstructorFK foreign key (InstructorId) references [userAcc].Instructor(InsId),
+    constraint CI_InstructorFK foreign key (InstructorId) references [userAcc].Instructor(InstructorId),
     constraint CI_BranchFK foreign key (BranchId) references [orgnization].Branch(BranchId),
     constraint CI_TrackFK foreign key (TrackId) references [orgnization].Track(TrackId),
     constraint CI_IntakeFK foreign key (IntakeId) references [orgnization].Intake(IntakeId),
