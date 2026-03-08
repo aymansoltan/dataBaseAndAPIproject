@@ -1,9 +1,9 @@
 go
 create or alter proc [TrainingMangerStp].stp_AddCourse 
     @CourseName varchar(20),
-    @MaxDegree  int,
-    @MinDegree  int,
-    @Description nvarchar(max) = null 
+    @MaxDegree  tinyint,
+    @MinDegree  tinyint,
+    @Description varchar(500) = null 
 as 
 begin
 set nocount on;
@@ -27,7 +27,7 @@ set nocount on;
         insert into [Courses].[Course] ([CourseName] , [MaxDegree] , [MinDegree] , [CourseDescription]   )
         values (lower(trim(@coursename)), @maxdegree, @mindegree, ltrim(rtrim(@description)));
 
-        select SCOPE_IDENTITY() as NewCourseId;
+        select SCOPE_IDENTITY() as NewCourseId , 1 as Success, 'Course added successfully.' as Message  ;
     end try
     begin catch
         throw;
@@ -35,12 +35,11 @@ set nocount on;
 end
 go
 create or alter proc [TrainingMangerStp].stp_UpdateCourse
-    @CourseId   int,
+    @CourseId   smallint,
     @CourseName varchar(30) = null,
-    @MaxDegree  int = null,
-    @MinDegree  int = null,
-    @Description varchar(max) = null,
-    @IsActive   bit = null
+    @MaxDegree  tinyint = null,
+    @MinDegree  tinyint = null,
+    @Description varchar(500) = null,
 as 
 begin
     set nocount on;
@@ -51,7 +50,7 @@ begin
         if @CourseName is not null and (trim(@CourseName) = '' or len(trim(@CourseName)) < 2)
             throw 53001, 'error: course name cannot be empty and must be at least 2 characters.', 1;
         
-        declare @CurrentMax int, @CurrentMin int;
+        declare @CurrentMax tinyint, @CurrentMin tinyint;
 
         select @CurrentMax = MaxDegree, @CurrentMin = MinDegree 
         from [Courses].[Course]  where [CourseId] = @CourseId;
@@ -78,11 +77,10 @@ begin
             [CourseName]  = coalesce(lower(trim(@CourseName)), CourseName),
             [MaxDegree]   = @CurrentMax,
             [MinDegree]   = @CurrentMin,
-            [CourseDescription] = coalesce(trim(@Description),[CourseDescription] ),
-            [isActive]    = coalesce(@IsActive, isActive)
+            [CourseDescription] = coalesce(trim(@Description),[CourseDescription] )
         where [CourseId] = @CourseId;
 
-        select @CourseId as UpdatedCourseId;
+        select @CourseId as UpdatedCourseId, 1 as Success, 'Course updated successfully.' as Message;
         
     end try 
     begin catch
@@ -92,7 +90,7 @@ end;
 
 go
 create or alter proc [TrainingMangerStp].stp_DeleteCourse
-    @CourseId int
+    @CourseId smallint
 as 
 begin
     set nocount on;
@@ -100,6 +98,7 @@ begin
             throw  53030, 'Error: Course not found or it has been deleted.', 1;
         
         delete from [Courses].[Course] where [CourseId] =@CourseId
+        select 1 as Success, 'Course deleted successfully.' as Message;
         
 end;
 go
@@ -111,7 +110,7 @@ as
 begin
     set nocount on;
 
-    declare @courseid int, @coursename varchar(20);
+    declare @courseid smallint, @coursename varchar(30);
     
     select @courseid = CourseId, @coursename = CourseName from deleted;
 
@@ -119,17 +118,14 @@ begin
        or exists (select 1 from [exams].[Question] where [CourseId] = @courseid)
     begin
         update [courses].[course]
-        set [isActive] = 0
+        set [isActive] = 0 , isDeleted = 1
         where [CourseId] = @courseid;
 
-        print 'note: course (' + @coursename + ') has related data. so it was marked as "inactive" instead of being deleted';
     end
     else
     begin
         delete from [courses].[course]
         where [CourseId] = @courseid;
-
-        print 'success: course (' + @coursename + ') deleted permanently.';
     end
 end;
 go

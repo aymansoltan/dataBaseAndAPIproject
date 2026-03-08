@@ -256,7 +256,7 @@ go
 create or alter table [Courses].Course(
     CourseId smallint identity(1,1),
     CourseName varchar(30) not null,
-    CourseDescription varchar(max),
+    CourseDescription varchar(500),
     MinDegree int constraint MinDegreeDefault default 50,
     MaxDegree int constraint MaxDegreeDefault default 100,
     isDeleted bit constraint courseDeleteDefault default 0,
