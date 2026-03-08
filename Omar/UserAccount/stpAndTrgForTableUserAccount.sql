@@ -243,68 +243,85 @@ end
 go
 
 go
-CREATE or alter PROC [TrainingMangerStp].stp_DeleteUserAccount 
+create or alter proc [TrainingMangerStp].stp_DeleteUserAccount 
     @UserId int
-AS
-BEGIN
-    SET NOCOUNT ON;
+as
+begin
+    set nocount on;
 
-    BEGIN TRY
+    begin try
 
-        IF NOT EXISTS (
-            SELECT 1 
-            FROM [Accounts]
-            WHERE UserId = @UserId
+        if not exists (
+            select 1 
+            from [Accounts]
+            where UserId = @UserId
         )
-            THROW 50008, 'User ID not found.', 1;
+            throw 50008, 'User ID not found.', 1;
 
-        DELETE FROM [Accounts]
-        WHERE UserId = @UserId;
+        delete from [Accounts] where UserId = @UserId;
 
         select @UserId as UserId, 1 as Success, 'User account deleted successfully.' as Message;    
+    end try
+    begin catch
+        throw;
+    end catch
+end
 
-    END TRY
-    BEGIN CATCH
-        THROW;
-    END CATCH
-END
-GO
 
 
 CREATE OR ALTER TRIGGER [userAcc].trg_SoftDeleteUserAccount
-ON [Accounts]
+ON [Accounts] 
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-
     IF EXISTS (
-        SELECT 1
-        FROM deleted d
-        JOIN [Accounts] UA 
-            ON UA.UserId = d.UserId
-        JOIN [Roles] R
-            ON UA.RoleId = R.RoleId
+        SELECT 1 FROM deleted d
+        JOIN [Accounts] UA ON UA.UserId = d.UserId
+        JOIN [Roles] R ON UA.RoleId = R.RoleId
         WHERE R.RoleName = 'admin'
     )
-    throw 50022, 'Error: Cannot delete an admin account.', 1;
+    THROW 50022, 'Error: Cannot delete an admin account.', 1;
 
-    UPDATE S
-    SET isActive = 0 , isDeleted = 1
-    FROM [Students] S
-    JOIN deleted d ON S.UserId = d.UserId;
+    IF EXISTS (
+        SELECT 1 FROM deleted d
+        JOIN [Students] S ON d.UserId = S.UserId
+        WHERE EXISTS (SELECT 1 FROM [StudentAnswers] SA WHERE SA.StudentId = S.StudentId)
+           OR EXISTS (SELECT 1 FROM [FinalResults] SR WHERE SR.StudentId = S.StudentId)
+    )
+    THROW 51030, 'Error: Cannot delete student with submitted answers or exam results.', 1;
 
+    -- 3. دمج شروط المدرس (Instructor Constraints)
+    -- بنشيك لو اليوزر ده مدرس وليه كورسات مسجلة (CourseInstances)
+    IF EXISTS (
+        SELECT 1 FROM deleted d
+        JOIN [Instructors] I ON d.UserId = I.UserId
+        WHERE EXISTS (SELECT 1 FROM [CourseInstructors] CI WHERE CI.InstructorId = I.InstructorId)
+           OR EXISTS (SELECT 1 FROM [CourseInstance] CI_INST WHERE CI_INST.InstructorId = I.InstructorId)
+    )
+    THROW 51035, 'Error: Cannot delete instructor assigned to active courses or course instances.', 1;
 
-    UPDATE I
-    SET isActive = 0 , isDeleted = 1
-    FROM [Instructors] I
-    JOIN deleted d ON I.UserId = d.UserId;
+    -- 4. تنفيذ الـ Soft Delete الفعلي (The Execution)
+    BEGIN TRANSACTION;
+        -- أ) تحديث جدول الطلاب لو موجود
+        UPDATE S 
+        SET isActive = 0, isDeleted = 1
+        FROM [Students] S
+        JOIN deleted d ON S.UserId = d.UserId;
 
+        -- ب) تحديث جدول المدرسين لو موجود
+        UPDATE I 
+        SET isActive = 0, isDeleted = 1
+        FROM [Instructors] I
+        JOIN deleted d ON I.UserId = d.UserId;
 
-    UPDATE UA
-    SET isActive = 0 , isDeleted = 1
-    FROM [Accounts] UA
-    JOIN deleted d ON UA.UserId = d.UserId;
+        -- ج) تحديث جدول الحسابات الأساسي
+        UPDATE UA 
+        SET isActive = 0, isDeleted = 1
+        FROM [Accounts] UA
+        JOIN deleted d ON UA.UserId = d.UserId;
+    COMMIT TRANSACTION;
+
+    PRINT 'Unified Soft Delete performed: User, Profile, and related records secured.';
 END
 GO
-
