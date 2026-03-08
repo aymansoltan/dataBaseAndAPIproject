@@ -16,6 +16,7 @@ create or alter proc [TrainingMangerStp].[stp_RegisterMemberByType]
     @IntakeId tinyint = null,
     @TrackId smallint = null,
     @Salary decimal(10,2) = null,
+    @HireDate date = null,
     @Specialization varchar(50) = null,
     @DeptId tinyint = null
 as
@@ -25,31 +26,59 @@ begin
     declare @RoleId tinyint;
 
     begin try
-            if len( @UserName) <10
-                throw 50001, 'Error: UserName must be at least 10 characters long.', 1;
+        if len( @UserName) <10
+            throw 50001, 'Error: UserName must be at least 10 characters long.', 1;
+        if len(@Email) < 10 or charindex('@', @Email) = 0 or charindex('.', @Email) = 0
+            throw 50002, 'Error: Invalid Email format.', 1;
 
-            if len(@Password) < 8
-                throw 50005, 'Error: Password must be at least 8 characters long.', 1;
+        if len(@Password) < 8
+            throw 50005, 'Error: Password must be at least 8 characters long.', 1;
 
-            if len(@FirstName) <2
-                throw 50006, 'Error: FirstName must be at least 2 characters long.', 1;
+        if len(@FirstName) <2 or len(@LastName)<2
+            throw 50006, 'Error: FirstName or lastName must be at least 2 characters long.', 1;
+
+        if @Gender not in ('M', 'F','m','f')
+            throw 50007, 'Error: Invalid Gender. Use (M) or (F).', 1;
+
+        if len(@Phone) <> 11
+            throw 50008, 'Error: Phone number must be exactly 11 digits.',1;
+
+        if len(@NationalID) <> 14
+            throw 50009, 'Error: NationalID must be exactly 14 digits.', 1;
+        if @BirthDate >= GETDATE()
+            throw 50011, 'Error: BirthDate must be a past date.', 1;   
+      
+        if lower(@TargetType) not in ('std', 'ins')
+            throw 50010, 'Error: Invalid TargetType. Use (std) or (ins).', 1;
+
         begin transaction;
-            if lower(trim(@TargetType)) = 'std'
-                select @RoleId = RoleId from Roles where RoleName = 'student';
-            else if lower(trim(@TargetType)) = 'ins'
-                select @RoleId = RoleId from Roles where RoleName = 'instructor';
-            else
-                throw 50020, 'Error: Invalid TargetType. Use (std) or (ins).', 1;
+  
+            select @RoleId = RoleId from [userAcc].[UserRole] where RoleName = case when lower(@TargetType) = 'std' then 'student' else 'instructor' end;
 
     
-            insert into [userAcc].[UserAccount] (UserName, Email, UserPassword, RoleId)
+            insert into [Accounts] (UserName, Email, UserPassword, RoleId)
             values (trim(@UserName), lower(trim(@Email)), @Password, @RoleId);
 
             set @NewUserId = SCOPE_IDENTITY();
 
             if lower(@TargetType) = 'std'
             begin
-                insert into [orgnization].[Students] (
+                if @birthdate >= DATEADD(year, -18, GETDATE())
+                    throw 50012, 'Error: Student must be at least 18 years old.', 1;
+
+                if @BranchId is null or @IntakeId is null or @TrackId is null
+                    throw 50014, 'Error: BranchId, IntakeId, and TrackId are required for students.', 1;
+
+                if not exists (select 1 from [Branch] where BranchId = @BranchId and isActive = 1 and isDeleted = 0)
+                    throw 50015, 'Error: BranchId does not exist or is inactive.', 1;
+
+                if not exists (select 1 from [Intake] where IntakeId = @IntakeId and isActive = 1 and isDeleted = 0)
+                    throw 50016, 'Error: IntakeId does not exist or is inactive.', 1;
+
+                if not exists (select 1 from [Track] where TrackId = @TrackId and isActive = 1 and isDeleted = 0)
+                    throw 50017, 'Error: TrackId does not exist or is inactive.', 1;
+
+                insert into [Students] (
                     FirstName, LastName, Gender, BirthDate, StuAddress, 
                     Phone, NationalID, UserId, BranchId, IntakeId, TrackId
                 )
@@ -60,11 +89,23 @@ begin
             end
             else if lower(@TargetType) = 'ins'
             begin
-                insert into [orgnization].[Instructors] (
-                    InsName, Salary, Specialization, DeptId, UserId
+                if @birthdate >= DATEADD(year, -20, GETDATE())
+                    throw 50013, 'Error: Instructor must be at least 20 years old.', 1;
+
+                if @Salary is null or @Specialization is null or @DeptId is null
+                    throw 50018, 'Error: Salary, Specialization, and DeptId are required for instructors.', 1;
+
+                if not exists (select 1 from [Department] where DeptId = @DeptId and isActive = 1 and isDeleted = 0)
+                    throw 50019, 'Error: DeptId does not exist or is inactive.', 1;
+
+                if @Salary <= 0
+                    throw 50020, 'Error: Salary must be a positive number.', 1;
+
+                insert into [Instructors] (
+                    FirstName, LastName,BirthDate, InsAddress,Phone,NationalID,HireDate,Salary, Specialization, DeptId, UserId
                 )
                 values (
-                    @FullInsName, @Salary, @Specialization, @DeptId, @NewUserId
+                    @FirstName, @LastName, @BirthDate, @Address, @Phone, @NationalID, @HireDate, @Salary, @Specialization, @DeptId, @NewUserId
                 );
             end
 
@@ -75,8 +116,7 @@ begin
     end try
     begin catch
         if @@trancount > 0 rollback transaction;
-        
-        -- معالجة تكرار البيانات الفريدة (Unique Constraints)
+
         if error_number() in (2627, 2601)
             throw 50021, 'Error: UserName, Email, Phone, or NationalID already exists.', 1;
         else
@@ -84,83 +124,124 @@ begin
     end catch
 end
 go
-------------------------------------------------------------
--- 2) Update User (Fully Secured)
-------------------------------------------------------------
-go
-create or alter procedure [TrainingMangerStp].[stp_updateuseraccount] 
-    @userid int,
-    @username nvarchar(50) = null,     -- ����� ������ (�� ���� �����)
-    @email nvarchar(100) = null,
-    @password nvarchar(250) = null,   -- ���� ���� �������
-    @isactive bit = null
+
+create or alter proc [TrainingMangerStp].[stp_UpdateMemberFull]
+    @UserId int,
+    @UserName varchar(50) = null,
+    @Email varchar(100) = null,
+    @Password varchar(250) = null,
+    @FirstName varchar(20) = null,
+    @LastName varchar(20) = null,
+    @Gender char(1) = null,
+    @BirthDate date = null,
+    @Address varchar(150) = null,
+    @Phone char(11) = null,
+    @NationalID char(14) = null,
+    @BranchId tinyint = null,
+    @IntakeId tinyint = null,
+    @TrackId smallint = null,
+    @Salary decimal(10,2) = null,
+    @HireDate date = null,
+    @Specialization varchar(50) = null,
+    @DeptId tinyint = null
 as
 begin
     set nocount on;
     begin try
+        if @UserName is not null and len(trim(@UserName)) < 10
+            throw 50001, 'Error: New UserName must be at least 10 characters.', 1;
+
+        if @Email is not null and (@Email not like '%_@__%.__%')
+            throw 50002, 'Error: New Email format is invalid.', 1;
+
+        if @Password is not null and len(@Password) < 8
+            throw 50005, 'Error: New Password must be at least 8 characters.', 1;
+
+        if (@FirstName is not null and len(trim(@FirstName)) < 2) or (@LastName is not null and len(trim(@LastName)) < 2)
+            throw 50006, 'Error: Name fields must be at least 2 characters.', 1;
+
+        if @Gender is not null and upper(trim(@Gender)) not in ('M', 'F','m','f')
+            throw 50007, 'Error: Gender must be M or F.', 1;
+
+        if @Phone is not null and (len(@Phone) <> 11 or @Phone not like '[0-9]%')
+            throw 50008, 'Error: Phone must be exactly 11 digits.', 1;
+
+        if @NationalID is not null and len(@NationalID) <> 14
+            throw 50009, 'Error: NationalID must be 14 digits.', 1;
+
+        if @BirthDate is not null and @BirthDate >= getdate()
+            throw 50011, 'Error: BirthDate must be a past date.', 1;
+
         begin transaction;
+        if not exists (select 1 from [Accounts] where UserId = @UserId)
+            throw 50008, 'Error: User ID not found.', 1;
+        
+        update [Accounts]
+        set UserName = isnull(trim(@UserName), UserName),
+            Email = isnull(lower(trim(@Email)), Email),
+            UserPassword = isnull(@Password, UserPassword)
+        where UserId = @UserId;
 
-        -- 1. ������ �� ���� ������
-        if not exists (select 1 from [useracc].[useraccount] where userid = @userid)
-            throw 50003, 'error: user id not found.', 1;
-
-        declare @olddbusername nvarchar(100);
-        declare @oldloginname nvarchar(100);
-        declare @rolename nvarchar(20);
-
-        -- ��� �������� �������
-        select 
-            @olddbusername = ua.username,
-            @rolename = r.rolename
-        from [useracc].useraccount ua
-        join [useracc].userrole r on ua.roleid = r.roleid
-        where ua.userid = @userid;
-
-        -- 2. ����� ������ (����� ������� ���� �� ���)
-        if @rolename = 'admin'
-            throw 50004, 'error: admin account cannot be modified via this procedure.', 1;
-
-        -- 3. ����� ���� ���� ��� ������� (�� ������)
-        if @password is not null
+        if exists (select 1 from [Students] where UserId = @UserId)
         begin
-            -- ����� ��� ������ (����� ������ + login) �� �� ����� �� ������
-            set @oldloginname = replace(@olddbusername, 'user', 'login'); 
-            
-            declare @sqlpass nvarchar(max) = 'alter login [' + @oldloginname + '] with password = ''' + @password + ''';';
-            exec sp_executesql @sqlpass;
-        end
+            if @BranchId is not null and not exists (select 1 from [Branch] where BranchId = @BranchId and isActive = 1 and isDeleted = 0)
+                throw 50030, 'Error: Selected Branch is invalid or inactive.', 1;
 
-        -- 4. ����� ���� ������ (active / inactive) ��� �������
-        if @isactive is not null
+            if @IntakeId is not null and not exists (select 1 from [Intake] where IntakeId = @IntakeId and isActive = 1 and isDeleted = 0)
+                throw 50031, 'Error: Selected Intake is invalid or inactive.', 1;
+
+            if @TrackId is not null and not exists (select 1 from [Track] where TrackId = @TrackId and isActive = 1 and isDeleted = 0)
+                throw 50032, 'Error: Selected Track is invalid or inactive.', 1;
+
+            update [Students]
+            set FirstName = isnull(trim(@FirstName), FirstName),
+                LastName = isnull(trim(@LastName), LastName),
+                Gender = isnull(upper(trim(@Gender)), Gender),
+                BirthDate = isnull(@BirthDate, BirthDate),
+                StuAddress = isnull(trim(@Address), StuAddress),
+                Phone = isnull(@Phone, Phone),
+                NationalID = isnull(@NationalID, NationalID),
+                BranchId = isnull(@BranchId, BranchId),
+                IntakeId = isnull(@IntakeId, IntakeId),
+                TrackId = isnull(@TrackId, TrackId)
+            where UserId = @UserId;
+        end
+        else if exists (select 1 from [Instructors] where UserId = @UserId)
         begin
-            set @oldloginname = replace(@olddbusername, 'user', 'login');
-            declare @sqlstatus nvarchar(max) = 'alter login [' + @oldloginname + '] ' + case when @isactive = 1 then 'enable' else 'disable' end + ';';
-            exec sp_executesql @sqlstatus;
-        end
+            if @DeptId is not null and not exists (select 1 from [Department] where DeptId = @DeptId and isActive = 1 and isDeleted = 0)
+                throw 50034, 'Error: Selected Department is invalid or inactive.', 1;
 
-        -- 5. ����� ������ ������� (useraccount)
-        update [useracc].[useraccount]
-        set 
-            email = isnull(lower(trim(@email)), email),
-            userpassword = isnull(@password, userpassword),
-            isactive = isnull(@isactive, isactive)
-        where userid = @userid;
+            if @Salary is not null and @Salary <= 0
+                throw 50020, 'Error: Salary must be a positive number.', 1;
+
+            update [Instructors]
+            set FirstName = isnull(trim(@FirstName), FirstName),
+                LastName = isnull(trim(@LastName), LastName),
+                BirthDate = isnull(@BirthDate, BirthDate),
+                InsAddress = isnull(trim(@Address), InsAddress),
+                Phone = isnull(@Phone, Phone),
+                NationalID = isnull(@NationalID, NationalID),
+                HireDate = isnull(@HireDate, HireDate),
+                Salary = isnull(@Salary, Salary),
+                Specialization = isnull(trim(@Specialization), Specialization),
+                DeptId = isnull(@DeptId, DeptId)
+            where UserId = @UserId;
+        end
 
         commit transaction;
-        print 'user account and server login updated successfully.';
+        select @UserId as UserId, 1 as Success, 'Update completed successfully' as Message;
 
     end try
     begin catch
         if @@trancount > 0 rollback transaction;
-        declare @err nvarchar(4000) = error_message();
-        raiserror(@err, 16, 1);
+        if error_number() in (2627, 2601)
+            throw 50021, 'Error: Duplicate data detected (UserName, Email, Phone, or NationalID).', 1;
+        else
+            throw;
     end catch
-end;
+end
 go
 
-------------------------------------------------------------
--- 3) Delete User (Soft Delete Driven)
-------------------------------------------------------------
 go
 CREATE or alter PROC [TrainingMangerStp].stp_DeleteUserAccount 
     @UserId int
@@ -172,15 +253,15 @@ BEGIN
 
         IF NOT EXISTS (
             SELECT 1 
-            FROM [userAcc].[UserAccount] 
+            FROM [Accounts]
             WHERE UserId = @UserId
         )
             THROW 50008, 'User ID not found.', 1;
 
-        DELETE FROM [userAcc].[UserAccount]
+        DELETE FROM [Accounts]
         WHERE UserId = @UserId;
 
-        PRINT 'Delete request processed.';
+        select @UserId as UserId, 1 as Success, 'User account deleted successfully.' as Message;    
 
     END TRY
     BEGIN CATCH
@@ -190,49 +271,40 @@ END
 GO
 
 
-------------------------------------------------------------
--- 4) Soft Delete Trigger
-------------------------------------------------------------
 CREATE OR ALTER TRIGGER [userAcc].trg_SoftDeleteUserAccount
-ON [userAcc].[UserAccount]
+ON [Accounts]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Prevent Admin deletion
     IF EXISTS (
         SELECT 1
         FROM deleted d
-        JOIN [userAcc].[UserAccount] UA 
+        JOIN [Accounts] UA 
             ON UA.UserId = d.UserId
-        JOIN [userAcc].[UserRole] R
+        JOIN [Roles] R
             ON UA.RoleId = R.RoleId
         WHERE R.RoleName = 'admin'
     )
-        THROW 50009, 'Admin account cannot be deleted.', 1;
+    throw 50022, 'Error: Cannot delete an admin account.', 1;
 
-    -- Deactivate related Student
     UPDATE S
-    SET isActive = 0
-    FROM [userAcc].[Student] S
+    SET isActive = 0 , isDeleted = 1
+    FROM [Students] S
     JOIN deleted d ON S.UserId = d.UserId;
 
-    -- Deactivate related Instructor
+
     UPDATE I
-    SET isActive = 0
-    FROM [userAcc].[Instructor] I
+    SET isActive = 0 , isDeleted = 1
+    FROM [Instructors] I
     JOIN deleted d ON I.UserId = d.UserId;
 
-    -- Deactivate UserAccount
-    UPDATE UA
-    SET isActive = 0
-    FROM [userAcc].[UserAccount] UA
-    JOIN deleted d ON UA.UserId = d.UserId;
 
+    UPDATE UA
+    SET isActive = 0 , isDeleted = 1
+    FROM [Accounts] UA
+    JOIN deleted d ON UA.UserId = d.UserId;
 END
 GO
 
-
-PRINT 'UserAccount module enterprise-secured successfully.'
-GO
