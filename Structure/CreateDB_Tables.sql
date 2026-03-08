@@ -293,10 +293,10 @@ create or alter table [Courses].CourseInstance(
 go
 create or alter table [exams].Question(
     QuestionId smallint identity(1,1),
-    QuestionText varchar(max) not null,
+    QuestionText varchar(700) not null,
     QuestionType varchar(5) not null,
     CorrectAnswer char(1) ,
-    BestAnswer varchar(max) not null, 
+    BestAnswer varchar(1000) not null, 
     Points tinyint default 1,
     CourseId smallint not null,
     isActive bit default 1,
@@ -310,7 +310,7 @@ create or alter table [exams].Question(
 go
 create or alter table [exams].QuestionOption (
     QuestionOptionId smallint identity(1,1),
-    QuestionOptionText varchar(max) not null,
+    QuestionOptionText varchar(500) not null,
     QuestionId smallint not null,
 
     constraint QuestionOptionPK primary key (QuestionOptionId),

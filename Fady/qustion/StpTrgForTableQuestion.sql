@@ -1,11 +1,12 @@
 create or alter procedure [InstructorStp].stp_createquestion
-    @questiontext  nvarchar(max),
-    @questiontype  nvarchar(20),        
-    @correctanswer nvarchar(max) = null,
-    @bestanswer    nvarchar(max),
-    @points        int           = 1,
-    @courseid      int,
-    @optionslist   nvarchar(max) = null  
+    @questiontext  varchar(4000),
+    @questiontype  varchar(5),        
+    @correctanswer char(5) = null,
+    @bestanswer    varchar(4000),
+    @points        tinyint = 1,
+    @courseid      smallint,
+    @instructorid   int ,
+    @optionslist   varchar(4000) = null  
 as
 begin
     set nocount on;
@@ -18,77 +19,62 @@ begin
     begin try
         begin transaction;
 
-        declare @currentinsid int;
-        select @currentinsid = i.insid
-        from [useracc].useraccount ua 
-        join [useracc].instructor i on ua.userid = i.userid 
-        where ua.username =replace(suser_name() ,'login' , 'user')  and i.isactive = 1;
+        if not exists (select 1 from [Instructors] where InstructorId = @instructorid and isactive = 1 and isdeleted = 0)
+            throw 50001, 'Access denied. Only active instructors can create questions.', 1;
 
-      
-        if @currentinsid is null
-        begin
-            raiserror('access denied. only active instructors can create questions.', 16, 1);
-            rollback; return;
-        end
-        
-        if not exists(select 1 from [courses].[course] where [courseid] = @courseid and [isactive] = 1)
-        begin
-            raiserror('course not found or is currently inactive.', 16, 1);
-            rollback; return;
-        end
-    
-        if not exists (select 1 from [courses].[courseinstance]
-                       where courseid = @courseid and instructorid = @currentinsid)
-        begin
-            raiserror('access denied: you are not assigned to teach this course.', 16, 1);
-            rollback; return;
-        end
+        if not exists (select 1 from [Course] where courseid = @courseid and isactive = 1 and isdeleted = 0)
+            throw 50002, 'Course not found or is currently inactive.', 1;
+
+        if not exists (select 1 from [CourseInstance] where courseid = @courseid and instructorid = @instructorid)
+            throw 50003, 'Access denied: You are not assigned to teach this course.', 1;
 
         if len(@questiontext) < 10
-            raiserror('question text must be at least 10 characters.', 16, 1);
+            throw 50004, 'Question text must be at least 10 characters.', 1;
 
         if len(@bestanswer) = 0
-            raiserror('bestanswer is required for all question types.', 16, 1);
+            throw 50005, 'bestanswer is required for all question types.', 1;
 
         if @questiontype not in ('mcq', 't/f', 'text')
-            raiserror('invalid question type. must be mcq, t/f, or text.', 16, 1);
+            throw 50006, 'invalid question type. must be mcq, t/f, or text.', 1;
 
         if @points <= 0
-            raiserror('points must be greater than 0.', 16, 1);
+            throw 50007, 'points must be greater than 0.', 1;
 
         if @questiontype = 'mcq'
         begin
+            if @correctanswer is null or len(trim(@correctanswer)) = 0
+                throw 50008, 'correctanswer is required for mcq questions and insert like a or b or c.', 1;
             if @optionslist is null or len(trim(@optionslist)) = 0
-                raiserror('options list is required for mcq questions.', 16, 1);
+                throw 50008, 'options list is required for mcq questions and insert like "A-ans1 | b-ans2 | c-Ans3".', 1;
 
             declare @totalcount int, @distinctcount int;
             select @totalcount = count(*), @distinctcount = count(distinct trim(value)) 
             from string_split(@optionslist, '|') where len(trim(value)) > 0;
 
             if @totalcount < 2
-                raiserror('mcq must have at least 2 options.', 16, 1);
+                throw 50009, 'mcq must have at least 2 options.', 1;
 
             if @totalcount <> @distinctcount
-                raiserror('duplicate options are not allowed.', 16, 1);
+                throw 50010, 'duplicate options are not allowed.', 1;
 
             if not exists (select 1 from string_split(@optionslist, '|') where lower(trim(value)) = @bestanswer)
-                raiserror('bestanswer must match one of the provided options.', 16, 1);
+                throw 50011, 'bestanswer must match one of the provided options.', 1;
         end
 
         if @questiontype = 't/f'
         begin
             if @correctanswer not in ('true', 'false')
-                raiserror('for t/f questions, correctanswer must be either ''true'' or ''false''.', 16, 1);
+                throw 50012, 'for t/f questions, correctanswer must be either ''true'' or ''false''.', 1;
         end
 
         if exists (select 1 from [exams].[question] 
                    where courseid = @courseid and questiontext = @questiontext and isdeleted = 0)
         begin
-            raiserror('this question already exists for this course.', 16, 1);
+            throw 50013, 'this question already exists for this course.', 1;
             rollback; return;
         end
 
-        declare @questionid int;
+        declare @questionid smallint;
         insert into [exams].[question] ([questiontext], [questiontype], [correctanswer], [bestanswer], [points], [courseid])
         values (@questiontext, @questiontype, 
                 case when @questiontype = 'text' then null else @correctanswer end,
@@ -108,199 +94,142 @@ begin
         end
 
         commit transaction;
-        print 'question created successfully with id: ' + cast(@questionid as nvarchar(10));
-
+        SELECT @questionid AS QuestionId, 1 as Success ,'qustion added successfully' as Message;
     end try
     begin catch
         if xact_state() <> 0 rollback;
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+       throw;
     end catch
 end;
 
 go
 
 create or alter procedure [InstructorStp].stp_updatequestion
-    @questionid    int,
-    @questiontext  nvarchar(max),
-    @questiontype  nvarchar(20),
-    @correctanswer nvarchar(max) = null,
-    @bestanswer    nvarchar(max),
-    @points        int           = 1,
-    @optionslist   nvarchar(max) = null  
+    @questionid    smallint,
+    @questiontext  varchar(4000),
+    @questiontype  varchar(5),
+    @correctanswer char(5) = null,
+    @bestanswer    varchar(4000),
+    @points        tinyint = 1,
+    @instructorid  int, 
+    @courseid      smallint,
+    @optionslist   varchar(4000) = null  
 as
 begin
     set nocount on;
 
-    set @questiontext = trim(@questiontext);
-    set @questiontype = lower(trim(@questiontype));
+    set @questiontext  = trim(@questiontext);
+    set @questiontype  = lower(trim(@questiontype));
     set @correctanswer = lower(trim(@correctanswer));
-    set @bestanswer = trim(@bestanswer);
+    set @bestanswer    = trim(@bestanswer);
 
     begin try
         begin transaction;
 
-        declare @currentinsid int;
-        select @currentinsid = i.insid
-        from [useracc].useraccount ua
-        inner join [useracc].instructor i on ua.userid = i.userid
-        where ua.username =replace(suser_name() ,'login' , 'user')  and i.isactive = 1;
+    
+        if not exists (select 1 from [Instructors] where InstructorId = @instructorid and isactive = 1 and isdeleted = 0)
+            throw 50001, 'Access denied. Only active instructors can update questions.', 1;
 
-        if @currentinsid is null
-        begin
-            raiserror('access denied. only active instructors can update questions.', 16, 1);
-            rollback; return;
-        end
+        if not exists (select 1 from [exams].[question] where questionid = @questionid and isdeleted = 0)
+            throw 50014, 'Error: Question not found or has been deleted.', 1;
 
-        declare @oldtype nvarchar(20), @courseid int, @isdeleted bit;
+     
+        if not exists (select 1 from [CourseInstance] where courseid = @courseid and instructorid = @instructorid)
+            throw 50003, 'Access denied: You are not assigned to teach this course.', 1;
 
-        select @oldtype = [QuestionType], @courseid = [CourseId], @isdeleted = [IsDeleted]
-        from [exams].[Question] where [QuestionId] = @questionid;
+   
+        if exists (select 1 from [exams].[StudentAnswer] where questionid = @questionid)
+            throw 51000, 'Cannot update: Students have already started answering this question. Try creating a new one.', 1;
 
-        if @oldtype is null
-        begin
-            raiserror('question not found.', 16, 1);
-            rollback; return;
-        end
-
-        if @isdeleted = 1
-        begin
-            raiserror('cannot update a deleted question.', 16, 1);
-            rollback; return;
-        end
-
-        if not exists (
-            select 1 from [courses].course c
-            join [courses].courseinstance ci on c.courseid = ci.courseid
-            where c.courseid = @courseid and ci.instructorid = @currentinsid and c.isactive = 1
-        )
-        begin
-            raiserror('access denied: you do not teach this active course.', 16, 1);
-            rollback; return;
-        end
-
-
-        if exists (select 1 from [exams].[Student_Answer] where [QuestionId] = @questionid)
-        begin
-            raiserror('cannot update: students have already answered this question.', 16, 1);
-            rollback; return;
-        end
-
+  
         if len(@questiontext) < 10
-            raiserror('question text must be at least 10 characters.', 16, 1);
+            throw 50004, 'Question text must be at least 10 characters.', 1;
 
         if @questiontype not in ('mcq', 't/f', 'text')
-            raiserror('invalid type. must be mcq, t/f, or text.', 16, 1);
+            throw 50006, 'Invalid question type. Must be mcq, t/f, or text.', 1;
 
         if @points <= 0
-            raiserror('points must be greater than 0.', 16, 1);
+            throw 50007, 'Points must be greater than 0.', 1;
+        delete from [exams].[questionoption] where questionid = @questionid;
 
         if @questiontype = 'mcq'
         begin
             if @optionslist is null or len(trim(@optionslist)) = 0
-                raiserror('options list is required for mcq.', 16, 1);
+                throw 50008, 'Options list is required for MCQ questions.', 1;
 
-            declare @totalcount int, @distinctcount int;
-            select @totalcount = count(*), @distinctcount = count(distinct trim(value)) 
-            from string_split(@optionslist, '|') where len(trim(value)) > 0;
-
-            if @totalcount <> @distinctcount
-                raiserror('duplicate options are not allowed.', 16, 1);
-
-            if not exists (select 1 from string_split(@optionslist, '|') where lower(trim(value)) = @correctanswer)
-                raiserror('correctanswer must match one of the options.', 16, 1);
-        end
-
-        if exists (select 1 from [exams].question 
-                   where courseid = @courseid and questiontext = @questiontext 
-                   and questionid != @questionid and isdeleted = 0)
-        begin
-            raiserror('another question with the same text already exists.', 16, 1);
-            rollback; return;
-        end
-
-        delete from[exams].[QuestionOption] where [QuestionId] = @questionid;
-
-        if @questiontype = 'mcq'
-        begin
-            insert into[exams].[QuestionOption]  ([QuestionOptionText], [QuestionId])
+            insert into [exams].[questionoption] ([questionoptiontext], [questionid])
             select trim(value), @questionid from string_split(@optionslist, '|') where len(trim(value)) > 0;
+            
+         
+            if not exists (select 1 from string_split(@optionslist, '|') where lower(trim(value)) = @bestanswer)
+                throw 50011, 'Updated bestanswer must match one of the provided options.', 1;
         end
         else if @questiontype = 't/f'
         begin
-            insert into [exams].[QuestionOption]  ([QuestionOptionText], [QuestionId])
+            insert into [exams].[questionoption] ([questionoptiontext], [questionid])
             values ('true', @questionid), ('false', @questionid);
         end
 
-        update[exams].[Question] 
-        set [QuestionText]  = @questiontext,
-            [QuestionType]  = @questiontype,
-            [CorrectAnswer] = case when @questiontype = 'text' then null else @correctanswer end,
-            [BestAnswer]    = @bestanswer,
-            [Points]        = @points
-        where [QuestionId]  = @questionid;
+
+        update [exams].[question]
+        set questiontext  = @questiontext,
+            questiontype  = @questiontype,
+            correctanswer = case when @questiontype = 'text' then null else @correctanswer end,
+            bestanswer    = @bestanswer,
+            points        = @points,
+            courseid      = @courseid
+        where questionid  = @questionid;
 
         commit transaction;
-        print 'question updated successfully. id = ' + cast(@questionid as nvarchar(10));
+
+   
+        SELECT @questionid AS QuestionId, 1 as Success, 'Question updated successfully' as Message;
 
     end try
     begin catch
         if xact_state() <> 0 rollback;
-        declare @errmsg nvarchar(2000) = error_message();
-        raiserror(@errmsg, 16, 1);
+        throw; 
     end catch
 end;
 go
 
 create or alter procedure [InstructorStp].stp_deletequestion
-    @questionid int
+    @questionid int,
+    @instructorid int
 as
 begin
     set nocount on;
     begin try
         begin transaction;
-
-        declare @currentinsid int;
-        select @currentinsid = i.insid
-        from [useracc].useraccount ua
-        inner join [useracc].instructor i on ua.userid = i.userid
-        where ua.username = replace(suser_name() ,'login' , 'user')  and i.isactive = 1;
-
-        if @currentinsid is null
-        begin
-            raiserror('access denied. only active instructors can delete questions.', 16, 1);
-            rollback; return;
-        end
+        if not exists (select 1 from [useracc].instructor where insid = @instructorid and isactive = 1)
+            throw 50001, 'Access denied. Only active instructors can delete questions.', 1;
 
         declare @courseid int, @isdeleted bit;
         select @courseid = courseid, @isdeleted = isdeleted
         from [exams].question where questionid = @questionid;
 
         if @courseid is null
-            raiserror('question not found.', 16, 1);
+            throw 50014, 'Question not found.', 1;
 
         if @isdeleted = 1
-            raiserror('question is already deleted.', 16, 1);
+            throw 50015, 'Question is already deleted.', 1;
 
-        if not exists (select 1 from [courses].courseinstance 
-                       where courseid = @courseid and instructorid = @currentinsid)
-        begin
-            raiserror('access denied: you do not teach this course.', 16, 1);
-            rollback; return;
-        end
+        if not exists (select 1 from [courses].courseinstance where courseid = @courseid and instructorid = @instructorid)
+            throw 50003, 'Access denied: You do not teach this course.', 1;
 
         delete from [exams].question where questionid = @questionid;
 
         commit transaction;
+
+        SELECT @questionid AS QuestionId, 1 as Success, 'Question deleted successfully' as Message;
+
     end try
     begin catch
         if xact_state() <> 0 rollback;
-        declare @errmsg_del nvarchar(2000) = error_message();
-        raiserror(@errmsg_del, 16, 1);
+        throw; 
     end catch
 end;
 go
-
 create or alter trigger [exams].trg_softdeletequestion
 on [exams].question
 instead of delete
@@ -312,21 +241,20 @@ begin
     from [exams].question q
     inner join deleted d on q.questionid = d.questionid
     where exists (select 1 from [exams].examquestion eq where eq.questionid = d.questionid)
-       or exists (select 1 from [exams].student_answer sa where sa.questionid = d.questionid);
+        or exists (select 1 from [exams].student_answer sa where sa.questionid = d.questionid);
+
 
     delete qo
     from [exams].questionoption qo
     inner join deleted d on qo.questionid = d.questionid
     where not exists (select 1 from [exams].examquestion eq where eq.questionid = d.questionid)
-      and not exists (select 1 from [exams].student_answer sa where sa.questionid = d.questionid);
+        and not exists (select 1 from [exams].student_answer sa where sa.questionid = d.questionid);
+
 
     delete q
     from [exams].question q
     inner join deleted d on q.questionid = d.questionid
     where not exists (select 1 from [exams].examquestion eq where eq.questionid = d.questionid)
-      and not exists (select 1 from [exams].student_answer sa where sa.questionid = d.questionid);
-
-    if @@rowcount > 0 print 'delete operation completed successfully (hybrid logic applied).';
+        and not exists (select 1 from [exams].student_answer sa where sa.questionid = d.questionid);
 end;
 go
-
