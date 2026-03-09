@@ -58,6 +58,9 @@ begin
                 throw 50010, 'Cannot create a Corrective exam without a prior Regular exam for this course instance.', 1;
         end
 
+        if @starttime < dateadd(hour, 24, getdate())
+            throw 50003, 'error: exam start time must be at least 24 hours from now.', 1;
+
         if len(@examtitle) < 3 
             throw 50003, 'exam title must be at least 3 characters.', 1;
 
@@ -227,6 +230,27 @@ begin
     where examid in (select id from @HardDeleteIDs);
 end;
 go
+CREATE OR ALTER TRIGGER [exams].trg_UpdateExamTotalDegree
+ON [exams].[ExamQuestion]
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    WITH AffectedExams AS (
+        SELECT ExamId FROM inserted
+        UNION
+        SELECT ExamId FROM deleted
+    )
+    UPDATE E
+    SET E.[TotalGrade] = ISNULL(
+        (SELECT SUM(Q.Points) 
+        FROM [exams].ExamQuestion EQ
+        JOIN [exams].Question Q ON EQ.QuestionId = Q.QuestionId
+        WHERE EQ.ExamId = E.ExamId), 0)
+    FROM [exams].Exam E
+    JOIN AffectedExams AE ON E.ExamId = AE.ExamId;
+END;
+GO
 
 
 
