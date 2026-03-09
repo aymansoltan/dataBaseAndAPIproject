@@ -110,9 +110,9 @@ as
 begin
     set nocount on;
 
-    declare @courseid smallint, @coursename varchar(30);
+    declare @courseid smallint
     
-    select @courseid = CourseId, @coursename = CourseName from deleted;
+    select @courseid = CourseId from deleted;
 
     if exists (select 1 from[Courses].[CourseInstance]  where [CourseId] = @courseid)
        or exists (select 1 from [exams].[Question] where [CourseId] = @courseid)
