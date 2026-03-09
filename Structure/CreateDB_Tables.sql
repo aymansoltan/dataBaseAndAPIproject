@@ -415,4 +415,6 @@ create synonym FinalResults for [exams].Student_Exam_Result;
 go
 alter database [ExaminationSystemDB] set recursive_triggers on;
 go
+GRANT SELECT, INSERT, UPDATE, DELETE TO [AppUser];
+GRANT EXECUTE TO [AppUser];
 
