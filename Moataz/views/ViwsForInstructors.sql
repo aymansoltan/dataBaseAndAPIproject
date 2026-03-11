@@ -1,131 +1,108 @@
 use [ExaminationSystemDB]
 go
-
-create or alter view [InstructorViews].vw_InstructorProfile
-
+create or alter proc [InstructorViews].Stp_GetMyProfile
+    @InstructorId int
 as
+begin
+    set nocount on;
+
     select
-        -- personal info
-        i.FirstName + ' ' + i.LastName  as FullName,
+        i.FirstName + ' ' + i.LastName as FullName,
         i.BirthDate,
-        i.Age,
+        datediff(year, i.BirthDate, getdate()) as Age,
         i.Phone,
-        i.InsAddress                    as [Address],
+        i.InsAddress as [Address],
         i.NationalID,
         i.Specialization,
-        i.HireDate,
+        cast(i.HireDate as date) as HireDate,
         i.Salary,
-
-        -- account info
         ua.UserName,
         ua.Email,
-        ua.createdAt                    as MemberSince,
-
-        -- organization info
-        d.DeptName                      as Department,
+        ua.createdAt as MemberSince,
+        d.DeptName as Department,
         b.BranchName
-
-    from   [userAcc].Instructor          i
-    inner join [userAcc].UserAccount     ua on i.UserId   = ua.UserId
-    inner join [orgnization].Department  d  on i.DeptId   = d.DeptId
-    inner join [orgnization].Branch      b  on d.BranchId = b.BranchId
-
-    -- each instructor sees only their own data
-    where  ua.UserName = replace(SUSER_SNAME(),'login','user')
-      and  ua.isActive = 1
-      and  i.isActive  = 1;
+    from [userAcc].Instructor i with (nolock)
+    inner join [userAcc].UserAccount ua with (nolock) on i.UserId = ua.UserId
+    inner join [orgnization].Department d with (nolock) on i.DeptId = d.DeptId
+    inner join [orgnization].Branch b with (nolock) on d.BranchId = b.BranchId
+    where i.InstructorId = @InstructorId
+      and ua.isActive = 1
+      and i.isActive = 1;
+end
 go
-
 ---------------------------------------------------------------
 
 use [ExaminationSystemDB]
 go
 
-create or alter view [InstructorViews].vw_InstructorCourses 
+create or alter proc [InstructorViews].Stp_GetInstructorCourses
+    @InstructorId int
 as
-    select
-        -- course info
+begin
+    set nocount on;
+
+    select 
         c.CourseName,
         ci.AcademicYear,
-
-        -- organization info
         t.TrackName,
         it.IntakeName,
         b.BranchName,
-
-        -- number of students in this course instance
         (
-            select count(*)
-            from   [userAcc].Student s
-            where  s.TrackId  = ci.TrackId
-              and  s.IntakeId = ci.IntakeId
-              and  s.BranchId = ci.BranchId
-              and  s.isActive = 1
-        )                                           as StudentCount
-
-    from   [userAcc].Instructor          i
-    inner join [userAcc].UserAccount     ua on i.UserId             = ua.UserId
-    inner join [Courses].CourseInstance  ci on i.InsId              = ci.InstructorId
-    inner join [Courses].Course          c  on ci.CourseId          = c.CourseId
-    inner join [orgnization].Track       t  on ci.TrackId           = t.TrackId
-    inner join [orgnization].Intake      it on ci.IntakeId          = it.IntakeId
-    inner join [orgnization].Branch      b  on ci.BranchId          = b.BranchId
-
-    -- each instructor sees only their own courses
-    where  ua.UserName = replace(SUSER_SNAME(),'login','user')
-      and  ua.isActive = 1
-      and  i.isActive  = 1
-      and  c.isActive  = 1;
+            select count(*) 
+            from [userAcc].Student s with (nolock)
+            where s.TrackId  = ci.TrackId 
+              and s.IntakeId = ci.IntakeId 
+              and s.BranchId = ci.BranchId
+              and s.isActive = 1
+        ) as StudentCount
+    from [userAcc].Instructor i with (nolock)
+    inner join [Courses].CourseInstance ci with (nolock) on i.InstructorId = ci.InstructorId
+    inner join [Courses].Course c with (nolock) on ci.CourseId = c.CourseId
+    inner join [orgnization].Track t with (nolock) on ci.TrackId = t.TrackId
+    inner join [orgnization].Intake it with (nolock) on ci.IntakeId = it.IntakeId
+    inner join [orgnization].Branch b with (nolock) on ci.BranchId = b.BranchId
+    where i.InstructorId = @InstructorId
+      and i.isActive = 1
+      and c.isActive = 1;
+end
 go
 -----------------------------------------------------------
 
-use [ExaminationSystemDB]
-go
-
-create or alter view [InstructorViews].vw_InstructorExams
-
+create or alter proc [InstructorViews].Stp_GetInstructorExams
+    @InstructorId int
 as
-    select
-        -- exam info
+begin
+    set nocount on;
+
+    select 
+        e.ExamId,
         e.ExamTitle,
         e.ExamType,
-
-        -- course info
         c.CourseName,
         ci.AcademicYear,
-
-        -- timing
         e.StartTime,
         e.EndTime,
         e.DurationMinutes,
-
-        -- exam status
-        case
-            when e.IsDeleted = 1                              then 'Cancelled'
-            when getdate() < e.StartTime                      then 'Upcoming'
-            when getdate() between e.StartTime and e.EndTime  then 'In Progress'
-            else                                                   'Ended'
-        end                                                   as ExamStatus,
-
-        -- total questions in exam
+        case 
+            when e.IsDeleted = 1 then 'Cancelled'
+            when getdate() < e.StartTime then 'Upcoming'
+            when getdate() between e.StartTime and e.EndTime then 'In Progress'
+            else 'Ended'
+        end as ExamStatus,
         (
-            select count(*)
-            from   [exams].ExamQuestion eq
-            where  eq.ExamId = e.ExamId
-        )                                                     as TotalQuestions
-
-    from   [userAcc].Instructor          i
-    inner join [userAcc].UserAccount     ua on i.UserId             = ua.UserId
-    inner join [Courses].CourseInstance  ci on i.InsId              = ci.InstructorId
-    inner join [Courses].Course          c  on ci.CourseId          = c.CourseId
-    inner join [exams].Exam              e  on ci.CourseInstanceId  = e.CourseInstanceId
-
-    -- each instructor sees only their own exams
-    where  ua.UserName =  replace(SUSER_SNAME(),'login','user')
-      and  ua.isActive = 1
-      and  i.isActive  = 1;
+            select count(*) 
+            from [exams].ExamQuestion eq with (nolock)
+            where eq.ExamId = e.ExamId
+        ) as TotalQuestions
+    from [userAcc].Instructor i with (nolock)
+    inner join [Courses].CourseInstance ci with (nolock) on i.InstructorId = ci.InstructorId -- تأكد من InsId
+    inner join [Courses].Course c with (nolock) on ci.CourseId = c.CourseId
+    inner join [exams].Exam e with (nolock) on ci.CourseInstanceId = e.CourseInstanceId
+    where i.InstructorId = @InstructorId
+      and i.isActive = 1
+      and e.IsDeleted = 0;
+end
 go
-
 --------------------------------------------------------------
 
 use [ExaminationSystemDB]
@@ -133,135 +110,54 @@ use [ExaminationSystemDB]
 go
 
 create or alter procedure [InstructorStp].stp_InstructorStudentResultsPassOrFail
-    @Filter nvarchar(10)  -- 'Pass' or 'Fail'
+    @InstructorId int,     
+    @Filter varchar(10)   
 as
 begin
     set nocount on;
     begin try
-
-        -- ══════════════════════════════════════════════════════════════
-        -- step 1: get current instructor from sql server login
-        -- ══════════════════════════════════════════════════════════════
-        declare @CurrentInsId int;
-
-        select @CurrentInsId = i.InsId
-        from   [userAcc].UserAccount ua
-        inner join [userAcc].Instructor i
-            on ua.UserId  = i.UserId
-           and i.isActive = 1
-        where  ua.UserName =  replace(SUSER_SNAME(),'login','user')
-          and  ua.isActive = 1;
-
-        if @CurrentInsId is null
-        begin
-            raiserror('Access Denied. Only active instructors can view results.', 16, 1);
-            return;
-        end
-
-        -- ══════════════════════════════════════════════════════════════
-        -- step 2: validate @Filter value
-        -- ══════════════════════════════════════════════════════════════
+        
         if @Filter not in ('Pass', 'Fail')
-        begin
-            raiserror('Invalid filter. Use ''Pass'' or ''Fail'' only.', 16, 1);
-            return;
-        end
+            throw 50105 ,'Invalid filter. Use ''Pass'' or ''Fail'' only.', 1 ;
 
-        -- ══════════════════════════════════════════════════════════════
-        -- step 3: check if instructor has any exam results at all
-        -- ══════════════════════════════════════════════════════════════
-        if not exists (
-            select 1
-            from   [exams].Student_Exam_Result  r
-            inner join [exams].Exam             e  on r.ExamId          = e.ExamId
-            inner join [Courses].CourseInstance ci on e.CourseInstanceId = ci.CourseInstanceId
-            where  ci.InstructorId = @CurrentInsId
-              and  e.IsDeleted     = 0
-        )
-        begin
-            print 'No exam results found for your courses yet.';
-            return;
-        end
 
-        -- ══════════════════════════════════════════════════════════════
-        -- step 4: check if results exist for the requested filter
-        -- ══════════════════════════════════════════════════════════════
         declare @IsPassed bit = case when @Filter = 'Pass' then 1 else 0 end;
 
-        if not exists (
-            select 1
-            from   [exams].Student_Exam_Result  r
-            inner join [exams].Exam             e  on r.ExamId          = e.ExamId
-            inner join [Courses].CourseInstance ci on e.CourseInstanceId = ci.CourseInstanceId
-            where  ci.InstructorId = @CurrentInsId
-              and  r.IsPassed      = @IsPassed
-              and  e.IsDeleted     = 0
-        )
-        begin
-            if @Filter = 'Pass'
-                print 'No passed students found in your courses.';
-            else
-                print 'No failed students found in your courses.';
-            return;
-        end
-
-        -- ══════════════════════════════════════════════════════════════
-        -- step 5: return results
-        -- ══════════════════════════════════════════════════════════════
+       
         select
-            -- student info
-            s.FirstName + ' ' + s.LastName      as StudentName,
-
-            -- exam info
+            s.FirstName + ' ' + s.LastName as StudentName,
             e.ExamTitle,
             e.ExamType,
-            cast(e.StartTime as date)            as ExamDate,
-
-            -- course info
+            cast(e.StartTime as date) as ExamDate,
             c.CourseName,
             ci.AcademicYear,
-
-            -- grades
-            r.TotalGrade                         as StudentGrade,
-            e.TotalGrade                         as ExamTotalGrade,
-
-            -- grade based on course min/max degree
+            r.TotalGrade as StudentGrade,
+            e.TotalGrade as ExamTotalGrade,
+         
             case
-                when r.TotalGrade * 1.0 / e.TotalGrade
-                     < c.MinDegree * 1.0 / c.MaxDegree
+                when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0))
                 then 'Fail'
-
-                when r.TotalGrade * 1.0 / e.TotalGrade
-                     < (c.MinDegree * 1.0 / c.MaxDegree) + 0.10
+                when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.10
                 then 'Pass'
-
-                when r.TotalGrade * 1.0 / e.TotalGrade
-                     < (c.MinDegree * 1.0 / c.MaxDegree) + 0.20
+                when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.20
                 then 'Good'
-
-                when r.TotalGrade * 1.0 / e.TotalGrade
-                     < (c.MinDegree * 1.0 / c.MaxDegree) + 0.30
+                when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.30
                 then 'Very Good'
-
                 else 'Excellent'
-            end                                  as Grade
-
-        from   [exams].Student_Exam_Result   r
-        inner join [exams].Exam              e  on r.ExamId           = e.ExamId
-        inner join [Courses].CourseInstance  ci on e.CourseInstanceId = ci.CourseInstanceId
-        inner join [Courses].Course          c  on ci.CourseId        = c.CourseId
-        inner join [userAcc].Student         s  on r.StudentId        = s.StudentId
-
-        where  ci.InstructorId = @CurrentInsId
-          and  r.IsPassed      = @IsPassed
-          and  e.IsDeleted     = 0
-
+            end as Grade
+        from [exams].Student_Exam_Result r with (nolock)
+        inner join [exams].Exam e with (nolock) on r.ExamId = e.ExamId
+        inner join [Courses].CourseInstance ci with (nolock) on e.CourseInstanceId = ci.CourseInstanceId
+        inner join [Courses].Course c with (nolock) on ci.CourseId = c.CourseId
+        inner join [userAcc].Student s with (nolock) on r.StudentId = s.StudentId
+        where ci.InstructorId = @InstructorId
+          and r.IsPassed = @IsPassed
+          and e.IsDeleted = 0
         order by c.CourseName, ci.AcademicYear, s.FirstName;
 
     end try
     begin catch
-        declare @ErrMsg nvarchar(2000) = error_message();
-        raiserror(@ErrMsg, 16, 1);
+        throw; 
     end catch
 end
 go
