@@ -69,7 +69,7 @@ go
 
 
 create  or alter trigger [orgnization].trg_SoftDeleteBranch
-on [Branch]
+on [orgnization].[Branch]
 instead of delete 
 as 
 begin 
@@ -121,7 +121,7 @@ begin
 end
 go
 create or alter  trigger [orgnization].trg_inactivateDepartmentWhenInActiveBranch
-on [Branch]
+on [orgnization].[Branch]
 after update
 as
 begin
