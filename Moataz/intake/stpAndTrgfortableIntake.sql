@@ -70,7 +70,7 @@ end
 go
 
 create or alter trigger [orgnization].trg_SoftDeleteIntake
-on [Intake]
+on [orgnization].[Intake]
 instead of delete
 as
 begin
@@ -96,7 +96,7 @@ end
 go
 
 create or alter trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveIntake
-on [Intake]
+on [orgnization].[Intake]
 after update
 as
 begin

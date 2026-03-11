@@ -75,7 +75,7 @@ begin
 end
 
 create or alter trigger [orgnization].trg_SoftDeleteDepartment
-on [Department]
+on [orgnization].[Department]
 instead of delete
 as
 begin
@@ -98,7 +98,7 @@ end
 
 go
 create or alter trigger [orgnization].trg_CheckBranchStatusBeforeInsert
-on [Department]
+on [orgnization].[Department]
 after insert
 as
 begin
@@ -121,7 +121,7 @@ go
 
 go
 create trigger [orgnization].trg_inactivateTracksWhenInActiveDerpartment
-on [Department]
+on [orgnization].[Department]
 after update
 as
 begin

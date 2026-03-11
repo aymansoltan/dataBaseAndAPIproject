@@ -73,9 +73,9 @@ go
 create schema [admin]
 go
 
-create  or alter table [orgnization].Branch
+create   table [orgnization].Branch
 (
-    [Department] tinyint identity(1,1),
+    BranchId tinyint identity(1,1),
     BranchName varchar(15) not null,
     isActive bit constraint branchActiveDefault default 1,
     isDeleted bit constraint branchDeleteDefault default 0,
@@ -87,7 +87,7 @@ create  or alter table [orgnization].Branch
     constraint BranchNameFormatCheck check (BranchName NOT like '[0-9]%' AND BranchName NOT like '[!@#$%^&*]%'),
 ) on [primary]
 go
-create or alter table [orgnization].Department(
+create table [orgnization].Department(
     DeptId tinyint identity(1,1),
     DeptName varchar(20) not null,
     isActive bit constraint DepartmentActiveDefault default 1 ,
@@ -102,7 +102,7 @@ create or alter table [orgnization].Department(
     constraint DepartmentBranchFK foreign key (BranchId) references [orgnization].[Branch](BranchId)
 ) on [primary]
 go
-create or alter table [orgnization].Track(
+create table [orgnization].Track(
     TrackId smallint identity(1,1),
     TrackName varchar(40) not null,
     isActive bit constraint TrackActiveDefault default 1,
@@ -117,7 +117,7 @@ create or alter table [orgnization].Track(
     constraint TrackDepartmentFK foreign key (DeprtmentId) references [orgnization].[Department](DeptId)
 ) on [primary]
 go
-create or alter table [orgnization].Intake(
+create table [orgnization].Intake(
     IntakeId tinyint identity(1,1),
     IntakeName varchar(10) not null,
     isActive bit constraint IntakeActiveDefault default 1,
@@ -130,7 +130,7 @@ create or alter table [orgnization].Intake(
     constraint IntakeNameFormatCheck check (IntakeName NOT like '[0-9]%' AND IntakeName NOT like '[!@#$%^&*]%'),
 ) on [primary]
 go
-create or alter table [orgnization].IntakeTrack(
+create table [orgnization].IntakeTrack(
     IntakeId tinyint,
     TrackId smallint,
     isActive bit constraint IntakeTrackActiveDefault default 1,
@@ -144,7 +144,7 @@ create or alter table [orgnization].IntakeTrack(
 go
 
 -- ===========================================================
-create or alter table [userAcc].UserRole(
+create table [userAcc].UserRole(
     RoleId tinyint identity(1,1),
     RoleName varchar(20) not null,
 
@@ -154,7 +154,7 @@ create or alter table [userAcc].UserRole(
     constraint RoleNameCheck check (RoleName in ('admin' , 'instructor','student','Training Manager'))
 ) on [FG_Users]
 go
-create or alter table [userAcc].UserAccount(
+create  table [userAcc].UserAccount(
     UserId int identity(1,1),
     UserName varchar(50) not null,
     Email varchar(100) not null,
@@ -174,7 +174,7 @@ create or alter table [userAcc].UserAccount(
     constraint UserRoleFK foreign key (RoleId) references [userAcc].UserRole(RoleId)
 )on [FG_Users]
 go
-create or alter table [userAcc].Student (
+create  table [userAcc].Student (
     StudentId int identity(1,1),
     FirstName varchar(20) not null,
     LastName varchar(20) not null,
@@ -183,7 +183,7 @@ create or alter table [userAcc].Student (
     StuAddress varchar(150) not null,
     Phone char(11) not null,
     NationalID char(14) not null,
-    Age as (datediff(year, BirthDate, getdate())) persisted,
+    Age as (datediff(year, BirthDate, getdate())) ,
     UserId int not null,
     BranchId tinyint not null,
     IntakeId tinyint not null,
@@ -213,12 +213,12 @@ create or alter table [userAcc].Student (
     constraint StudentTrackFK foreign key (TrackId) references [orgnization].Track(TrackId)
 ) on [FG_Users];
 go
-create or alter table [userAcc].Instructor (
+create  table [userAcc].Instructor (
     InstructorId int identity(1,1),
     FirstName varchar(20) not null,
     LastName varchar(20) not null,
     BirthDate date,
-    Age as (datediff(year, BirthDate, getdate())) persisted, 
+    Age as (datediff(year, BirthDate, getdate())) , 
     InsAddress varchar(150),
     Phone char(11) not null,
     NationalID char(14) not null,
@@ -253,7 +253,7 @@ create or alter table [userAcc].Instructor (
 ) on [FG_Users];
 -- ==========================================================
 go
-create or alter table [Courses].Course(
+create  table [Courses].Course(
     CourseId smallint identity(1,1),
     CourseName varchar(30) not null,
     CourseDescription varchar(500),
@@ -270,7 +270,7 @@ create or alter table [Courses].Course(
 ) on [FG_Courses];
 go
 
-create or alter table [Courses].CourseInstance(
+create table [Courses].CourseInstance(
     CourseInstanceId smallint identity(1,1),
     CourseId smallint not null,
     InstructorId int not null , 
@@ -291,7 +291,7 @@ create or alter table [Courses].CourseInstance(
 
 -- ====================================================================
 go
-create or alter table [exams].Question(
+create  table [exams].Question(
     QuestionId smallint identity(1,1),
     QuestionText varchar(700) not null,
     QuestionType varchar(5) not null,
@@ -308,7 +308,7 @@ create or alter table [exams].Question(
 )on [FG_Questions] 
 
 go
-create or alter table [exams].QuestionOption (
+create table [exams].QuestionOption (
     QuestionOptionId smallint identity(1,1),
     QuestionOptionText varchar(500) not null,
     QuestionId smallint not null,
@@ -318,7 +318,7 @@ create or alter table [exams].QuestionOption (
 ) on [FG_Questions];
 
 go
-create or alter table [exams].Exam (
+create  table [exams].Exam (
     ExamId smallint identity(1,1),
     ExamTitle varchar(100) not null ,
     ExamType varchar(11) not null default 'Regular', 
@@ -345,7 +345,7 @@ create or alter table [exams].Exam (
 ) on [FG_Exams];
 
 go
-create or alter table [exams].ExamQuestion (
+create table [exams].ExamQuestion (
     ExamId smallint not null,
     QuestionId smallint not null,
 
@@ -354,7 +354,7 @@ create or alter table [exams].ExamQuestion (
     constraint EQ_QuestionFK foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Exams];
 go
-create or alter table [exams].Student_Answer (
+create table [exams].Student_Answer (
     StudentId int not null,
     ExamId smallint not null,
     QuestionId smallint not null,
@@ -368,7 +368,7 @@ create or alter table [exams].Student_Answer (
     constraint FK_Ans_Question foreign key (QuestionId) references [exams].Question(QuestionId)
 ) on [FG_Exams];
 go
-create or alter table [exams].Student_Exam_Result (
+create  table [exams].Student_Exam_Result (
     StudentId int not null,
     ExamId smallint not null,
     TotalGrade tinyint,                 
@@ -415,6 +415,5 @@ create synonym FinalResults for [exams].Student_Exam_Result;
 go
 alter database [ExaminationSystemDB] set recursive_triggers on;
 go
-GRANT SELECT, INSERT, UPDATE, DELETE TO [AppUser];
-GRANT EXECUTE TO [AppUser];
+
 

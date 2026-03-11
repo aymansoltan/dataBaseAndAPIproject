@@ -270,7 +270,7 @@ end
 
 
 create or alter trigger [userAcc].trg_SoftDeleteUserAccount
-on [Accounts] 
+on [userAcc].[UserAccount]
 instead of delete
 as
 begin

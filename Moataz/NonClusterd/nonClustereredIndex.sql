@@ -11,7 +11,7 @@ on [userAcc].[Student] ([BranchId] ,[IntakeId],[TrackId])
 include([StudentId],[FirstName],[LastName])
 go
 create nonclustered index ix_userAcc_userID_deptId_insId
-on [userAcc].[Instructor] ([UserId],[DeptId],[InsId])
+on [userAcc].[Instructor] ([UserId],[DeptId],[InstructorId])
 include ([FirstName],[LastName])
 go
 create nonclustered index ix_track_branch_intake_instructor_course

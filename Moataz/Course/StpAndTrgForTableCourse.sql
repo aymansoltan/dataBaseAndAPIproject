@@ -39,7 +39,7 @@ create or alter proc [TrainingMangerStp].stp_UpdateCourse
     @CourseName varchar(30) = null,
     @MaxDegree  tinyint = null,
     @MinDegree  tinyint = null,
-    @Description varchar(500) = null,
+    @Description varchar(500) = null
 as 
 begin
     set nocount on;

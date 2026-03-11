@@ -71,7 +71,7 @@ begin
 end
 go
 create or alter trigger [orgnization].trg_SoftDeleteIntakeTrack
-on [IntakeTrack]
+on [orgnization].[IntakeTrack]
 instead of delete
 as
 begin

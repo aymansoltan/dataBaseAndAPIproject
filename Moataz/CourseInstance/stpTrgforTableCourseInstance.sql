@@ -57,11 +57,11 @@ begin
         if not exists (select 1 from [courses].[CourseInstance] where [CourseInstanceId] = @instanceid and [isDeleted] = 0)
             throw 55000, 'error: course instance not found or has been deleted.', 1;
 
-        declare @CId smallint, @InsId int, @BrId tinyint, @TrId smallint, @IntakeId tinyint, @AcademicYear smallint;
+        declare @CId smallint, @InsId int, @BrId tinyint, @TrId smallint, @IntId tinyint, @Year smallint;
         
         select 
             @CId =[CourseId] , @InsId =[InstructorId] , @BrId = [BranchId], 
-            @TrId =[TrackId] , @IntakeId =[IntakeId] , @AcademicYear = [AcademicYear]
+            @TrId =[TrackId] , @IntId =[IntakeId] , @Year = [AcademicYear]
         from [courses].[CourseInstance] 
         where [CourseInstanceId] = @instanceid;
 
@@ -69,8 +69,8 @@ begin
         set @InsId    = coalesce(@instructorid, @InsId);
         set @BrId = coalesce(@branchid, @BrId);
         set @TrId  = coalesce(@trackid, @TrId);
-        set @IntakeId = coalesce(@intakeid, @IntakeId);
-        set @AcademicYear   = coalesce(@academicyear, @AcademicYear);
+        set @IntId = coalesce(@intakeid, @IntId);
+        set @Year   = coalesce(@academicyear, @Year);
 
          
         if not exists (select 1 from [courses].[Course] where [CourseId] = @CId and [isActive] = 1 and [isDeleted] = 0)
@@ -85,12 +85,12 @@ begin
         if not exists (select 1 from [orgnization].[Track] where [TrackId] = @TrId and [isActive] = 1 and [isDeleted] = 0)
             throw 55004, 'error: target track is inactive or not found.', 1;
 
-        if not exists (select 1 from [orgnization].[Intake] where [IntakeId] = @IntakeId and [isActive] = 1 and [isDeleted] = 0)
+        if not exists (select 1 from [orgnization].[Intake] where [IntakeId] = @IntId and [isActive] = 1 and [isDeleted] = 0)
             throw 55005, 'error: target intake is inactive or not found.', 1;
 
         if exists (select 1 from [courses].[CourseInstance] 
                 where  [CourseId]= @CId and[TrackId]  = @TrId 
-                and [IntakeId] = @IntakeId and [AcademicYear] = @AcademicYear
+                and [IntakeId] = @IntId and [AcademicYear] = @Year
                 and [CourseInstanceId] <> @instanceid) 
             throw 55006, 'error: another instance already exists with these same details.', 1;
 
@@ -100,8 +100,8 @@ begin
             [InstructorId]= @InsId,
             [BranchId]    = @BrId,
             [TrackId]     = @TrId,
-            [IntakeId]    = @IntakeId,
-            [AcademicYear]= @AcademicYear
+            [IntakeId]    = @IntId,
+            [AcademicYear]= @Year
         where [CourseInstanceId] = @instanceid;
 
         select @instanceid as UpdatedCourseInstanceId, 1 as Success, 'Course instance updated successfully.' as Message;
@@ -134,21 +134,19 @@ end
 go
 
 create or alter  trigger [courses].trg_preventdeleteinstance
-on [courses].[courseinstance]
+on [Courses].[CourseInstance]
 instead of delete
 as
 begin
     set nocount on;
 
     declare @instanceid smallint, @courseid smallint, @year smallint;
-    select @instanceid = courseinstanceid, @courseid = courseid, @year = academicyear from deleted;
+    select @instanceid =[CourseInstanceId] , @courseid =[CourseId] , @year = academicyear from deleted;
 
     if exists (select 1 from[exams].[Exam]  where [CourseInstanceId] = @instanceid and [isDeleted] = 0) 
-    or exists (select 1 from [exams].[Question] where [CourseInstanceId] = @instanceid and [isDeleted] = 0)
-    or exists (select 1 from [results].[Result] where [CourseInstanceId] = @instanceid and [isDeleted] = 0)
-    or exists (select 1 from [students].[StudentCourseInstance] where [CourseInstanceId] = @instanceid and [isDeleted] = 0)
+    or exists (select 1 from [Courses].[CourseInstance] where [CourseInstanceId] = @instanceid and [isDeleted] = 0)
     begin
-        update [courses].[courseinstance]
+        update [Courses].[CourseInstance]
         set [isActive] = 0, [isDeleted] = 1
         where courseinstanceid = @instanceid;
     end

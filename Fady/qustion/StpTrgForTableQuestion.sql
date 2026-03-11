@@ -201,7 +201,7 @@ begin
     set nocount on;
     begin try
         begin transaction;
-        if not exists (select 1 from [useracc].instructor where insid = @instructorid and isactive = 1)
+        if not exists (select 1 from [useracc].instructor where [InstructorId] = @instructorid and isactive = 1)
             throw 50001, 'Access denied. Only active instructors can delete questions.', 1;
 
         declare @courseid int, @isdeleted bit;

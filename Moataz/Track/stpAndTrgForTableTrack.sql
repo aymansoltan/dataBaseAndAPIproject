@@ -78,7 +78,7 @@ go
 
 
 create or alter trigger [orgnization].trg_SoftDeleteTrack
-on [Track]
+on [orgnization].[Track]
 instead of delete
 as
 begin
@@ -101,7 +101,7 @@ end
 
 go
 create or alter trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveTrack
-on [Track]
+on [orgnization].[Track]
 after update
 as
 begin
