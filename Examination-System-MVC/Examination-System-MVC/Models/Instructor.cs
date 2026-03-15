@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace Examination_System_MVC.Models;
-
 public partial class Instructor
 {
     public int InstructorId { get; set; }
