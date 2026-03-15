@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore; 
-using Examination_System_MVC.Models; 
 
 namespace Examination_System_MVC
 {
@@ -11,7 +9,9 @@ namespace Examination_System_MVC
 
             
             builder.Services.AddControllersWithViews();
-
+            builder.Services.AddRepositories();
+            builder.Services.AddServices();
+            builder.Services.AddMapping();
         
             builder.Services.AddDbContext<ExaminationContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
