@@ -7,3 +7,4 @@ global using System.Threading.Tasks;
 global using System;
 global using System.Collections.Generic;
 global using Microsoft.EntityFrameworkCore;
+global using Examination_System_MVC.Repository.ClassRepository;

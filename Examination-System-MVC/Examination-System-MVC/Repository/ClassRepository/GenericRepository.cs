@@ -3,8 +3,8 @@ namespace Examination_System_MVC.Repository.ClassRepository
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        private readonly ExaminationContext _context;
-        private readonly DbSet<T> _dbSet;
+        protected readonly ExaminationContext _context;
+        protected readonly DbSet<T> _dbSet;
         public GenericRepository(ExaminationContext context)
         {
             _context = context;
