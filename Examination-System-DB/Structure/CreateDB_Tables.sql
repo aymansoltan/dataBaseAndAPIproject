@@ -75,7 +75,7 @@ go
 
 create   table [orgnization].Branch
 (
-    BranchId tinyint identity(1,1),
+    BranchId  tinyint identity(1,1),
     BranchName varchar(15) not null,
     isActive bit constraint branchActiveDefault default 1,
     isDeleted bit constraint branchDeleteDefault default 0,
