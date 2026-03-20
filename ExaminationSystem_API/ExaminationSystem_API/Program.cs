@@ -1,6 +1,6 @@
 
-using ExaminationSystem_API.Helper;
-using ExaminationSystem_API.Models;
+//using ExaminationSystem_API.Helper;
+//using ExaminationSystem_API.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ExaminationSystem_API
@@ -13,22 +13,24 @@ namespace ExaminationSystem_API
 
 
             builder.Services.AddControllers();
-            builder.Services.AddRepositories();
-            builder.Services.AddServices();
-            builder.Services.AddMapping();
-            builder.Services.AddOpenApi();
-            builder.Services.AddDbContext<ExaminationContext>(options =>
-                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-            builder.Services.AddCors(options => {
+            //builder.Services.AddRepositories();
+            //builder.Services.AddServices();
+            //builder.Services.AddMapping();
+            //builder.Services.AddOpenApi();
+            //builder.Services.AddDbContext<ExaminationContext>(options =>
+            //     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddCors(options =>
+            {
                 options.AddPolicy("AllowAll", b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             });
             var app = builder.Build();
 
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi(); 
-                app.UseSwaggerUI(options => {
-                    options.SwaggerEndpoint("/openapi/v1.json", "v1"); 
+                app.MapOpenApi();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/openapi/v1.json", "v1");
                 });
             }
 

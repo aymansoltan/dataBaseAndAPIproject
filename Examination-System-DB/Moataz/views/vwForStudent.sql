@@ -9,7 +9,7 @@ begin
         concat_ws(' ', s.FirstName, s.LastName) as FullName,
         s.Gender,
         s.BirthDate,
-        datediff(year, s.BirthDate, getdate()) as Age,
+        (0 + Convert(Char(8),GetDate(),112) - Convert(Char(8),s.[BirthDate],112)) / 10000 as Age,
         s.Phone,
         s.StuAddress as [Address],
         s.NationalID,
@@ -25,12 +25,16 @@ begin
     inner join [orgnization].Track t with (nolock) on s.TrackId = t.TrackId
     inner join [orgnization].Intake i with (nolock) on s.IntakeId = i.IntakeId
     where s.StudentId = @StudentId
-      and ua.isActive = 1
-      and s.isActive = 1;
+      and s.isDeleted = 0   
+      and ua.isActive = 1;
+
+    if @@ROWCOUNT = 0
+    begin
+        throw 50106, 'Student profile not found or inactive.', 1;
+    end
 end
 go
 -------------------------------------------------------------------------------------------------
-
 create or alter procedure [studentViews].Stp_GetStudentCourses
     @StudentId int
 as
@@ -38,11 +42,14 @@ begin
     set nocount on;
 
     select 
+        c.[CourseId],
+        ci.CourseInstanceId,
         c.CourseName,
         ci.AcademicYear,
         concat_ws(' ', i.FirstName, i.LastName) as InstructorName,
         t.TrackName,
-        it.IntakeName
+        it.IntakeName,
+        ci.IsActive as CourseStatus
     from [userAcc].Student s with (nolock)
     inner join [Courses].CourseInstance ci with (nolock) 
         on  s.TrackId  = ci.TrackId 
@@ -51,18 +58,23 @@ begin
     inner join [Courses].Course c with (nolock) 
         on ci.CourseId = c.CourseId
     inner join [userAcc].Instructor i with (nolock) 
-        on ci.InstructorId = i.InstructorId -- تأكد من اسم العمود InsId
+        on ci.InstructorId = i.InstructorId
     inner join [orgnization].Track t with (nolock) 
         on ci.TrackId = t.TrackId
     inner join [orgnization].Intake it with (nolock) 
         on ci.IntakeId = it.IntakeId
     where s.StudentId = @StudentId
-      and s.isActive = 1
-      and c.isActive = 1;
-end
-go
+      and s.isDeleted = 0
+      and ci.isDeleted = 0
+      and c.isDeleted = 0
+      and s.isActive = 1;
 
--------------------------------------------------------------------------------------------------
+    if @@ROWCOUNT = 0
+    begin
+        print 'No active courses found for this student.';
+    end
+end
+go-------------------------------------------------------------------------------------------------
 
 use [ExaminationSystemDB]
 go
@@ -74,25 +86,21 @@ begin
     set nocount on;
 
     select 
+        e.[ExamId],
         e.ExamTitle,
         ci.AcademicYear,
         e.ExamType,
         r.TotalGrade as StudentGrade,
         e.TotalGrade as ExamTotalGrade,
         case 
-            when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) 
-                 < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) 
-            then 'Fail'
-            when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) 
-                 < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.10 
-            then 'Pass'
-            when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) 
-                 < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.20 
-            then 'Good'
-            when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) 
-                 < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.30 
-            then 'Very Good'
-            else 'Excellent'
+            when r.IsPassed = 0 then 'Fail'
+            else 
+                case 
+                    when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) >= 0.90 then 'Excellent'
+                    when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) >= 0.80 then 'Very Good'
+                    when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) >= 0.70 then 'Good'
+                    else 'Pass'
+                end
         end as Grade,
         cast(e.StartTime as date) as ExamDate
     from [exams].Student_Exam_Result r with (nolock)
@@ -100,7 +108,13 @@ begin
     inner join [Courses].CourseInstance ci with (nolock) on e.CourseInstanceId = ci.CourseInstanceId
     inner join [Courses].Course c with (nolock) on ci.CourseId = c.CourseId
     where r.StudentId = @StudentId
-      and e.IsDeleted = 0;
+      and e.IsDeleted = 0
+    order by e.StartTime desc;
+
+    if @@ROWCOUNT = 0
+    begin
+        print 'No exam results found for this student.';
+    end
 end
 go
 --------------------------------------------------------------------------------------------------
@@ -121,7 +135,8 @@ begin
         e.EndTime,
         e.DurationMinutes,
         c.CourseName,
-        concat_ws(' ', i.FirstName, i.LastName) as InstructorName
+        concat_ws(' ', i.FirstName, i.LastName) as InstructorName,
+        datediff(hour, getdate(), e.StartTime) as HoursRemaining
     from [exams].Exam e with (nolock)
     inner join [Courses].CourseInstance ci with (nolock) 
         on e.CourseInstanceId = ci.CourseInstanceId
@@ -134,10 +149,15 @@ begin
         and s.IntakeId = e.IntakeId 
         and s.BranchId = e.BranchId
     where s.StudentId = @StudentId
-      and s.isActive = 1
+      and s.isDeleted = 0
       and e.IsDeleted = 0
       and getdate() < e.StartTime 
-    order by e.StartTime asc; 
+    order by e.StartTime asc;
+
+    if @@ROWCOUNT = 0
+    begin
+        print 'No upcoming exams found for this student.';
+    end
 end
 go
 -----------------------------------------------------------------------------------
@@ -158,22 +178,10 @@ begin
         if @Filter not in ('Pass', 'Fail')
             throw 50105 ,'Invalid filter. Use ''Pass'' or ''Fail'' only.', 1 ;
 
-
         declare @IsPassed bit = case when @Filter = 'Pass' then 1 else 0 end;
 
-        if not exists (
-            select 1 
-            from [exams].Student_Exam_Result with (nolock)
-            where StudentId = @StudentId and IsPassed = @IsPassed
-        )
-        begin
-            declare @msg nvarchar(100) = 'No ' + @Filter + 'ed exams found.';
-            print @msg;
-            return;
-        end
-
-
         select
+            e.[ExamId],
             e.ExamTitle,
             e.ExamType,
             ci.AcademicYear,
@@ -183,16 +191,15 @@ begin
             e.TotalGrade as ExamTotalGrade,
           
             case
-                when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0))
-                then 'Fail'
-                when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.10
-                then 'Pass'
-                when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.20
-                then 'Good'
-                when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) < (c.MinDegree * 1.0 / nullif(c.MaxDegree, 0)) + 0.30
-                then 'Very Good'
-                else 'Excellent'
-            end as Grade
+                when r.IsPassed = 0 then 'Fail'
+                else 
+                    case 
+                        when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) >= 0.90 then 'Excellent'
+                        when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) >= 0.80 then 'Very Good'
+                        when (r.TotalGrade * 1.0 / nullif(e.TotalGrade, 0)) >= 0.70 then 'Good'
+                        else 'Pass'
+                    end
+            end as GradeStatus
         from [exams].Student_Exam_Result r with (nolock)
         inner join [exams].Exam e with (nolock) on r.ExamId = e.ExamId
         inner join [Courses].CourseInstance ci with (nolock) on e.CourseInstanceId = ci.CourseInstanceId
@@ -202,11 +209,17 @@ begin
           and e.IsDeleted = 0
         order by e.StartTime desc;
 
+        if @@ROWCOUNT = 0
+        begin
+            print 'No ' + @Filter + 'ed exams found for this student.';
+        end
+
     end try
     begin catch
         throw; 
     end catch
 end
+go
 go
 
 -------------------------------------------------------------------------------------
