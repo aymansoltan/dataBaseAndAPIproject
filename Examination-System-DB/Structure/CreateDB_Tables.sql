@@ -93,13 +93,13 @@ create table [orgnization].Department(
     isActive bit constraint DepartmentActiveDefault default 1 ,
     isDeleted bit constraint DepartmentDeleteDefault default 0,
     createdAt date constraint deptcreatedAtDefault default getdate(),
-    BranchId tinyint,
-
+    BranchId tinyint not null,
     constraint DepartmentPK primary key (DeptId),
     constraint DepartmentName_branchUniqe unique (DeptName ,BranchId ),
     constraint DepartmentNamelenCheck check(len(DeptName) >=3),
     constraint DepartmentNameFormatCheck check (DeptName NOT like '[0-9]%' AND DeptName NOT like '[!@#$%^&*]%'),
     constraint DepartmentBranchFK foreign key (BranchId) references [orgnization].[Branch](BranchId)
+
 ) on [primary]
 go
 create table [orgnization].Track(
@@ -114,7 +114,8 @@ create table [orgnization].Track(
     constraint TrackName_DeptUniqe unique (TrackName ,DeprtmentId ),
     constraint TrackNamelenCheck check(len(TrackName) >=3),
     constraint TrackNameFormatCheck check (TrackName NOT like '[0-9]%' AND TrackName NOT like '[!@#$%^&*]%'),
-    constraint TrackDepartmentFK foreign key (DeprtmentId) references [orgnization].[Department](DeptId)
+    constraint TrackDepartmentFK foreign key (DeprtmentId) references [orgnization].[Department](DeptId),
+
 ) on [primary]
 go
 create table [orgnization].Intake(

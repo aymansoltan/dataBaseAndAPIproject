@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExaminationSystem_API.Models;
 
+[Table("Branch", Schema = "orgnization")]
 public partial class Branch
 {
     public byte BranchId { get; set; }

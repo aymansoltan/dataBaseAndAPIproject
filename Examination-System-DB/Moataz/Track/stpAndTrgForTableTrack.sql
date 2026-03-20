@@ -15,9 +15,23 @@ begin
 
         if exists (select 1 from [Track] where [TrackName] = @TrackName and [DeprtmentId] = @DeptId)
             throw 50006, 'Error: A track with this name already exists in the specified department.', 1;
+        declare @NewTrackId smallint;
+        declare @LatestIntakeId tinyint;
+
+        select top 1 @LatestIntakeId = IntakeId 
+        from [Intake] 
+        where isDeleted = 0 and isActive = 1
+        order by IntakeId desc;
+
+        if @LatestIntakeId is null
+            throw 50008, 'Error: No active intake found to link with the track.', 1;
 
         insert into [Track] ([TrackName], [DeprtmentId])
         values (trim(@TrackName), @DeptId);
+        set @NewTrackId = SCOPE_IDENTITY();
+        insert into [IntakeTrack] (IntakeId, TrackId)
+        values (@LatestIntakeId, @NewTrackId);
+
         select SCOPE_IDENTITY() as NewTrackId ,1 as Success , 'track added Successfully' as Message;
     end try
     begin catch
@@ -33,10 +47,11 @@ as
 begin
     set nocount on;
     begin try
-
+     
         if not exists (select 1 from [Track] where [TrackId] = @TrackId and [isDeleted] = 0 and [isActive] = 1)
             throw 50007, 'Error: Track not found, inactive, or it has been deleted.', 1;
 
+   
         if not exists (select 1 from [Department] where [DeptId] = @DeptId and [isActive] = 1 and [isDeleted] = 0 )
             throw 50004, 'Error: Department not found, inactive, or it has been deleted.', 1;
 
@@ -45,10 +60,22 @@ begin
 
         update [Track]
         set [TrackName] = trim(@TrackName),
-          [DeprtmentId] = @DeptId
+            [DeprtmentId] = @DeptId
         where [TrackId] = @TrackId;
 
-        select @TrackId as UpdatedTrackId , 1 as Success , 'Track updated Successfully' as Message;
+        declare @LatestIntakeId tinyint;
+        select top 1 @LatestIntakeId = IntakeId from [Intake] where isDeleted = 0 and isActive = 1 order by IntakeId desc;
+
+        if @LatestIntakeId is not null
+        begin
+            if not exists (select 1 from [IntakeTrack] where [TrackId] = @TrackId and [IntakeId] = @LatestIntakeId)
+            begin
+                insert into [IntakeTrack] (IntakeId, TrackId)
+                values (@LatestIntakeId, @TrackId);
+            end
+        end
+
+        select @TrackId as UpdatedTrackId, 1 as Success, 'Track updated and linkage verified successfully' as Message;
 
     end try
     begin catch

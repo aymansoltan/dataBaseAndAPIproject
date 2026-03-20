@@ -1,6 +1,9 @@
 
 
 global using ExaminationSystem_API.Repository.UnitWork;
+using ExaminationSystem_API.Dto.BranchDTO;
+using ExaminationSystem_API.Helper;
+using System.Threading.Tasks;
 
 namespace ExaminationSystem_API.Service.ClassService
 {
@@ -17,7 +20,38 @@ namespace ExaminationSystem_API.Service.ClassService
         public async Task AddBranchAsync(AddBranchDTO branchdto)
         {
             await _unitOfWork.Branches.AddBranchWithStoredAsync(branchdto.BranchName);
-            await _unitOfWork.CompleteAsync();
         }
+
+        public async Task UpdateBranchAsync(int id , UpdateBranchDTO updateBranch)
+        {
+            await _unitOfWork.Branches.UpdateBranchWithStoredAsync(id, updateBranch.BranchName);
+        }
+        public async Task DeleteBranchAsync(int id)
+        {
+            await _unitOfWork.Branches.DeleteBranchWithStoredAsync(id);
+        }
+        public async Task ActivateBranchAsync(int id)
+        {
+            await _unitOfWork.Branches.ActivateBranchWithStoredAsync(id);
+        }
+        public async Task<PaginatedList<BranchSummaryDTO>> GetAllBranchSummryAsync(string? searchTerm , int pageNumber , int pageSize)
+        {
+            var summary = await _unitOfWork.Branches.GetAllBranchSummaryWithStoredAsync();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.Trim().ToLower();
+                summary = summary.Where(b => b.BranchName != null && b.BranchName.ToLower().Contains(searchTerm));
+            }
+            var paginatedList = PaginatedList<VBranchsummary>.Create(summary, pageNumber, pageSize);
+
+            var mapper = _mapper.Map<List<BranchSummaryDTO>>(paginatedList.Items);
+
+            var result = new PaginatedList<BranchSummaryDTO>(mapper, paginatedList.TotalCount, pageNumber, pageSize);
+           
+            return result;
+        }
+
+
     }
 }

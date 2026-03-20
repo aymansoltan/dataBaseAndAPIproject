@@ -6,23 +6,34 @@ as
 begin
     set nocount on;
     begin try
-        if len(trim(@IntakeName))<2
+        if len(trim(@IntakeName)) < 2
             throw 50001, 'Error: Intake name must be at least 2 characters long.', 1;
      
         if exists (select 1 from [Intake] where [IntakeName] = @IntakeName)
             throw 50002, 'Error: This intake name already exists.', 1;
+        declare @LastIntakeDate date;
+        
+        select top 1 @LastIntakeDate = createdAt 
+        from [Intake] 
+        where isDeleted = 0 
+        order by IntakeId desc; 
+        if @LastIntakeDate is not null
+        begin
+            if datediff(month, @LastIntakeDate, getdate()) < 3
+                throw 50009, 'Error: Cannot create a new intake. At least 3 months must pass since the last intake was created.', 1;
+        end
 
         insert into [Intake] ([IntakeName])
         values (trim(@IntakeName));
 
-        select SCOPE_IDENTITY() as NewIntakeId , 1 as Success , 'intake added Successfully' as Message ;
+        select SCOPE_IDENTITY() as NewIntakeId, 1 as Success, 'Intake added successfully' as Message;
     end try
     begin catch
         throw;  
     end catch
 end
-
 go
+
 create or alter proc [TrainingMangerStp].stp_UpdateIntake
     @IntakeId tinyint,
     @IntakeName varchar(10)
@@ -95,21 +106,19 @@ begin
 end
 go
 
-create or alter trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveIntake
+create or alter trigger [orgnization].trg_syncIntakeTrackStatus
 on [orgnization].[Intake]
 after update
 as
 begin
     set nocount on;
-    if exists (select 1 from inserted i join deleted d on i.IntakeId = d.IntakeId 
-               where i.isActive = 0 and d.isActive = 1)
-    begin
-        declare @intakeid tinyint;
-        select @intakeid = IntakeId from inserted;
-
-  
-        update [IntakeTrack]
-        set [isActive] = 0 , [isDeleted] = 1
-        where [IntakeId] = @intakeid;
-    end
+    
+    update IT
+    set IT.isActive = i.isActive,
+        IT.isDeleted = i.isDeleted
+    from [orgnization].[IntakeTrack] IT
+    inner join inserted i on IT.IntakeId = i.IntakeId
+    inner join deleted d on i.IntakeId = d.IntakeId
+    where i.isActive <> d.isActive or i.isDeleted <> d.isDeleted;
 end
+go

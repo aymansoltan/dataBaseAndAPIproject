@@ -27,5 +27,6 @@ namespace ExaminationSystem_API.Helper
             services.AddAutoMapper(typeof(ServiceCollectionExtensions).Assembly);
             return services;
         }
+        
     }
 }
