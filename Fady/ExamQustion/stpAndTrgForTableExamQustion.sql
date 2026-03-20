@@ -273,6 +273,31 @@ begin
 end;
 go
 
+CREATE OR ALTER TRIGGER trg_UpdateExamTotalDegree
+ON [exams].[ExamQuestion]
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    
+    DECLARE @AffectedExams TABLE (ExamId INT);
+
+
+    INSERT INTO @AffectedExams
+    SELECT ExamId FROM inserted
+    UNION
+    SELECT ExamId FROM deleted;
+
+    UPDATE [exams].Exam
+    SET E.TotalDegree = ISNULL(
+        (SELECT SUM(Q.Points) 
+         FROM [exams].ExamQuestion EQ
+         JOIN [exams].Question Q ON EQ.QuestionId = Q.QuestionId
+         WHERE EQ.ExamId = E.ExamId), 0)
+    FROM [exams].Exam E
+    WHERE E.ExamId IN (SELECT ExamId FROM @AffectedExams);
+END;
 
 -- =====================================================================
 --  TEST CASES  (v2)
