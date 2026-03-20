@@ -70,7 +70,7 @@ create schema [StudentStp]
 go
 create schema [TrainingMangerStp]
 go
-create schema [adminStp]
+create schema [admin]
 go
 
 

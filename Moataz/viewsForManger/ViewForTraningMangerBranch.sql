@@ -11,7 +11,7 @@ select
 from [orgnization].[branch];
 go
 
-create or alter view [MangerViews].v_department_branch_summary
+create  view [MangerViews].v_department_branch_summary
 as
 select 
     dept.[deptname] as [department_name],
@@ -26,7 +26,7 @@ join [orgnization].[branch] as br
     on dept.branchid = br.branchid;
 go
 
-create or alter view [MangerViews].v_track_department_branch_details
+create  view [MangerViews].v_track_department_branch_details
 as
 select
     tr.[trackname] as [track_name],
@@ -45,7 +45,7 @@ join [orgnization].[branch] as br
 
 go
 
-create or alter view [MangerViews].v_track_Intake_details
+create view [MangerViews].v_track_Intake_details
 as
 select 
     ik.[intakename] as [intake_name],
@@ -79,14 +79,14 @@ from [orgnization].[branch] as br right join [orgnization].[department] as dept
 go
 create or alter view [MangerViews].v_org_integrity_check
 as
-select 
-    br.branchname as branch_name,
-    count(dept.deptid) as total_departments,
-    count(tr.trackid) as total_tracks
-from [orgnization].[branch] br
-left join [orgnization].[department] dept on br.branchid = dept.branchid
-left join [orgnization].[track] tr on dept.deptid = tr.deprtmentid
-group by br.branchname;
+SELECT 
+    br.BranchName,
+    COUNT(DISTINCT dept.DeptId) AS Total_Departments,
+    COUNT(DISTINCT tr.TrackId) AS Total_Tracks
+FROM [orgnization].[Branch] br
+LEFT JOIN [orgnization].[Department] dept ON br.BranchId = dept.BranchId
+LEFT JOIN [orgnization].[Track] tr ON dept.DeptId = tr.DeprtmentId
+GROUP BY br.BranchName;
 go
 create or alter view [MangerViews].v_active_intake_map
 as
@@ -100,7 +100,7 @@ join [orgnization].[track] tr on itr.trackid = tr.trackid
 join [orgnization].[department] dept on tr.deprtmentid = dept.deptid
 where ik.isactive = 1 and tr.isactive = 1;
 go
-create or alter view [MangerViews].v_numTrackInIntake
+create  view [MangerViews].v_numTrackInIntake
 as
 select
 ik.[IntakeName] as[Intake_Name],
@@ -120,7 +120,7 @@ from [orgnization].[intake] ik
 left join [orgnization].[intaketrack] itr on ik.intakeid = itr.intakeid
 group by ik.intakeid, ik.intakename, ik.createdat;
 go
-create or alter view [MangerViews].v_student_comprehensive_profile
+create  view [MangerViews].v_student_comprehensive_profile
 as
 select 
     concat(s.[firstname], ' ', s.[lastname]) as [full_name],
@@ -149,7 +149,7 @@ where r.[RoleName] ='student'
 
 
 go
-create or alter view [MangerViews].v_instructor_profiles
+create  view [MangerViews].v_instructor_profiles
 as
 select 
     concat(ins.[firstname], ' ', ins.[lastname]) as [full_name],
@@ -175,7 +175,7 @@ join [orgnization].[department] dept on ins.[deptid] = dept.[deptid]
 where r.[rolename] = 'instructor';
 go
 
-create or alter view [MangerViews].v_Student_Courses_Instructore
+create  view [MangerViews].v_Student_Courses_Instructore
 as
 select 
     concat(s.[FirstName], ' ', s.[LastName]) as [Student_Name],
@@ -199,7 +199,7 @@ join [userAcc].[Instructor] ins on ci.[InstructorId] = ins.[InsId];
 go
 
 
-create or alter view [MangerViews].v_question_bank_summary
+create  view [MangerViews].v_question_bank_summary
 as
 select 
     c.coursename,
@@ -212,7 +212,7 @@ where q.isdeleted = 0
 group by c.coursename, q.questiontype;
 go
 
-create or alter view [MangerViews].v_exams_comprehensive_details
+create  view [MangerViews].v_exams_comprehensive_details
 as
 select 
     ex.[ExamTitle] as [exam_title],
@@ -235,7 +235,7 @@ join [userAcc].[Instructor] as ins on cri.[InstructorId] = ins.[InsId]
 where ex.[IsDeleted] = 0;
 go
 
-create or alter view [MangerViews].v_students_final_results
+create view [MangerViews].v_students_final_results
 as
 select 
     concat(s.[FirstName], ' ', s.[LastName]) as [student_name],
@@ -253,7 +253,8 @@ join [exams].[Exam] as ex on ser.[ExamId] = ex.[ExamId]
 join [Courses].[CourseInstance] as ci on ex.[CourseInstanceId] = ci.[CourseInstanceId] 
 join [Courses].[Course] as cr on ci.[CourseId] = cr.[CourseId];
 go
-create or alter proc[TrainingMangerStp].Stp_ViewStudentData 
+
+create proc[TrainingMangerStp].Stp_ViewStudentData 
     @StudentId INT 
 as
 begin
@@ -287,7 +288,7 @@ begin
 END
 GO
 
-CREATE OR ALTER PROC [TrainingMangerStp].Stp_ViewinstructoreData 
+CREATE  PROC [TrainingMangerStp].Stp_ViewinstructoreData 
     @InstructorID INT 
 AS
 BEGIN

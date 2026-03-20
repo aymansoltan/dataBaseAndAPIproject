@@ -1,3 +1,4 @@
+use  [ExaminationSystemDB]
 go
 create proc[TrainingMangerStp].stp_addCourseInstance
     @courseid     int,

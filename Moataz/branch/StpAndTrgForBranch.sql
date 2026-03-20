@@ -108,7 +108,7 @@ begin
     end
 end 
 go
-create  proc [TrainingMangerStp].stp_ActivateBranch @BranchId int 
+create or alter proc [TrainingMangerStp].stp_ActivateBranch @BranchId int 
 as
 begin
     begin try
@@ -127,6 +127,9 @@ begin
             set [isActive] = 1
             where [BranchId] = @BranchId;
             
+            update [orgnization].[Department]
+            set [isActive] =1
+            where [BranchId] =@BranchId
             print 'Success: Branch has been activated.';
         end
     end try

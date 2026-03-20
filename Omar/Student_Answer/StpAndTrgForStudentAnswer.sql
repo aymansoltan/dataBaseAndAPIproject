@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [StudentStp].stp_StudentSubmitAnswer 
+CREATE or alter PROCEDURE [StudentStp].stp_StudentSubmitAnswer 
     @ExamId          int,
     @QuestionId      int,
     @StudentResponse nvarchar(max)
@@ -93,9 +93,11 @@ begin
         -- ══════════════════════════════════════════════════════════════
         declare @QuestionType nvarchar(20),
                 @BestAnswer   nvarchar(max),
-                @Points       int;
+                @Points       int,
+                @correct   nvarchar(max);
 
         select @QuestionType = QuestionType,
+               @correct=[CorrectAnswer],
                @BestAnswer   = BestAnswer,
                @Points       = Points
         from   [exams].Question
@@ -167,7 +169,7 @@ begin
 
         if @QuestionType in ('MCQ', 'T/F')
         begin
-            if trim(lower(@StudentResponse)) = trim(lower(@BestAnswer))
+            if trim(lower(@StudentResponse)) = trim(lower(@correct))
                 set @SystemGrade = @Points;
             else
                 set @SystemGrade = 0;
@@ -258,7 +260,7 @@ end
 go
 ---------------------------------------------------------------------------------------------
 
-create or alter procedure [InstructorStp].stp_InstructorGradeText
+create procedure [InstructorStp].stp_InstructorGradeText
     @ExamId          int,
     @StudentId       int,
     @QuestionId      int,
@@ -470,7 +472,7 @@ begin
 end
 go
 --------------------------------- ----------------------------------------------
-create  or alter procedure [InstructorStp].stp_deletstudentanswer 
+create   procedure [InstructorStp].stp_deletstudentanswer 
 @studentid int
 as 
 begin
@@ -479,7 +481,7 @@ where @studentid = StudentId
 end
 go
 --------------------------------------------------------------------
-create or alter trigger [exams].trg_StudentAnswer
+create  trigger [exams].trg_StudentAnswer
 on [exams].Student_Answer
 instead of delete, update
 as

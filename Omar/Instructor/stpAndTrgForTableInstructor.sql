@@ -115,6 +115,8 @@ BEGIN
     END CATCH
 END;
 GO
+--==========================================
+
 create  proc [TrainingMangerStp].stp_deleteinstructor 
     @instructoid int 
 as 

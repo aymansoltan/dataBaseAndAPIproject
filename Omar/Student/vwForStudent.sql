@@ -6,8 +6,6 @@ as
     select
         -- personal info
         s.StudentId,
-        s.FirstName,
-        s.LastName,
         s.FirstName + ' ' + s.LastName  as FullName,
         s.Gender,
         s.BirthDate,
@@ -181,9 +179,6 @@ begin
     set nocount on;
     begin try
 
-        -- ══════════════════════════════════════════════════════════════
-        -- step 1: get current student from sql server login
-        -- ══════════════════════════════════════════════════════════════
         declare @CurrentStudentId int;
 
         select @CurrentStudentId = s.StudentId
