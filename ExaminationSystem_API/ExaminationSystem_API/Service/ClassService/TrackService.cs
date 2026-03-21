@@ -14,6 +14,8 @@ namespace ExaminationSystem_API.Service.ClassService
         }
         public async Task AddTrackAsync(AddTrackDTO trackDTO) 
             => await _unitOfWork.Tracks.AddTrackWithStoredAsync(trackDTO.TrackName, trackDTO.DeptId);
+        public async Task UpdateTrackAsync(UpdateTrackDTO trackDTO) 
+            => await _unitOfWork.Tracks.UpdateTrackWithStoredAsync(trackDTO.TrackId,trackDTO.TrackName, trackDTO.DeptId);
 
     }
 }
