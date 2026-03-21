@@ -40,7 +40,7 @@ namespace ExaminationSystem_API.Controllers
             }
         }
         [HttpPut("Update-Branch/{id}")]
-        public async Task<IActionResult> UpdateBranch(int id, [FromBody] UpdateBranchDTO updateBranch)
+        public async Task<IActionResult> UpdateBranch(byte id, [FromBody] UpdateBranchDTO updateBranch)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -59,7 +59,7 @@ namespace ExaminationSystem_API.Controllers
             }
         }
         [HttpPut("Activate-Branch/{id}")]
-        public async Task<IActionResult> ActivateBranch(int id)
+        public async Task<IActionResult> ActivateBranch(byte id)
         {
             try
             {
@@ -76,7 +76,7 @@ namespace ExaminationSystem_API.Controllers
             }
         }
         [HttpDelete("Delete-Branch/{id}")]
-        public async Task<IActionResult> DeleteBranch(int id)
+        public async Task<IActionResult> DeleteBranch(byte id)
         {
 
             try

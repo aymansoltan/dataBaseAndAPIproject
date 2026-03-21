@@ -15,6 +15,7 @@ namespace ExaminationSystem_API.Helper
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IBranchRepository, BranchRepository>();
             services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+            services.AddScoped<ITrackRepository, TrackRepository>();
 
             return services;
         }
@@ -22,6 +23,7 @@ namespace ExaminationSystem_API.Helper
         {
             services.AddScoped<IBranchService, BranchService>();
             services.AddScoped<IDepartmentService, DepartmentService>();
+            services.AddScoped<ITrackService, TrackService>();
             return services;
         }
         public static IServiceCollection AddMapping(this IServiceCollection services)

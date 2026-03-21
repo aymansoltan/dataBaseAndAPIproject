@@ -19,20 +19,20 @@ namespace ExaminationSystem_API.Service.ClassService
         public async Task AddDepartmentAsync(AddDepartmentDTO departmentDTO)
         {
             var DeptMapper = _mapper.Map<Department>(departmentDTO);
-            await _unitOfWork.Departments.AddDepartmentWithStoredAsync(DeptMapper.DeptName,(int)(DeptMapper.BranchId ??0));
+            await _unitOfWork.Departments.AddDepartmentWithStoredAsync(DeptMapper.DeptName,DeptMapper.BranchId.Value );
         }
         public async Task UpdateDepartmentAsync(UpdateDepartmentDTO departmentDTO)
         {
             var DeptMapper = _mapper.Map<Department>(departmentDTO);
-            await _unitOfWork.Departments.UpdateDepartmentWithStoredAsync(DeptMapper.DeptId , DeptMapper.DeptName , (int)(DeptMapper.BranchId ?? 0));
+            await _unitOfWork.Departments.UpdateDepartmentWithStoredAsync(DeptMapper.DeptId , DeptMapper.DeptName , DeptMapper.BranchId.Value );
         }
 
-        public async Task DeleteDepartmentAsync(int id)
+        public async Task DeleteDepartmentAsync(byte id)
         {
             await _unitOfWork.Departments.DeleteDepartmentWithStoredAsync(id); 
         }
 
-        public async Task<DepartmentReadByIDDTO> GetDepartmentByID(int id)
+        public async Task<DepartmentReadByIDDTO> GetDepartmentByID(byte id)
         {
             var department = await _unitOfWork.Departments.GetAllQueryable()
                 .Include(d => d.Branch)

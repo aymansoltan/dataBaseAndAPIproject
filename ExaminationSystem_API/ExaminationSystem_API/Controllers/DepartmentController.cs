@@ -40,7 +40,7 @@ namespace ExaminationSystem_API.Controllers
         }
         
         [HttpPut("Update-Department/{id}")]
-        public async Task<IActionResult> UpdateDepartment([FromRoute]int id ,[FromBody] UpdateDepartmentDTO Department)
+        public async Task<IActionResult> UpdateDepartment([FromRoute]byte id ,[FromBody] UpdateDepartmentDTO Department)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if(id!=Department.DeptId)
@@ -57,7 +57,7 @@ namespace ExaminationSystem_API.Controllers
         }
        
         [HttpDelete("delete-Department/{id}")]
-        public async Task<IActionResult> DeleteDepartment([FromRoute]int id)
+        public async Task<IActionResult> DeleteDepartment([FromRoute]byte id)
         {
             try
             {
@@ -71,7 +71,7 @@ namespace ExaminationSystem_API.Controllers
         }
 
         [HttpGet("get-Department/{id}")]
-        public async Task<IActionResult> GetDepartmentByID([FromRoute]int id)
+        public async Task<IActionResult> GetDepartmentByID([FromRoute]byte id)
         {
             try
             {

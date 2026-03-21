@@ -22,15 +22,15 @@ namespace ExaminationSystem_API.Service.ClassService
             await _unitOfWork.Branches.AddBranchWithStoredAsync(branchdto.BranchName);
         }
 
-        public async Task UpdateBranchAsync(int id, UpdateBranchDTO updateBranch)
+        public async Task UpdateBranchAsync(byte id, UpdateBranchDTO updateBranch)
         {
             await _unitOfWork.Branches.UpdateBranchWithStoredAsync(id, updateBranch.BranchName);
         }
-        public async Task DeleteBranchAsync(int id)
+        public async Task DeleteBranchAsync(byte id)
         {
             await _unitOfWork.Branches.DeleteBranchWithStoredAsync(id);
         }
-        public async Task ActivateBranchAsync(int id)
+        public async Task ActivateBranchAsync(byte id)
         {
             await _unitOfWork.Branches.ActivateBranchWithStoredAsync(id);
         }

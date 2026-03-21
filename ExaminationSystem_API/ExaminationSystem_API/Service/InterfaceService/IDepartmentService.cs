@@ -7,8 +7,8 @@ namespace ExaminationSystem_API.Service.InterfaceService
     {
         Task AddDepartmentAsync(AddDepartmentDTO departmentDTO);
         Task UpdateDepartmentAsync(UpdateDepartmentDTO departmentDTO);
-        Task DeleteDepartmentAsync(int id);
-        Task<DepartmentReadByIDDTO> GetDepartmentByID(int id);
+        Task DeleteDepartmentAsync(byte id);
+        Task<DepartmentReadByIDDTO> GetDepartmentByID(byte id);
         Task<PaginatedList<DepartmentReadAll>> GetAllDepartment(string? searchTerm, int pageNumber, int pageSize);
         Task<IEnumerable<DepartmentLookupDTO>> GetDepartmentLookupAsync();
     }
