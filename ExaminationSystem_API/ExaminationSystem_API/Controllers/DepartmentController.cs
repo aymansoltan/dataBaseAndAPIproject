@@ -1,5 +1,6 @@
 using ExaminationSystem_API.Dto.DepartmentDTO;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -23,8 +24,9 @@ namespace ExaminationSystem_API.Controllers
             return Ok(Branches);
         }
 
+
         [HttpPost("Add-Department")]
-        public async Task<IActionResult> AddDepartment(AddDepartmentDTO addDepartment)
+        public async Task<IActionResult> AddDepartment([FromBody]AddDepartmentDTO addDepartment)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             try
@@ -36,8 +38,9 @@ namespace ExaminationSystem_API.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+        
         [HttpPut("Update-Department/{id}")]
-        public async Task<IActionResult> UpdateDepartment(int id ,[FromBody] UpdateDepartmentDTO Department)
+        public async Task<IActionResult> UpdateDepartment([FromRoute]int id ,[FromBody] UpdateDepartmentDTO Department)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if(id!=Department.DeptId)
@@ -46,11 +49,64 @@ namespace ExaminationSystem_API.Controllers
             {
                 await _departmentService.UpdateDepartmentAsync(Department);
                 return Ok(new { success = true, message = "Department Updated successfully using SP" });
-            }catch(Exception ex)
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+       
+        [HttpDelete("delete-Department/{id}")]
+        public async Task<IActionResult> DeleteDepartment([FromRoute]int id)
+        {
+            try
+            {
+                await _departmentService.DeleteDepartmentAsync(id);
+                return Ok(new { success = true, message = "Department Deleted successfully using SP" });
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
+        [HttpGet("get-Department/{id}")]
+        public async Task<IActionResult> GetDepartmentByID([FromRoute]int id)
+        {
+            try
+            {
+                var result =  await _departmentService.GetDepartmentByID(id);
+                if (result == null)
+                    return NotFound(new { message = $"Department with ID {id} not found." });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An unexpected error occurred on the server.",
+                    error = ex.Message 
+                });
+            }
+        }
+
+        [HttpGet("All_Department")]
+        public async Task<IActionResult> GetAllDepartment([FromQuery]string? searchTerm ,[FromQuery] int pageNumber =1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _departmentService.GetAllDepartment(searchTerm, pageNumber, pageSize);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An unexpected error occurred on the server.",
+                    error = ex.Message
+                });
+            }
+        }
     }
 }

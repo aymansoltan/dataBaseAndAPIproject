@@ -9,6 +9,11 @@ namespace ExaminationSystem_API.Mapping.DepartmentMapping
         {
             CreateMap<AddDepartmentDTO, Department>();
             CreateMap<UpdateDepartmentDTO, Department>();
+            CreateMap<Department, DepartmentReadByIDDTO>()
+               .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch.BranchName));
+            CreateMap<Department, DepartmentReadAll>()
+               .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch.BranchName));
+
         }
     }
 }
