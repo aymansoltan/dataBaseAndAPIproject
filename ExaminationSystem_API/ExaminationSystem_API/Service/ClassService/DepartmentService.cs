@@ -63,6 +63,17 @@ namespace ExaminationSystem_API.Service.ClassService
             var result = new PaginatedList<DepartmentReadAll>(mapper, paginatedList.TotalCount, pageNumber, pageSize);
             return result;
         }
+        public async Task<IEnumerable<DepartmentLookupDTO>> GetDepartmentLookupAsync()
+        {
+            return await _unitOfWork.Departments
+                .GetAllQueryable().Where(d => d.IsActive == true && d.IsDeleted == false)
+                .Select(d => new DepartmentLookupDTO
+                {
+                    DepartmentId = d.DeptId,
+                    DepartmentName = d.DeptName
+                })
+                .ToListAsync();
+        }
 
     }
 }

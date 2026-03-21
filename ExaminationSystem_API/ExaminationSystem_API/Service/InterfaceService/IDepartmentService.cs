@@ -10,5 +10,6 @@ namespace ExaminationSystem_API.Service.InterfaceService
         Task DeleteDepartmentAsync(int id);
         Task<DepartmentReadByIDDTO> GetDepartmentByID(int id);
         Task<PaginatedList<DepartmentReadAll>> GetAllDepartment(string? searchTerm, int pageNumber, int pageSize);
+        Task<IEnumerable<DepartmentLookupDTO>> GetDepartmentLookupAsync();
     }
 }

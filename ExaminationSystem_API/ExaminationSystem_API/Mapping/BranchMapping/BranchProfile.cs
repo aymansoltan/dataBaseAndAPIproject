@@ -8,8 +8,8 @@ namespace ExaminationSystem_API.Mapping.BranchMapping
     {
         public BranchProfile()
         {
-            CreateMap<AddBranchDTO, Branch>();
-            CreateMap<UpdateBranchDTO, Branch>();
+            //CreateMap<AddBranchDTO, Branch>();
+            //CreateMap<UpdateBranchDTO, Branch>();
             CreateMap<VBranchsummary, BranchSummaryDTO>();
         }
     }
