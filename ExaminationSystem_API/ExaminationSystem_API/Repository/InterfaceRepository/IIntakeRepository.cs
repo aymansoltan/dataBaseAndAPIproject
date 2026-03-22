@@ -4,5 +4,6 @@ namespace ExaminationSystem_API.Repository.InterfaceRepository
     {
         Task AddIntakeWithStoredAsync(string name);
         Task UpdateIntakeWithStoredAsync(byte intakeId, string name);
+        Task DeleteIntakeWithStoredAsync(byte intakeId);
     }
 }

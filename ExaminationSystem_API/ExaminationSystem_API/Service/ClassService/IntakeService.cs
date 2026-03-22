@@ -20,5 +20,9 @@ namespace ExaminationSystem_API.Service.ClassService
         {
             await _unitOfWork.Intakes.UpdateIntakeWithStoredAsync(intakeDTO.IntakeID,intakeDTO.IntakeName);
         }
+        public async Task DeleteIntakeAsync(byte id)
+        {
+            await _unitOfWork.Intakes.DeleteIntakeWithStoredAsync(id);
+        }
     }
 }

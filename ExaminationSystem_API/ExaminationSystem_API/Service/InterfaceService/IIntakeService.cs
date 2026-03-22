@@ -6,6 +6,7 @@ namespace ExaminationSystem_API.Service.InterfaceService
     {
         Task AddIntakeAsync(AddIntakeDTO intakeDTO);
         Task UpdateIntakeAsync(UpdateIntakeDTO intakeDTO);
+        Task DeleteIntakeAsync(byte id);
 
     }
 }

@@ -45,5 +45,19 @@ namespace ExaminationSystem_API.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+        [HttpDelete("Delete-Intake/{id}")]
+        public async Task<IActionResult> DeleteIntakeAsync([FromRoute] byte id)
+        {
+         
+            try
+            {
+                await _intakeService.DeleteIntakeAsync(id) ;
+                return Ok(new { success = true, message = "intake deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 }
