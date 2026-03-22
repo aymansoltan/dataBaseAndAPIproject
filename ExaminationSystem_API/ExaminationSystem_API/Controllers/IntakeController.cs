@@ -59,5 +59,22 @@ namespace ExaminationSystem_API.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+        [HttpGet("All-Intacke")]
+        public async Task<IActionResult> GetAllIntackeAsync([FromQuery] string? searchTerm, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _intakeService.GetAllIntackeAsync(searchTerm, pageNumber, pageSize);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An unexpected error occurred on the server.",
+                    error = ex.Message
+                });
+            }
+        }
     }
 }

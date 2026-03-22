@@ -1,4 +1,6 @@
 using ExaminationSystem_API.Dto.IntakeDTO;
+using ExaminationSystem_API.Dto.TrackDTO;
+using ExaminationSystem_API.Helper;
 using System.Threading.Tasks;
 
 namespace ExaminationSystem_API.Service.ClassService
@@ -24,5 +26,20 @@ namespace ExaminationSystem_API.Service.ClassService
         {
             await _unitOfWork.Intakes.DeleteIntakeWithStoredAsync(id);
         }
+
+        public async Task<PaginatedList<IntakeReadAllDTO>> GetAllIntackeAsync(string? searchTerm, int pageNumber, int pageSize)
+        {
+            IQueryable<Intake> query = _unitOfWork.Intakes.GetAllQueryable()
+                .AsNoTracking()
+                .Where(i => i.IsDeleted==false);
+              
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.Trim().ToLower();
+                query = query.Where(t => t.IntakeName.ToLower().Contains(searchTerm));
+            }
+            return await query.ToPaginatedListAsync<Intake, IntakeReadAllDTO>(_mapper, pageNumber, pageSize);
+        }
+
     }
 }
