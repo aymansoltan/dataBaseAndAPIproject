@@ -54,5 +54,37 @@ namespace ExaminationSystem_API.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpDelete("Delete-Track/{id}")]
+        public async Task<IActionResult> DeleteTrackAsync([FromRoute] short id)
+        {
+            try
+            {
+                await _trackService.DeleteTrackAsync(id);
+                return Ok(new { success = true, message = "Track Deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+
+        }
+        [HttpGet("All-Track")]
+        public async Task<IActionResult> GetAllTrackAsync([FromQuery] string? searchTerm, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _trackService.GetAllTrackAsync(searchTerm, pageNumber, pageSize);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An unexpected error occurred on the server.",
+                    error = ex.Message
+                });
+            }
+        }
     }
 }

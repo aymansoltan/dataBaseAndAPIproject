@@ -1,5 +1,6 @@
 using ExaminationSystem_API.Dto.BranchDTO;
 using ExaminationSystem_API.Dto.DepartmentDTO;
+using ExaminationSystem_API.Dto.TrackDTO;
 using ExaminationSystem_API.Helper;
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -56,12 +57,8 @@ namespace ExaminationSystem_API.Service.ClassService
                 searchTerm = searchTerm.Trim().ToLower();
                 query = query.Where(d => d.DeptName.ToLower().Contains(searchTerm));
             }
-            var paginatedList =await PaginatedList<Department>.CreateAsync(query, pageNumber, pageSize);
+            return await query.ToPaginatedListAsync<Department, DepartmentReadAll>(_mapper, pageNumber, pageSize);
 
-            var mapper = _mapper.Map<List<DepartmentReadAll>>(paginatedList.Items);
-
-            var result = new PaginatedList<DepartmentReadAll>(mapper, paginatedList.TotalCount, pageNumber, pageSize);
-            return result;
         }
         public async Task<IEnumerable<DepartmentLookupDTO>> GetDepartmentLookupAsync()
         {

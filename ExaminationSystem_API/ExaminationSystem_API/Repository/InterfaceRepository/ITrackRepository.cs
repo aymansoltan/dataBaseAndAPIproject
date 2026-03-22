@@ -4,5 +4,6 @@ namespace ExaminationSystem_API.Repository.InterfaceRepository
     {
         Task AddTrackWithStoredAsync(string name, byte deptId);
         Task UpdateTrackWithStoredAsync(short trackId, string name, byte deptId);
+        Task DeleteTrackWithStoredAsync(short trackId);
     }
 }
