@@ -10,18 +10,19 @@ namespace ExaminationSystem_API.Controllers
     public class TrackController : ControllerBase
     {
         private readonly ITrackService _trackService;
-        private readonly IDepartmentService _departmentService;
-        public TrackController(ITrackService trackService , IDepartmentService departmentService)
+        public TrackController(ITrackService trackService  )
         {
             _trackService = trackService;
-            _departmentService=departmentService;
         }
-        [HttpGet("Department-lookup")]
-        public async Task<IActionResult> GetDepartment()
+        [HttpGet("Track-lookup")]
+        public async Task<IActionResult> GetTrack()
         {
-            var Departments = await _departmentService.GetDepartmentLookupAsync();
-            return Ok(Departments);
+            var tracks = await _trackService.GetTrackLookupAsync();
+            return Ok(tracks);
         }
+
+
+       
         [HttpPost("Add-Track")]
         public async Task<IActionResult> AddTrackAsync([FromBody]AddTrackDTO trackDTO)
         {

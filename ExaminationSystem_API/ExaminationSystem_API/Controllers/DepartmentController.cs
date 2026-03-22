@@ -11,20 +11,18 @@ namespace ExaminationSystem_API.Controllers
     public class DepartmentController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
-        private readonly IBranchService _branchService;
-        public DepartmentController(IDepartmentService departmentService , IBranchService branchService)
+        public DepartmentController(IDepartmentService departmentService )
         {
             _departmentService = departmentService;
-            _branchService = branchService;
         }
-        [HttpGet("branches-lookup")]
-        public async Task<IActionResult> GetBranches()
+     
+
+        [HttpGet("Department-lookup")]
+        public async Task<IActionResult> GetDepartment()
         {
-           var Branches = await _branchService.GetBranchesLookupAsync();
-            return Ok(Branches);
+            var Departments = await _departmentService.GetDepartmentLookupAsync();
+            return Ok(Departments);
         }
-
-
         [HttpPost("Add-Department")]
         public async Task<IActionResult> AddDepartment([FromBody]AddDepartmentDTO addDepartment)
         {

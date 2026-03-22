@@ -9,5 +9,6 @@ namespace ExaminationSystem_API.Service.InterfaceService
         Task UpdateTrackAsync(UpdateTrackDTO trackDTO);
         Task DeleteTrackAsync(short id);
         Task<PaginatedList<TrackReadAllDTO>> GetAllTrackAsync(string? searchTerm, int pageNumber, int pageSize);
+        Task<IEnumerable<TrackLookupDTO>> GetTrackLookupAsync();
     }
 }

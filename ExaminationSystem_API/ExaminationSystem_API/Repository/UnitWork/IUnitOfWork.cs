@@ -5,7 +5,7 @@ namespace ExaminationSystem_API.Repository.UnitWork
         IBranchRepository Branches { get; }
         IDepartmentRepository Departments {  get; }
         ITrackRepository Tracks { get; }
-
+        IIntakeRepository Intakes { get; }
         Task<int> CompleteAsync();
     }
 }

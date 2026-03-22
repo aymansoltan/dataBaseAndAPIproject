@@ -35,5 +35,17 @@ namespace ExaminationSystem_API.Service.ClassService
             }
             return await query.ToPaginatedListAsync<Track, TrackReadAllDTO>(_mapper, pageNumber, pageSize);
         }
+
+        public async Task<IEnumerable<TrackLookupDTO>> GetTrackLookupAsync()
+        {
+            return await _unitOfWork.Tracks
+                .GetAllQueryable().Where(t => t.IsActive == true && t.IsDeleted == false)
+                .Select(t => new TrackLookupDTO
+                {
+                    TrackId = t.TrackId,
+                    TrackName = t.TrackName,
+                })
+                .ToListAsync();
+        }
     }
 }

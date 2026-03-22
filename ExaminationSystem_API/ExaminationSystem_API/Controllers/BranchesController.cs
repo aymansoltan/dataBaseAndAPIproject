@@ -13,7 +13,12 @@ namespace ExaminationSystem_API.Controllers
         {
             _branchService = branchService;
         }
-
+        [HttpGet("branches-lookup")]
+        public async Task<IActionResult> GetBranches()
+        {
+            var Branches = await _branchService.GetBranchesLookupAsync();
+            return Ok(Branches);
+        }
         [HttpPost("Add-Branch")]
         public async Task<IActionResult> AddBranch([FromBody] AddBranchDTO branchDTO)
         {
