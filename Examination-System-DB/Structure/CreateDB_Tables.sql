@@ -152,9 +152,10 @@ create table [userAcc].UserRole(
     constraint RolePK primary key (RoleId),
     constraint RoleNameUniqe unique (RoleName),
     constraint RoleNamelenCheck check(len(RoleName) >=3),
-    constraint RoleNameCheck check (RoleName in ('admin' , 'instructor','student','Training Manager'))
+    constraint RoleNameCheck check (RoleName in ('admin' , 'instructor','student','TrainingManager'))
 ) on [FG_Users]
 go
+
 create  table [userAcc].UserAccount(
     UserId int identity(1,1),
     UserName varchar(50) not null,

@@ -4,7 +4,7 @@ VALUES
 ('admin'), 
 ('instructor'), 
 ('student'), 
-('training manager'); 
+('TrainingManager'); 
 GO
 execute as user ='Moatzuser'
 ------------------------------------------------
