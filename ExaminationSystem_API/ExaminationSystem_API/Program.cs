@@ -2,6 +2,7 @@
 using ExaminationSystem_API.Helper;
 using ExaminationSystem_API.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace ExaminationSystem_API
 {
@@ -17,6 +18,11 @@ namespace ExaminationSystem_API
             builder.Services.AddServices();
             builder.Services.AddMapping();
             builder.Services.AddOpenApi();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             builder.Services.AddDbContext<ExaminationContext>(options =>
                  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             builder.Services.AddCors(options =>

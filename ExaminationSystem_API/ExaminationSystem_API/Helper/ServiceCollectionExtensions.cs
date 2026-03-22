@@ -17,6 +17,7 @@ namespace ExaminationSystem_API.Helper
             services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             services.AddScoped<ITrackRepository, TrackRepository>();
             services.AddScoped<IIntakeRepository, intakeRepository>();
+            services.AddScoped<IAuthRepository,AuthRepository>();
 
             return services;
         }

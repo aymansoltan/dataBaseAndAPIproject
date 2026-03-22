@@ -7,6 +7,7 @@ namespace ExaminationSystem_API.Repository.UnitWork
         public IDepartmentRepository Departments { get; private set; }
         public ITrackRepository Tracks { get; private set; }
         public IIntakeRepository Intakes { get; private set; }
+        public IAuthRepository Auths { get; private set; }
 
         public UnitOfWork(ExaminationContext context)
         {
@@ -15,6 +16,7 @@ namespace ExaminationSystem_API.Repository.UnitWork
             Departments = new DepartmentRepository(_context);
             Tracks = new TrackRepository(_context);
             Intakes = new intakeRepository(_context);
+            Auths = new AuthRepository(_context);
         }
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
 
