@@ -51,7 +51,6 @@ create or alter proc [TrainingMangerStp].stp_updatecourseinstance
     @instructorid  int = null,       
     @branchid      tinyint = null,
     @trackid       smallint = null,
-    @intakeid      tinyint = null,
     @academicyear  smallint = null
 as
 begin
@@ -64,7 +63,7 @@ begin
         
         select 
             @CId =[CourseId] , @InsId =[InstructorId] , @BrId = [BranchId], 
-            @TrId =[TrackId] , @IntId =[IntakeId] , @Year = [AcademicYear]
+            @TrId =[TrackId]  , @Year = [AcademicYear]
         from [courses].[CourseInstance] 
         where [CourseInstanceId] = @instanceid;
 
@@ -72,7 +71,6 @@ begin
         set @InsId    = coalesce(@instructorid, @InsId);
         set @BrId = coalesce(@branchid, @BrId);
         set @TrId  = coalesce(@trackid, @TrId);
-        set @IntId = coalesce(@intakeid, @IntId);
         set @Year   = coalesce(@academicyear, @Year);
 
          
@@ -88,12 +86,10 @@ begin
         if not exists (select 1 from [orgnization].[Track] where [TrackId] = @TrId and [isActive] = 1 and [isDeleted] = 0)
             throw 55004, 'error: target track is inactive or not found.', 1;
 
-        if not exists (select 1 from [orgnization].[Intake] where [IntakeId] = @IntId and [isActive] = 1 and [isDeleted] = 0)
-            throw 55005, 'error: target intake is inactive or not found.', 1;
-
+      
         if exists (select 1 from [courses].[CourseInstance] 
                 where  [CourseId]= @CId and[TrackId]  = @TrId 
-                and [IntakeId] = @IntId and [AcademicYear] = @Year
+                 and [AcademicYear] = @Year
                 and [CourseInstanceId] <> @instanceid) 
             throw 55006, 'error: another instance already exists with these same details.', 1;
 
@@ -103,7 +99,6 @@ begin
             [InstructorId]= @InsId,
             [BranchId]    = @BrId,
             [TrackId]     = @TrId,
-            [IntakeId]    = @IntId,
             [AcademicYear]= @Year
         where [CourseInstanceId] = @instanceid;
 

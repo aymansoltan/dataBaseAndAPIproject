@@ -1,6 +1,18 @@
-﻿namespace ExaminationSystem_API.Service.ClassService
+using ExaminationSystem_API.Dto.CourseInstanceDTO;
+using System.Threading.Tasks;
+
+namespace ExaminationSystem_API.Service.ClassService
 {
-    public class CourseInstanceService
+    public class CourseInstanceService : ICourseInstanceService
     {
+        private readonly IUnitOfWork _unitOfWork;
+        public CourseInstanceService(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+        public async Task AddCourseInstanceAsync(AddCourseInstaceDTO instaceDTO)
+        {
+            await _unitOfWork.CoursesInstances.AddCourseInstaceWithStoredAsync(instaceDTO);
+        }
     }
 }

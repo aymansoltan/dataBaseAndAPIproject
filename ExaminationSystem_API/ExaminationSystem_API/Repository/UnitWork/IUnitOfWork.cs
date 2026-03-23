@@ -8,6 +8,7 @@ namespace ExaminationSystem_API.Repository.UnitWork
         IIntakeRepository Intakes { get; }
         IAuthRepository Auths { get; }
         ICourseRepository Courses { get; }
+        ICourseInstanceRepository CoursesInstances { get; }
         Task<int> CompleteAsync();
     }
 }
