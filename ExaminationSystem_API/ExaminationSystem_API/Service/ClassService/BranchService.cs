@@ -1,10 +1,4 @@
 
-
-global using ExaminationSystem_API.Repository.UnitWork;
-using ExaminationSystem_API.Dto.BranchDTO;
-using ExaminationSystem_API.Helper;
-using System.Threading.Tasks;
-
 namespace ExaminationSystem_API.Service.ClassService
 {
     public class BranchService : IBranchService

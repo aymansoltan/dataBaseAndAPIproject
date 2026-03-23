@@ -1,9 +1,4 @@
-using ExaminationSystem_API.Dto.AuthDTO;
-using ExaminationSystem_API.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Net;
-using System.Numerics;
-using System.Reflection;
+
 
 namespace ExaminationSystem_API.Repository.ClassRepository
 {

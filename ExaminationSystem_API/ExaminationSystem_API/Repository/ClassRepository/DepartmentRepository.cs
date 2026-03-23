@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 
 namespace ExaminationSystem_API.Repository.ClassRepository
 {

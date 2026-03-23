@@ -1,4 +1,3 @@
-using ExaminationSystem_API.Dto.AuthDTO;
 
 namespace ExaminationSystem_API.Service.InterfaceService
 {

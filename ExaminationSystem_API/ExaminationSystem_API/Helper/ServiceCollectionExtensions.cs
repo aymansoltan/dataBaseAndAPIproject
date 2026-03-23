@@ -1,9 +1,3 @@
-
-global using ExaminationSystem_API.Service.ClassService;
-global using ExaminationSystem_API.Service.InterfaceService;
-global using ExaminationSystem_API.Repository.ClassRepository;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace ExaminationSystem_API.Helper
 {
     public static class ServiceCollectionExtensions

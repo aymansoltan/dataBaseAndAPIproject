@@ -1,8 +1,4 @@
-using ExaminationSystem_API.Dto.DepartmentDTO;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+
 
 namespace ExaminationSystem_API.Controllers
 {
@@ -30,10 +26,10 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _departmentService.AddDepartmentAsync(addDepartment);
-                return Ok(new { success = true, message = "Department added successfully using SP" });
+                return this.SuccessResponse("Department added successfully using SP");
             }catch(Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
         
@@ -46,11 +42,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _departmentService.UpdateDepartmentAsync(Department);
-                return Ok(new { success = true, message = "Department Updated successfully using SP" });
+                return  this.SuccessResponse("Department Updated successfully using SP");
             }
             catch(Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
        
@@ -60,11 +56,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _departmentService.DeleteDepartmentAsync(id);
-                return Ok(new { success = true, message = "Department Deleted successfully using SP" });
+                return this.SuccessResponse("Department Deleted successfully using SP");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
 
@@ -77,15 +73,12 @@ namespace ExaminationSystem_API.Controllers
                 if (result == null)
                     return NotFound(new { message = $"Department with ID {id} not found." });
 
-                return Ok(result);
+                return this.SuccessResponse("department get successfully" , result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    message = "An unexpected error occurred on the server.",
-                    error = ex.Message 
-                });
+                return this.HandleException(ex);
+
             }
         }
 
@@ -95,15 +88,12 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 var result = await _departmentService.GetAllDepartment(searchTerm, pageNumber, pageSize);
-                return Ok(result);
+                return this.SuccessResponse(" all department get successfully", result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    message = "An unexpected error occurred on the server.",
-                    error = ex.Message
-                });
+                return this.HandleException(ex);
+
             }
         }
     }

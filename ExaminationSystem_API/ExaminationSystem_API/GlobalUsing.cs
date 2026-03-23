@@ -1,0 +1,21 @@
+global using ExaminationSystem_API.Dto.TrackDTO;
+global using ExaminationSystem_API.Helper;
+global using Microsoft.AspNetCore.Mvc;
+global using ExaminationSystem_API.Dto.IntakeDTO;
+global using ExaminationSystem_API.Dto.DepartmentDTO;
+global using ExaminationSystem_API.Dto.BranchDTO;
+global using ExaminationSystem_API.Dto.AuthDTO;
+global using System.ComponentModel.DataAnnotations;
+global using ExaminationSystem_API.Service.ClassService;
+global using ExaminationSystem_API.Service.InterfaceService;
+global using ExaminationSystem_API.Repository.ClassRepository;
+global using AutoMapper;
+global using ExaminationSystem_API.ViewModel.BranchVM;
+global using Microsoft.EntityFrameworkCore;
+global using ExaminationSystem_API.Enumeration;
+global using ExaminationSystem_API.Models;
+global using ExaminationSystem_API.Repository.InterfaceRepository;
+global using System.Linq.Expressions;
+global using ExaminationSystem_API.Repository.UnitWork;
+global using System.Text.Json.Serialization;
+

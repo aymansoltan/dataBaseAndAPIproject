@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 
 namespace ExaminationSystem_API.Repository.InterfaceRepository
 {

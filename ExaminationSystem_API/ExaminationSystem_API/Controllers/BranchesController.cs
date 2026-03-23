@@ -1,6 +1,4 @@
-using ExaminationSystem_API.Dto.BranchDTO;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+
 
 namespace ExaminationSystem_API.Controllers
 {
@@ -28,20 +26,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _branchService.AddBranchAsync(branchDTO);
-                return Ok(new
-                {
-                    success = true,
-                    message = "Branch added successfully using Stored Procedure."
-                });
+                return this.SuccessResponse("Branch added successfully using Stored Procedure.");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "An error occurred while adding the branch.",
-                    detail = ex.Message
-                });
+                return this.HandleException(ex);
             }
         }
         [HttpPut("Update-Branch/{id}")]
@@ -52,15 +41,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _branchService.UpdateBranchAsync(id, updateBranch);
-                return Ok(new
-                {
-                    success = true,
-                    message = "Branch updated successfully using Stored Procedure."
-                });
+                return this.SuccessResponse("Branch updated successfully using Stored Procedure.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
         [HttpPut("Activate-Branch/{id}")]
@@ -69,15 +54,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _branchService.ActivateBranchAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    message = "Branch Activate successfully using Stored Procedure."
-                });
+                return this.SuccessResponse("Branch Activate successfully using Stored Procedure.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
         [HttpDelete("Delete-Branch/{id}")]
@@ -87,15 +68,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _branchService.DeleteBranchAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    message = "Branch deleted successfully using Stored Procedure (Deleted or Deactivated via Trigger)."
-                });
+                return Ok("Branch deleted successfully using Stored Procedure (Deleted or Deactivated via Trigger).");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
         [HttpGet("GetAll-Branches")]
@@ -105,11 +82,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 var result = await _branchService.GetAllBranchSummryAsync(searchTerm, pageNumber, pageSize);
-                return Ok(new { success = true, data = result });
+                return this.SuccessResponse("all branch get successfully" , result);
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
     }

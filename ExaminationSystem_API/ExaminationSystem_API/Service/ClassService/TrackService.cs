@@ -1,8 +1,3 @@
-using ExaminationSystem_API.Dto.DepartmentDTO;
-using ExaminationSystem_API.Dto.TrackDTO;
-using ExaminationSystem_API.Helper;
-using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ExaminationSystem_API.Service.ClassService
 {

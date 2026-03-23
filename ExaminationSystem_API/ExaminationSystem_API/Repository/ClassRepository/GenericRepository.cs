@@ -1,9 +1,5 @@
 
-global using ExaminationSystem_API.Enumeration;
-global using ExaminationSystem_API.Models;
-global using ExaminationSystem_API.Repository.InterfaceRepository;
-global using Microsoft.EntityFrameworkCore;
-global using System.Linq.Expressions;
+
 
 namespace ExaminationSystem_API.Repository.ClassRepository
 {

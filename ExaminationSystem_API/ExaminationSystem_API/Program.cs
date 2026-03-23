@@ -1,9 +1,4 @@
 
-using ExaminationSystem_API.Helper;
-using ExaminationSystem_API.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
-
 namespace ExaminationSystem_API
 {
     public class Program

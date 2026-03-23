@@ -1,8 +1,3 @@
-using ExaminationSystem_API.Dto.TrackDTO;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-
 namespace ExaminationSystem_API.Controllers
 {
     [Route("api/[controller]")]
@@ -30,11 +25,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _trackService.AddTrackAsync(trackDTO);
-                return Ok(new { success = true, message = "Track added and linked to intake successfully." });
+                return this.SuccessResponse("Track added and linked to intake successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
 
@@ -48,11 +43,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _trackService.UpdateTrackAsync(trackDTO);
-                return Ok(new { success = true, message = "Track updated  successfully." });
+                return this.SuccessResponse("Track updated  successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
 
@@ -62,11 +57,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _trackService.DeleteTrackAsync(id);
-                return Ok(new { success = true, message = "Track Deleted successfully." });
+                return this.SuccessResponse("Track Deleted successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
 
         }
@@ -76,15 +71,13 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 var result = await _trackService.GetAllTrackAsync(searchTerm, pageNumber, pageSize);
-                return Ok(result);
+                return this.SuccessResponse(" all track get successfully", result);
+
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    message = "An unexpected error occurred on the server.",
-                    error = ex.Message
-                });
+                return this.HandleException(ex);
+
             }
         }
     }

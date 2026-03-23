@@ -1,5 +1,4 @@
-using ExaminationSystem_API.Enumeration;
-using System.Linq.Expressions;
+
 
 namespace ExaminationSystem_API.Repository.InterfaceRepository
 {

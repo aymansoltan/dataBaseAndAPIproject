@@ -1,7 +1,4 @@
-using ExaminationSystem_API.Dto.IntakeDTO;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+
 
 namespace ExaminationSystem_API.Controllers
 {
@@ -22,11 +19,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _intakeService.AddIntakeAsync(intakeDTO) ;
-                return Ok(new { success = true, message = "intake added successfully." });
+                return this.SuccessResponse("intake added successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
         [HttpPut("Update-Intake/{id}")]
@@ -38,11 +35,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _intakeService.UpdateIntakeAsync(intakeDTO) ;
-                return Ok(new { success = true, message = "intake Updated successfully." });
+                return this.SuccessResponse("intake Updated successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
         [HttpDelete("Delete-Intake/{id}")]
@@ -52,11 +49,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _intakeService.DeleteIntakeAsync(id) ;
-                return Ok(new { success = true, message = "intake deleted successfully." });
+                return this.SuccessResponse("intake deleted successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
             }
         }
         [HttpGet("All-Intacke")]
@@ -65,15 +62,12 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 var result = await _intakeService.GetAllIntackeAsync(searchTerm, pageNumber, pageSize);
-                return Ok(result);
+                return this.SuccessResponse(" all intake get successfully", result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    message = "An unexpected error occurred on the server.",
-                    error = ex.Message
-                });
+                return this.HandleException(ex);
+
             }
         }
     }

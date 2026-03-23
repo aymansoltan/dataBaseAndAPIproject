@@ -1,6 +1,4 @@
-using ExaminationSystem_API.Dto.AuthDTO;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+
 
 namespace ExaminationSystem_API.Controllers
 {
@@ -21,12 +19,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _authService.RegisterStudentAsync(dto);
-                return Ok(new { message = "Student registered successfully" });
+                return this.SuccessResponse("Student registered successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
-
+                return this.HandleException(ex);
             }
 
         }
@@ -38,11 +35,12 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _authService.RegisterInstructorAsync(dto);
-                return Ok(new { message = "Instructor registered successfully" });
+                return this.SuccessResponse("Instructor registered successfully.");
+
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return this.HandleException(ex);
 
             }
 
@@ -58,12 +56,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _authService.UpdateAccountInstructorAsync(dto);
-                return Ok(new { message = "Instructor Updated account successfully" });
+                return this.SuccessResponse("Instructor Updated account successfully");
             }
             catch(Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
-
+                return this.HandleException(ex);
             }
 
         }
@@ -78,12 +75,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _authService.UpdateAccountStudentAsync(dto);
-                return Ok(new { message = "Student Updated account successfully" });
+                return this.SuccessResponse("Student Updated account successfully");
             }
             catch(Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
-
+                return this.HandleException(ex);
             }
 
         }
@@ -94,12 +90,11 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 await _authService.DeleteAccountAsync(id);
-                return Ok(new { message = " Deleted account successfully" });
+                return this.SuccessResponse("Deleted account successfully");
             }
             catch(Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
-
+                return this.HandleException(ex);
             }
 
         }

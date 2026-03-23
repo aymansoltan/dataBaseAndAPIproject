@@ -1,5 +1,3 @@
-using ExaminationSystem_API.Dto.DepartmentDTO;
-using ExaminationSystem_API.Helper;
 
 namespace ExaminationSystem_API.Service.InterfaceService
 {

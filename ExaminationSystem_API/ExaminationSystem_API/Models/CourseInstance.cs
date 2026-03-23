@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace ExaminationSystem_API.Models;
 
 public partial class CourseInstance
