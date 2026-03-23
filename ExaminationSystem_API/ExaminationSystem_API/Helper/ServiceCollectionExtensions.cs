@@ -12,6 +12,7 @@ namespace ExaminationSystem_API.Helper
             services.AddScoped<ITrackRepository, TrackRepository>();
             services.AddScoped<IIntakeRepository, intakeRepository>();
             services.AddScoped<IAuthRepository,AuthRepository>();
+            services.AddScoped<ICourseRepository,CourseRepository>();
 
             return services;
         }
@@ -21,6 +22,7 @@ namespace ExaminationSystem_API.Helper
             services.AddScoped<IDepartmentService, DepartmentService>();
             services.AddScoped<ITrackService, TrackService>();
             services.AddScoped<IIntakeService, IntakeService>();
+            services.AddScoped<ICourseService, CourseService>();
             return services;
         }
         public static IServiceCollection AddMapping(this IServiceCollection services)
