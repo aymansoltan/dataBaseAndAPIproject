@@ -14,5 +14,13 @@ namespace ExaminationSystem_API.Service.ClassService
         {
             await _unitOfWork.CoursesInstances.AddCourseInstaceWithStoredAsync(instaceDTO);
         }
+        public async Task UpdateCourseInstanceAsync(UpdateCourseInstanceDTO instaceDTO)
+        {
+            await _unitOfWork.CoursesInstances.UpdateCourseInstanceWithStoredAsync(instaceDTO);
+        }
+        public async Task DeleteCourseInstanceAsync(int id)
+        {
+            await _unitOfWork.CoursesInstances.DeleteCourseInstaceWithStoredAsync(id);
+        }
     }
 }
