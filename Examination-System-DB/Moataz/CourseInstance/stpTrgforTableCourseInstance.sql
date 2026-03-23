@@ -5,12 +5,12 @@ create or alter proc[TrainingMangerStp].stp_addCourseInstance
     @instructorid int,
     @branchid     tinyint,
     @trackid      smallint,
-    @intakeid     tinyint,
     @academicyear smallint
 as
 begin
     set nocount on;
     begin try
+        declare @LastIntahke tinyint;
         if not exists (select 1 from [Courses].[Course] where [CourseId] = @courseid and [isActive] = 1 and [isDeleted] = 0)
             throw 54001, 'error: course not found or is inactive.', 1;
 
@@ -23,16 +23,19 @@ begin
         if not exists (select 1 from [orgnization].[Track] where [TrackId] = @trackid and [isActive] = 1 and [isDeleted] = 0)
             throw 54004, 'error: track not found or is inactive.', 1;
 
-        if not exists (select 1 from [orgnization].[Intake] where [IntakeId] = @intakeid and [isActive] = 1 and [isDeleted] = 0)
-            throw 54005, 'error: intake not found or is inactive.', 1;
+        select top 1 @LastIntahke =IntakeId
+        from [orgnization].[Intake]
+        where [isActive] = 1 and [isDeleted] = 0
+        order by [IntakeId] desc;
+    
 
         if exists (select 1 from [Courses].[CourseInstance]
                    where [CourseId] = @courseid and [InstructorId] = @instructorid and [TrackId] = @trackid 
-                   and [IntakeId] = @intakeid and [AcademicYear]  = @academicyear)
+                   and [IntakeId] = @LastIntahke and [AcademicYear]  = @academicyear)
             throw 54006, 'error: this course instance already exists for this track and year.', 1;
 
         insert into  [Courses].[CourseInstance](courseid, instructorid, branchid, trackid, intakeid, academicyear )
-        values (@courseid, @instructorid, @branchid, @trackid, @intakeid, @academicyear);
+        values (@courseid, @instructorid, @branchid, @trackid, @LastIntahke, @academicyear);
 
        select scope_identity() as NewCourseInstanceId, 1 as Success, 'Course instance added successfully.' as Message;
     end try
