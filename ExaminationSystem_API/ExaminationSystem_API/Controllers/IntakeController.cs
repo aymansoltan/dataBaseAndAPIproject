@@ -31,7 +31,7 @@ namespace ExaminationSystem_API.Controllers
         {
             if(!ModelState.IsValid) return BadRequest(ModelState);
             if (id != intakeDTO.IntakeID)
-                return BadRequest(new { success = false, message = "ID mismatch." });
+                return this.NotFoundResponse("ID mismatch.");
             try
             {
                 await _intakeService.UpdateIntakeAsync(intakeDTO) ;

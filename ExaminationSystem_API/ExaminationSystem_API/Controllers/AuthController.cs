@@ -51,7 +51,7 @@ namespace ExaminationSystem_API.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if(dto.UserId !=id)
-                return BadRequest(new { success = false, message = "ID mismatch." });
+                return this.NotFoundResponse("ID mismatch." );
 
             try
             {
@@ -71,7 +71,7 @@ namespace ExaminationSystem_API.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if (dto.UserId !=id)
-                return BadRequest(new { success = false, message = "ID mismatch." });
+                return this.NotFoundResponse("ID mismatch.");
             try
             {
                 await _authService.UpdateAccountStudentAsync(dto);

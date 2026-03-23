@@ -38,7 +38,7 @@ namespace ExaminationSystem_API.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if(trackDTO.TrackId != id)
-                return BadRequest(new { message = "ID mismatch between URL and Body." });
+                return this.NotFoundResponse("ID mismatch between URL and Body.");
 
             try
             {
