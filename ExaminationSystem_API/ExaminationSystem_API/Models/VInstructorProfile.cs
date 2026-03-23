@@ -1,5 +1,3 @@
-
-
 namespace ExaminationSystem_API.Models;
 
 public partial class VInstructorProfile

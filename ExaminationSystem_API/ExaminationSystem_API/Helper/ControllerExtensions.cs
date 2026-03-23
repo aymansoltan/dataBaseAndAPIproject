@@ -3,6 +3,10 @@ namespace ExaminationSystem_API.Helper
 {
     public static class ControllerExtensions
     {
+        public static IActionResult BadRequestResponse(this ControllerBase controller, string message)
+        {
+            return controller.BadRequest(new { success = false, message = message });
+        }
         public static IActionResult NotFoundResponse(this ControllerBase controller, string message)
         {
             return controller.NotFound(new { success = false, message = message });

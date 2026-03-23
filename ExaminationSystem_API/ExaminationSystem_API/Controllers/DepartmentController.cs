@@ -38,7 +38,7 @@ namespace ExaminationSystem_API.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if(id!=Department.DeptId)
-                return this.NotFoundResponse( "ID mismatch between URL and Body." );
+                return this.BadRequestResponse( "ID mismatch between URL and Body." );
             try
             {
                 await _departmentService.UpdateDepartmentAsync(Department);
