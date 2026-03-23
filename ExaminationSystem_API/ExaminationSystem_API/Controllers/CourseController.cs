@@ -42,5 +42,18 @@ namespace ExaminationSystem_API.Controllers
                 return this.HandleException(ex);
             }
         }
+        [HttpDelete("Delete-Course/{id}")]
+        public async Task<IActionResult> DeleteCourseAsync([FromRoute]short id)
+        {
+            try
+            {
+                await _courseService.DeleteCourseAsync(id);
+                return this.SuccessResponse("course Deleted Successfully");
+            }
+            catch (Exception ex)
+            {
+                return this.HandleException(ex);
+            }
+        }
     }
 }

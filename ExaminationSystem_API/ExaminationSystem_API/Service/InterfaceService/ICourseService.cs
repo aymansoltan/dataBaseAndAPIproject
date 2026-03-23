@@ -6,5 +6,6 @@ namespace ExaminationSystem_API.Service.InterfaceService
     {
         Task AddCourseAsync(AddCourseDTO courseDTO);
         Task UpdateCourseAsync(UpdateCourseDTO courseDTO);
+        Task DeleteCourseAsync(short id);
     }
 }

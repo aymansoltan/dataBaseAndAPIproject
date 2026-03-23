@@ -6,5 +6,6 @@ namespace ExaminationSystem_API.Repository.InterfaceRepository
     {
         Task AddCourseWithStoredAsync(AddCourseDTO dTO);
         Task UpdateCourseWithStoredAsync(UpdateCourseDTO dTO);
+        Task DeleteCourseWithStoredAsync(short id);
     }
 }

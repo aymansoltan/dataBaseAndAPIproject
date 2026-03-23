@@ -11,6 +11,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         }
         public async Task AddCourseWithStoredAsync(AddCourseDTO dTO) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_AddCourse @CourseName = {dTO.CourseName} , @MaxDegree = {dTO.MaxDegree} , @MinDegree = {dTO.MinDegree} , @Description = {dTO.Description}");
         public async Task UpdateCourseWithStoredAsync(UpdateCourseDTO dTO) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_UpdateCourse @CourseId = {dTO.CourseId} , @CourseName = {dTO.CourseName} , @MaxDegree = {dTO.MaxDegree} , @MinDegree = {dTO.MinDegree} , @Description = {dTO.Description}");
+        public async Task DeleteCourseWithStoredAsync(short id) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_DeleteCourse @CourseId = {id}");
 
     }
 }

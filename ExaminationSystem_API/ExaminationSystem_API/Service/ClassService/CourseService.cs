@@ -19,5 +19,9 @@ namespace ExaminationSystem_API.Service.ClassService
         {
             await _unitOfWork.Courses.UpdateCourseWithStoredAsync(courseDTO);
         }
+        public async Task DeleteCourseAsync(short id)
+        {
+            await _unitOfWork.Courses.DeleteCourseWithStoredAsync(id);
+        }
     }
 }
