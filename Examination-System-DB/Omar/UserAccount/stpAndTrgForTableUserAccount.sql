@@ -139,6 +139,31 @@ BEGIN
 END
 GO
 
+
+
+CREATE OR ALTER PROC [TrainingMangerStp].stp_GetUserByEmail
+    @Email nvarchar(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM [UserAcc].UserAccount WHERE Email = @Email AND isDeleted = 0 and isActive = 1)
+    BEGIN
+        RETURN; 
+    END
+
+    SELECT 
+        u.UserId, u.UserName, u.Email, u.UserPassword, r.RoleName AS [Role],
+        ins.InstructorId, 
+        std.StudentId
+   FROM [UserAcc].UserAccount u
+    INNER JOIN [UserAcc].UserRole r ON u.RoleId = r.RoleId 
+    LEFT JOIN [UserAcc].[Instructor] ins ON u.UserId = ins.UserId AND ins.isDeleted = 0
+    LEFT JOIN [UserAcc].[Student] std ON u.UserId = std.UserId AND std.isDeleted = 0
+    WHERE u.Email = @Email 
+      AND u.isActive = 1;
+END
+go
 create or alter proc [TrainingMangerStp].[stp_UpdateMemberFull]
     @UserId int,
     @UserName varchar(50) = null,

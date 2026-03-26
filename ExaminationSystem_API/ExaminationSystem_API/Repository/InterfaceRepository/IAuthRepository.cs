@@ -1,4 +1,6 @@
 
+using ExaminationSystem_API.Models.QueryResults;
+
 namespace ExaminationSystem_API.Repository.InterfaceRepository
 {
     public interface IAuthRepository :IGenericRepository<UserAccount>
@@ -6,5 +8,6 @@ namespace ExaminationSystem_API.Repository.InterfaceRepository
         Task AddUserWithStoredAsync(RegisterBaseDTO dto);
         Task UpdateUserWithStoredAsync(BaseUpdateMemberDTO dto);
         Task DeleteUserWithStoredAsync(int UserId);
+        Task<UserLoginResult?> GetUserByEmailAsync(string email);
     }
 }

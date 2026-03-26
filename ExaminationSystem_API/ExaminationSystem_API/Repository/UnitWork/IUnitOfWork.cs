@@ -9,6 +9,8 @@ namespace ExaminationSystem_API.Repository.UnitWork
         IAuthRepository Auths { get; }
         ICourseRepository Courses { get; }
         ICourseInstanceRepository CoursesInstances { get; }
+        IQuestionRepository Questions { get; }
+        IExamRepository Exams { get; }
         Task<int> CompleteAsync();
     }
 }

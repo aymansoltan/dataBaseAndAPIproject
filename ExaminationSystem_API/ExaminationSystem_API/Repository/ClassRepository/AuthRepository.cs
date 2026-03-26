@@ -1,5 +1,7 @@
 
 
+using ExaminationSystem_API.Models.QueryResults;
+
 namespace ExaminationSystem_API.Repository.ClassRepository
 {
     public class AuthRepository : GenericRepository<UserAccount>, IAuthRepository
@@ -51,6 +53,13 @@ namespace ExaminationSystem_API.Repository.ClassRepository
             await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].[stp_UpdateMemberFull] @UserId = {dto.UserId}, @UserName = {dto.UserName}, @Email = {dto.Email}, @Password = {dto.Password}, @FirstName = {dto.FirstName}, @LastName = {dto.LastName}, @Gender = {dto.Gender}, @Address = {dto.Address}, @Phone = {dto.Phone}, @NationalID = {dto.NationalId}, @BranchId = {branchId}, @IntakeId = {intakeId}, @TrackId = {trackId}, @Salary = {salary}, @HireDate = {hireDate}, @Specialization = {spec}, @DeptId = {deptId}");
         }
         public async Task DeleteUserWithStoredAsync(int UserId) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_DeleteUserAccount @UserId = {UserId}");
+        public async Task<UserLoginResult?> GetUserByEmailAsync(string email)
+        {
+            var UserEmail = await _context.Set<UserLoginResult>().FromSqlInterpolated($"EXEC [TrainingMangerStp].stp_GetUserByEmail @Email = {email}").ToListAsync();
+            var result = UserEmail.FirstOrDefault();
+            return result;
+            
+        }
 
     }
 }

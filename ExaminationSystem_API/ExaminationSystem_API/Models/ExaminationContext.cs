@@ -1,5 +1,7 @@
 
 
+using ExaminationSystem_API.Models.QueryResults;
+
 namespace ExaminationSystem_API.Models;
 
 public partial class ExaminationContext : DbContext
@@ -261,6 +263,8 @@ public partial class ExaminationContext : DbContext
                         j.ToTable("ExamQuestion", "exams", tb => tb.HasTrigger("trg_UpdateExamTotalDegree"));
                     });
         });
+
+        modelBuilder.Entity<UserLoginResult>().HasNoKey();
 
         modelBuilder.Entity<Instructor>(entity =>
         {

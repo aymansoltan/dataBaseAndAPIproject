@@ -1,5 +1,7 @@
 
 
+using ExaminationSystem_API.Dto.AuthDTO;
+
 namespace ExaminationSystem_API.Controllers
 {
     [Route("api/[controller]")]
@@ -98,6 +100,20 @@ namespace ExaminationSystem_API.Controllers
             }
 
         }
-       
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            try
+            {
+                var token = await _authService.LoginAsync(loginDto);
+                return Ok(new { Token = token });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+        }
+
     }
 }

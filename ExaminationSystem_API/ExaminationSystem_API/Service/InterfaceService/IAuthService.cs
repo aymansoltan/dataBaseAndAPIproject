@@ -8,6 +8,6 @@ namespace ExaminationSystem_API.Service.InterfaceService
         Task UpdateAccountStudentAsync(UpdateStudentDTO studentDTO);
         Task UpdateAccountInstructorAsync(UpdateInstructorDTO instructorDTO);
         Task DeleteAccountAsync(int id);
-
+        Task<string> LoginAsync(LoginDto dto);
     }
 }

@@ -7,7 +7,6 @@ create or alter procedure [InstructorStp].stp_createexam
     @courseinstanceid smallint,
     @branchid         tinyint,
     @trackid          smallint,
-    @intakeid         tinyint,
     @mode             varchar(7), -- 'manual' or 'random'
     @questionids      varchar(350) = null,
     @questioncount    tinyint = null,
@@ -22,9 +21,16 @@ begin
     set @examtitle = trim(@examtitle);
     set @mode = lower(trim(@mode));
     set @examtype = lower(trim(@examtype));
-
+    declare @lastIntakeId tinyint;
     begin try
-        begin transaction;
+        select top 1 @lastIntakeId = [IntakeId] 
+        from [orgnization].[Intake] 
+        where isActive = 1 and isDeleted = 0 
+        order by [IntakeId] desc;
+
+        if @lastIntakeId is null
+            throw 50020, 'Error: No active Intake found in the system.', 1;
+        begin transaction 
             if not exists (select 1 from [useracc].Instructor where InstructorId = @InstructorId and isActive = 1 and isDeleted = 0)
                 throw 50001, 'error: instructor not found or inactive.', 1;
 
@@ -37,8 +43,7 @@ begin
         where ci.courseinstanceid = @courseinstanceid 
             and ci.instructorid = @InstructorId
             and ci.branchid = @branchid 
-            and ci.trackid = @trackid 
-            and ci.intakeid = @intakeid;
+            and ci.trackid = @trackid ;
 
         if @courseid is null
             throw 50002, 'you canot put this exam for course beacuse you dont have this course ', 1;
@@ -83,7 +88,7 @@ begin
             throw 50008, 'instructor has another exam at this time.', 1;
 
 
-        if exists (select 1 from [exams].exam where trackid = @trackid and intakeid = @intakeid 
+        if exists (select 1 from [exams].exam where trackid = @trackid and intakeid = @lastIntakeId 
                 and isdeleted = 0 and @starttime < endtime and @endtime > starttime)
             throw 50009, 'this track already has an exam scheduled in this slot.', 1;
 
@@ -91,7 +96,7 @@ begin
 
         declare @examid int;
         insert into [exams].exam (examtitle, examtype, starttime, endtime, courseinstanceid, branchid, trackid, intakeid)
-        values (@examtitle, @examtype, @starttime, @endtime, @courseinstanceid, @branchid, @trackid, @intakeid);
+        values (@examtitle, @examtype, @starttime, @endtime, @courseinstanceid, @branchid, @trackid, @lastIntakeId);
 
         set @examid = scope_identity();
 
