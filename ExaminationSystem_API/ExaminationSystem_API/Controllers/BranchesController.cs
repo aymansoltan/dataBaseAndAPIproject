@@ -38,9 +38,11 @@ namespace ExaminationSystem_API.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+            if (updateBranch.BranchId != id)
+                return this.BadRequestResponse("id Mistake");
             try
             {
-                await _branchService.UpdateBranchAsync(id, updateBranch);
+                await _branchService.UpdateBranchAsync(updateBranch);
                 return this.SuccessResponse("Branch updated successfully using Stored Procedure.");
             }
             catch (Exception ex)
