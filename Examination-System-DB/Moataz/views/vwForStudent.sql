@@ -29,9 +29,7 @@ begin
       and ua.isActive = 1;
 
     if @@ROWCOUNT = 0
-    begin
         throw 50106, 'Student profile not found or inactive.', 1;
-    end
 end
 go
 -------------------------------------------------------------------------------------------------

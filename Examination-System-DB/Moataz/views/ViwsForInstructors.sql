@@ -33,9 +33,7 @@ begin
       and d.isDeleted = 0; 
 
     if @@ROWCOUNT = 0
-    begin
         throw 50102, 'Profile not found or account is deactivated.', 1;
-    end
 end
 go
 ---------------------------------------------------------------
@@ -80,19 +78,18 @@ begin
    
     if @@ROWCOUNT = 0
     begin
-       
         print 'No active courses found for this instructor.';
     end
 end
 go
------------------------------------------------------------
-create or alter proc [InstructorViews].Stp_GetInstructorExams
+---------------------------------------------------------------
+CREATE OR ALTER PROC [InstructorViews].Stp_GetInstructorExams
     @InstructorId int
-as
-begin
-    set nocount on;
+AS
+BEGIN
+    SET NOCOUNT ON;
 
-    select 
+    SELECT 
         e.ExamId,
         e.ExamTitle,
         e.ExamType,
@@ -100,37 +97,27 @@ begin
         ci.AcademicYear,
         e.StartTime,
         e.EndTime,
-        e.DurationMinutes,
-        case 
-            when e.IsDeleted = 1 then 'Cancelled'
-            when getdate() < e.StartTime then 'Upcoming'
-            when getdate() between e.StartTime and e.EndTime then 'In Progress'
-            else 'Ended'
-        end as ExamStatus,
-        
-        (
-            select count(*) 
-            from [exams].ExamQuestion eq with (nolock)
-            where eq.ExamId = e.ExamId
-        ) as TotalQuestions,
-
-        (
-            select isnull(sum(q.Points), 0)
-            from [exams].ExamQuestion eq with (nolock)
-            join [exams].Question q on eq.QuestionId = q.QuestionId
-            where eq.ExamId = e.ExamId
-        ) as TotalExamPoints
-
-    from [userAcc].Instructor i with (nolock)
-    inner join [Courses].CourseInstance ci with (nolock) on i.InstructorId = ci.InstructorId 
-    inner join [Courses].Course c with (nolock) on ci.CourseId = c.CourseId
-    inner join [exams].Exam e with (nolock) on ci.CourseInstanceId = e.CourseInstanceId 
-    where i.InstructorId = @InstructorId
-      and i.isDeleted = 0  
-      and e.IsDeleted = 0  
-    order by e.StartTime desc; 
-end
-go
+        DATEDIFF(MINUTE, e.StartTime, e.EndTime) as DurationMinutes,
+        CASE 
+            WHEN e.IsDeleted = 1 THEN 'Cancelled'
+            WHEN GETDATE() < e.StartTime THEN 'Upcoming'
+            WHEN GETDATE() BETWEEN e.StartTime AND e.EndTime THEN 'In Progress'
+            ELSE 'Ended'
+        END AS ExamStatus,
+        COUNT(eq.QuestionId) AS TotalQuestions,
+        ISNULL(SUM(q.Points), 0) AS TotalExamPoints
+    FROM [Courses].CourseInstance ci WITH (NOLOCK)
+    INNER JOIN [Courses].Course c WITH (NOLOCK) ON ci.CourseId = c.CourseId
+    INNER JOIN [exams].Exam e WITH (NOLOCK) ON ci.CourseInstanceId = e.CourseInstanceId 
+    LEFT JOIN [exams].ExamQuestion eq WITH (NOLOCK) ON e.ExamId = eq.ExamId
+    LEFT JOIN [exams].Question q WITH (NOLOCK) ON eq.QuestionId = q.QuestionId
+    WHERE ci.InstructorId = @InstructorId
+      AND ci.isDeleted = 0  
+      AND e.IsDeleted = 0  
+    GROUP BY e.ExamId, e.ExamTitle, e.ExamType, c.CourseName, ci.AcademicYear, e.StartTime, e.EndTime, e.IsDeleted
+    ORDER BY e.StartTime DESC; 
+END;
+GO
 --------------------------------------------------------------
 
 use [ExaminationSystemDB]

@@ -392,12 +392,9 @@ begin
     inner join [orgnization].[Intake] ik with (nolock)  on s.IntakeId = ik.IntakeId
     where s.[StudentId] = @StudentId 
       and s.[isDeleted] = 0; 
-
    
     if @@ROWCOUNT = 0
-    begin
         throw 50100, 'Student not found or has been deleted.', 1;
-    end
 end
 go
 ----------------------------------------------------
@@ -436,8 +433,6 @@ begin
       and ins.[isDeleted] = 0; 
 
     if @@ROWCOUNT = 0
-    begin
         throw 50101, 'Instructor not found or has been deleted from the system', 1;
-    end
 end
 go
