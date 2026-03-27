@@ -10,9 +10,7 @@ namespace ExaminationSystem_API.Service.ClassService
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task StudentSubmitAnswerAsync(SubmitExamDTO dto, int studentId)
-        {
+        public async Task StudentSubmitAnswerAsync(SubmitExamDTO dto, int studentId) =>
             await _unitOfWork.StudentAnswer.SubmitStudentAnswersAsync(dto, studentId);
-        }
     }
 }
