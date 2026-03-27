@@ -11,18 +11,12 @@ namespace ExaminationSystem_API.Service.ClassService
             _unitOfWork = unitOfWork;
         }
 
-        public async Task AddCourseAsync(AddCourseDTO courseDTO)
-        {
+        public async Task AddCourseAsync(AddCourseDTO courseDTO) => 
             await _unitOfWork.Courses.AddCourseWithStoredAsync(courseDTO);
-        }
-        public async Task UpdateCourseAsync(UpdateCourseDTO courseDTO)
-        {
+        public async Task UpdateCourseAsync(UpdateCourseDTO courseDTO) => 
             await _unitOfWork.Courses.UpdateCourseWithStoredAsync(courseDTO);
-        }
-        public async Task DeleteCourseAsync(short id)
-        {
+        public async Task DeleteCourseAsync(short id) => 
             await _unitOfWork.Courses.DeleteCourseWithStoredAsync(id);
-        }
         public async Task<IEnumerable<CourseLookupDTO>> GetCourseLookupAsync()
         {
             return await _unitOfWork.Courses
