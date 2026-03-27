@@ -49,7 +49,7 @@ namespace ExaminationSystem_API.Service.ClassService
         public async Task<IEnumerable<BranchLookupDTO>> GetBranchesLookupAsync()
         {
             return await _unitOfWork.Branches
-                .GetAllQueryable().Where(b => b.IsActive == true && b.IsDeleted == false) 
+                .GetAllQueryable().Where(b => b.IsActive == true && b.IsDeleted == false)
                 .Select(b => new BranchLookupDTO
                 {
                     BranchId = b.BranchId,

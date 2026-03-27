@@ -1,7 +1,7 @@
 
 namespace ExaminationSystem_API.Mapping.TrackMapping
 {
-    public class TrackProfile :Profile
+    public class TrackProfile : Profile
     {
         public TrackProfile()
         {

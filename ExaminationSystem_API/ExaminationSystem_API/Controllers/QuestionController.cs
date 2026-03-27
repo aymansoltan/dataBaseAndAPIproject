@@ -13,15 +13,15 @@ namespace ExaminationSystem_API.Controllers
         private readonly IQuestionService _questionService;
         public QuestionController(IQuestionService questionService)
         {
-            _questionService = questionService;   
+            _questionService = questionService;
         }
         [HttpPost("Add-TF-Question")]
-        public async Task<IActionResult> AddTFQuestion([FromBody]TfQuestionDTO dto)
+        public async Task<IActionResult> AddTFQuestion([FromBody] TfQuestionDTO dto)
         {
             var instructorId = GetInstructorId();
             try
             {
-                await _questionService.AddTfQuestionAsync(dto , instructorId);
+                await _questionService.AddTfQuestionAsync(dto, instructorId);
                 return Ok("Question Added Successfully.");
             }
             catch (Exception ex)
@@ -31,12 +31,12 @@ namespace ExaminationSystem_API.Controllers
 
         }
         [HttpPost("Add-Mcq-Question")]
-        public async Task<IActionResult> AddMcqQuestion([FromBody]McqQuestionDTO dto)
+        public async Task<IActionResult> AddMcqQuestion([FromBody] McqQuestionDTO dto)
         {
             var instructorId = GetInstructorId();
             try
             {
-                await _questionService.AddMCQQuestionAsync(dto , instructorId);
+                await _questionService.AddMCQQuestionAsync(dto, instructorId);
                 return Ok("Question Added Successfully.");
             }
             catch (Exception ex)
@@ -46,12 +46,12 @@ namespace ExaminationSystem_API.Controllers
 
         }
         [HttpPost("Add-text-Question")]
-        public async Task<IActionResult> AddTextQuestion([FromBody]TextQuestionDTO dto)
+        public async Task<IActionResult> AddTextQuestion([FromBody] TextQuestionDTO dto)
         {
             var instructorId = GetInstructorId();
             try
             {
-                await _questionService.AddTextQuestionAsync(dto , instructorId);
+                await _questionService.AddTextQuestionAsync(dto, instructorId);
                 return Ok("Question Added Successfully.");
             }
             catch (Exception ex)

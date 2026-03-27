@@ -13,7 +13,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         {
             _context = context;
         }
-        public async Task SubmitStudentAnswersAsync(SubmitExamDTO dto , int studentId)
+        public async Task SubmitStudentAnswersAsync(SubmitExamDTO dto, int studentId)
         {
             var table = new DataTable();
             table.Columns.Add("QuestionId", typeof(short));
@@ -26,7 +26,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
             var examIdParam = new SqlParameter("@examid", dto.ExamId);
             var answersParam = new SqlParameter("@answers", table)
             {
-                TypeName = "[StudentStp].StudentAnswersTableType", 
+                TypeName = "[StudentStp].StudentAnswersTableType",
                 SqlDbType = SqlDbType.Structured
             };
 

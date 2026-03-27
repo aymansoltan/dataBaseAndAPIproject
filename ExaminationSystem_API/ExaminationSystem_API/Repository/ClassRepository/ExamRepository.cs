@@ -7,7 +7,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
 {
     public class ExamRepository : GenericRepository<Exam>, IExamRepository
     {
-        private readonly ExaminationContext _context; 
+        private readonly ExaminationContext _context;
         public ExamRepository(ExaminationContext context) : base(context)
         {
             _context = context;

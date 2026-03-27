@@ -10,10 +10,10 @@ namespace ExaminationSystem_API.Dto.AuthDTO
     {
         [Required(ErrorMessage = "user name is required ")]
         [StringLength(50, MinimumLength = 10, ErrorMessage = "user name must be at least 10 letters and max length 50 letters")]
-        public string UserName {  get; set; }
+        public string UserName { get; set; }
 
         [Required(ErrorMessage = "Email is required ")]
-        [EmailAddress(ErrorMessage ="Email must contain @")]
+        [EmailAddress(ErrorMessage = "Email must contain @")]
         [StringLength(100, MinimumLength = 10, ErrorMessage = "Email must be at least 10 letters and max length 100 letters")]
         public string Email { get; set; }
 
@@ -34,7 +34,7 @@ namespace ExaminationSystem_API.Dto.AuthDTO
         public string LastName { get; set; }
 
         [Required(ErrorMessage = "Gender is required and must be one char M or F ")]
-        [RegularExpression("^[MFmf]$")] 
+        [RegularExpression("^[MFmf]$")]
         public char Gender { get; set; }
 
         [Required(ErrorMessage = "Birth Date is required ")]

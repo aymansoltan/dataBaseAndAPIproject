@@ -7,11 +7,11 @@ namespace ExaminationSystem_API.Controllers
     public class DepartmentController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
-        public DepartmentController(IDepartmentService departmentService )
+        public DepartmentController(IDepartmentService departmentService)
         {
             _departmentService = departmentService;
         }
-     
+
 
         [HttpGet("Department-lookup")]
         public async Task<IActionResult> GetDepartment()
@@ -20,38 +20,39 @@ namespace ExaminationSystem_API.Controllers
             return Ok(Departments);
         }
         [HttpPost("Add-Department")]
-        public async Task<IActionResult> AddDepartment([FromBody]AddDepartmentDTO addDepartment)
+        public async Task<IActionResult> AddDepartment([FromBody] AddDepartmentDTO addDepartment)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
                 await _departmentService.AddDepartmentAsync(addDepartment);
                 return this.SuccessResponse("Department added successfully using SP");
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.HandleException(ex);
             }
         }
-        
+
         [HttpPut("Update-Department/{id}")]
-        public async Task<IActionResult> UpdateDepartment([FromRoute]byte id ,[FromBody] UpdateDepartmentDTO Department)
+        public async Task<IActionResult> UpdateDepartment([FromRoute] byte id, [FromBody] UpdateDepartmentDTO Department)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            if(id!=Department.DeptId)
-                return this.BadRequestResponse( "ID mismatch between URL and Body." );
+            if (id!=Department.DeptId)
+                return this.BadRequestResponse("ID mismatch between URL and Body.");
             try
             {
                 await _departmentService.UpdateDepartmentAsync(Department);
-                return  this.SuccessResponse("Department Updated successfully using SP");
+                return this.SuccessResponse("Department Updated successfully using SP");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return this.HandleException(ex);
             }
         }
-       
+
         [HttpDelete("delete-Department/{id}")]
-        public async Task<IActionResult> DeleteDepartment([FromRoute]byte id)
+        public async Task<IActionResult> DeleteDepartment([FromRoute] byte id)
         {
             try
             {
@@ -65,15 +66,15 @@ namespace ExaminationSystem_API.Controllers
         }
 
         [HttpGet("get-Department/{id}")]
-        public async Task<IActionResult> GetDepartmentByID([FromRoute]byte id)
+        public async Task<IActionResult> GetDepartmentByID([FromRoute] byte id)
         {
             try
             {
-                var result =  await _departmentService.GetDepartmentByID(id);
+                var result = await _departmentService.GetDepartmentByID(id);
                 if (result == null)
-                    return this.NotFoundResponse($"Department with ID {id} not found." );
+                    return this.NotFoundResponse($"Department with ID {id} not found.");
 
-                return this.SuccessResponse("department get successfully" , result);
+                return this.SuccessResponse("department get successfully", result);
             }
             catch (Exception ex)
             {
@@ -83,7 +84,7 @@ namespace ExaminationSystem_API.Controllers
         }
 
         [HttpGet("All_Department")]
-        public async Task<IActionResult> GetAllDepartment([FromQuery]string? searchTerm ,[FromQuery] int pageNumber =1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllDepartment([FromQuery] string? searchTerm, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {

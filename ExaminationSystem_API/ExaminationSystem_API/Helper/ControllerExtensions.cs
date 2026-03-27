@@ -17,7 +17,7 @@ namespace ExaminationSystem_API.Helper
             {
                 success = true,
                 message = message,
-                data = data 
+                data = data
             });
         }
         public static IActionResult HandleException(this ControllerBase controller, Exception ex)
@@ -33,14 +33,14 @@ namespace ExaminationSystem_API.Helper
                 return controller.BadRequest(new
                 {
                     success = false,
-                    message = currentEx.Message 
+                    message = currentEx.Message
                 });
             }
             return controller.StatusCode(500, new
             {
                 success = false,
                 message = "An unexpected error occurred on the server.",
-                error = currentEx.Message 
+                error = currentEx.Message
             });
         }
     }

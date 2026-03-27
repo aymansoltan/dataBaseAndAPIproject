@@ -12,10 +12,16 @@ namespace ExaminationSystem_API.Controllers
         {
             _courseService = courseService;
         }
-        [HttpPost("Add-Course")]
-        public async Task<IActionResult> AddCourseAsync([FromBody]AddCourseDTO courseDTO)
+        [HttpGet("Course-lookup")]
+        public async Task<IActionResult> GetCourse()
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
+            var Course = await _courseService.GetCourseLookupAsync();
+            return Ok(Course);
+        }
+        [HttpPost("Add-Course")]
+        public async Task<IActionResult> AddCourseAsync([FromBody] AddCourseDTO courseDTO)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
                 await _courseService.AddCourseAsync(courseDTO);
@@ -27,9 +33,9 @@ namespace ExaminationSystem_API.Controllers
             }
         }
         [HttpPut("Update-Course/{id}")]
-        public async Task<IActionResult> UpdateCourseAsync([FromRoute]short id,[FromBody]UpdateCourseDTO courseDTO)
+        public async Task<IActionResult> UpdateCourseAsync([FromRoute] short id, [FromBody] UpdateCourseDTO courseDTO)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             if (courseDTO.CourseId != id)
                 return this.BadRequestResponse("ID mismatch between URL and body.");
             try
@@ -43,7 +49,7 @@ namespace ExaminationSystem_API.Controllers
             }
         }
         [HttpDelete("Delete-Course/{id}")]
-        public async Task<IActionResult> DeleteCourseAsync([FromRoute]short id)
+        public async Task<IActionResult> DeleteCourseAsync([FromRoute] short id)
         {
             try
             {

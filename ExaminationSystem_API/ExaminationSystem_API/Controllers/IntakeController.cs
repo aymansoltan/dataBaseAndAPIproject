@@ -13,12 +13,12 @@ namespace ExaminationSystem_API.Controllers
         }
 
         [HttpPost("Add-Intake")]
-        public async Task<IActionResult> AddIntakeAsync([FromBody]AddIntakeDTO intakeDTO)
+        public async Task<IActionResult> AddIntakeAsync([FromBody] AddIntakeDTO intakeDTO)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
-                await _intakeService.AddIntakeAsync(intakeDTO) ;
+                await _intakeService.AddIntakeAsync(intakeDTO);
                 return this.SuccessResponse("intake added successfully.");
             }
             catch (Exception ex)
@@ -27,14 +27,14 @@ namespace ExaminationSystem_API.Controllers
             }
         }
         [HttpPut("Update-Intake/{id}")]
-        public async Task<IActionResult> UpdateIntakeAsync([FromRoute] byte id,[FromBody]UpdateIntakeDTO intakeDTO)
+        public async Task<IActionResult> UpdateIntakeAsync([FromRoute] byte id, [FromBody] UpdateIntakeDTO intakeDTO)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             if (id != intakeDTO.IntakeID)
                 return this.BadRequestResponse("ID mismatch.");
             try
             {
-                await _intakeService.UpdateIntakeAsync(intakeDTO) ;
+                await _intakeService.UpdateIntakeAsync(intakeDTO);
                 return this.SuccessResponse("intake Updated successfully.");
             }
             catch (Exception ex)
@@ -45,10 +45,10 @@ namespace ExaminationSystem_API.Controllers
         [HttpDelete("Delete-Intake/{id}")]
         public async Task<IActionResult> DeleteIntakeAsync([FromRoute] byte id)
         {
-         
+
             try
             {
-                await _intakeService.DeleteIntakeAsync(id) ;
+                await _intakeService.DeleteIntakeAsync(id);
                 return this.SuccessResponse("intake deleted successfully.");
             }
             catch (Exception ex)

@@ -13,11 +13,17 @@ namespace ExaminationSystem_API.Controllers
         {
             _authService = authService;
         }
+        [HttpGet("instructor-lookup")]
+        public async Task<IActionResult> GetInstructor()
+        {
+            var instructor = await _authService.GetInstructoreLookupAsync();
+            return Ok(instructor);
+        }
 
         [HttpPost("register-student")]
-        public async Task<IActionResult> RegisterStudent([FromBody]RegisterStudentDTO dto)
+        public async Task<IActionResult> RegisterStudent([FromBody] RegisterStudentDTO dto)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
                 await _authService.RegisterStudentAsync(dto);
@@ -49,18 +55,18 @@ namespace ExaminationSystem_API.Controllers
         }
 
         [HttpPut("Update-Account-instructor/{id}")]
-        public async Task<IActionResult> UpdateAccountInstructorAsync([FromRoute]int id , [FromBody]UpdateInstructorDTO dto)
+        public async Task<IActionResult> UpdateAccountInstructorAsync([FromRoute] int id, [FromBody] UpdateInstructorDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            if(dto.UserId !=id)
-                return this.BadRequestResponse("ID mismatch." );
+            if (dto.UserId !=id)
+                return this.BadRequestResponse("ID mismatch.");
 
             try
             {
                 await _authService.UpdateAccountInstructorAsync(dto);
                 return this.SuccessResponse("Instructor Updated account successfully");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return this.HandleException(ex);
             }
@@ -69,7 +75,7 @@ namespace ExaminationSystem_API.Controllers
 
 
         [HttpPut("Update-Account-Student/{int id}")]
-        public async Task<IActionResult> UpdateAccountStudentAsync([FromRoute]int id,[FromBody]UpdateStudentDTO dto)
+        public async Task<IActionResult> UpdateAccountStudentAsync([FromRoute] int id, [FromBody] UpdateStudentDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if (dto.UserId !=id)
@@ -79,14 +85,14 @@ namespace ExaminationSystem_API.Controllers
                 await _authService.UpdateAccountStudentAsync(dto);
                 return this.SuccessResponse("Student Updated account successfully");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return this.HandleException(ex);
             }
 
         }
         [HttpDelete("Delete-Account/{id}")]
-        public async Task<IActionResult> DeleteAccountAsync([FromRoute]int id)
+        public async Task<IActionResult> DeleteAccountAsync([FromRoute] int id)
         {
 
             try
@@ -94,7 +100,7 @@ namespace ExaminationSystem_API.Controllers
                 await _authService.DeleteAccountAsync(id);
                 return this.SuccessResponse("Deleted account successfully");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return this.HandleException(ex);
             }

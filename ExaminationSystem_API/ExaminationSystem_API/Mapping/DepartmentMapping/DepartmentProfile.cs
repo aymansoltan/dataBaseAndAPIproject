@@ -2,7 +2,7 @@
 
 namespace ExaminationSystem_API.Mapping.DepartmentMapping
 {
-    public class DepartmentProfile :Profile
+    public class DepartmentProfile : Profile
     {
         public DepartmentProfile()
         {

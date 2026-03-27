@@ -13,12 +13,12 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         {
             string typeTarget = dto.TargetType.ToString();
             object? branchId = null, trackId = null, salary = null, hireDate = null, spec = null, deptId = null;
-            if(dto is RegisterStudentDTO studentDTO)
+            if (dto is RegisterStudentDTO studentDTO)
             {
                 branchId = studentDTO.BranchId;
                 trackId = studentDTO.TrackId;
             }
-            if(dto is RegisterInstructorDTO instructorDTO)
+            if (dto is RegisterInstructorDTO instructorDTO)
             {
                 salary = instructorDTO.Salary;
                 hireDate = instructorDTO.HireDate;
@@ -32,7 +32,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
 
         public async Task UpdateUserWithStoredAsync(BaseUpdateMemberDTO dto)
         {
-            object? branchId = null, trackId = null,intakeId = null, salary = null, spec = null,deptId = null, hireDate = null;
+            object? branchId = null, trackId = null, intakeId = null, salary = null, spec = null, deptId = null, hireDate = null;
 
             if (dto is UpdateStudentDTO std)
             {
@@ -56,7 +56,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
             var UserEmail = await _context.Set<UserLoginResult>().FromSqlInterpolated($"EXEC [TrainingMangerStp].stp_GetUserByEmail @Email = {email}").ToListAsync();
             var result = UserEmail.FirstOrDefault();
             return result;
-            
+
         }
 
     }

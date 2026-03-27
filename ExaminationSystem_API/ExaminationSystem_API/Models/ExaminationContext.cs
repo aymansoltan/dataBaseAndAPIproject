@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using ExaminationSystem_API.QueryResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace ExaminationSystem_API.Models;
 
@@ -57,8 +60,6 @@ public partial class ExaminationContext : DbContext
 
     public virtual DbSet<VIntakeGrowth> VIntakeGrowths { get; set; }
 
-    public virtual DbSet<VNumTrackInIntake> VNumTrackInIntakes { get; set; }
-
     public virtual DbSet<VOrgIntegrityCheck> VOrgIntegrityChecks { get; set; }
 
     public virtual DbSet<VOrgnizationSummarySchema> VOrgnizationSummarySchemas { get; set; }
@@ -75,6 +76,9 @@ public partial class ExaminationContext : DbContext
 
     public virtual DbSet<VTrackIntakeDetail> VTrackIntakeDetails { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=.;Database=ExaminationSystemDB;Trusted_Connection=True;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -113,8 +117,6 @@ public partial class ExaminationContext : DbContext
 
             entity.HasIndex(e => e.CourseName, "CourseNameUnique").IsUnique();
 
-            entity.HasIndex(e => e.CourseName, "ix_courseName");
-
             entity.Property(e => e.CourseDescription)
                 .HasMaxLength(500)
                 .IsUnicode(false);
@@ -136,8 +138,6 @@ public partial class ExaminationContext : DbContext
             entity.HasKey(e => e.CourseInstanceId).HasName("CourseInstancePK");
 
             entity.ToTable("CourseInstance", "Courses", tb => tb.HasTrigger("trg_preventdeleteinstance"));
-
-            entity.HasIndex(e => new { e.CourseId, e.InstructorId, e.BranchId, e.TrackId, e.IntakeId }, "ix_track_branch_intake_instructor_course");
 
             entity.Property(e => e.IsActive)
                 .HasDefaultValue(true)
@@ -201,6 +201,7 @@ public partial class ExaminationContext : DbContext
 
             entity.HasOne(d => d.Branch).WithMany(p => p.Departments)
                 .HasForeignKey(d => d.BranchId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("DepartmentBranchFK");
         });
 
@@ -209,8 +210,6 @@ public partial class ExaminationContext : DbContext
             entity.HasKey(e => e.ExamId).HasName("ExamPK");
 
             entity.ToTable("Exam", "exams", tb => tb.HasTrigger("trg_softdeleteexam"));
-
-            entity.HasIndex(e => e.CourseInstanceId, "ix_CourseInstace");
 
             entity.Property(e => e.DurationMinutes).HasComputedColumnSql("(datediff(minute,[StartTime],[EndTime]))", true);
             entity.Property(e => e.EndTime).HasPrecision(0);
@@ -262,7 +261,6 @@ public partial class ExaminationContext : DbContext
                     });
         });
 
-
         modelBuilder.Entity<Instructor>(entity =>
         {
             entity.HasKey(e => e.InstructorId).HasName("InstructorPK");
@@ -274,8 +272,6 @@ public partial class ExaminationContext : DbContext
             entity.HasIndex(e => e.Phone, "InstructorPhoneUnique").IsUnique();
 
             entity.HasIndex(e => e.UserId, "InstructorUserUnique").IsUnique();
-
-            entity.HasIndex(e => new { e.UserId, e.DeptId, e.InstructorId }, "ix_userAcc_userID_deptId_insId");
 
             entity.Property(e => e.Age).HasComputedColumnSql("(datediff(year,[BirthDate],getdate()))", false);
             entity.Property(e => e.FirstName)
@@ -326,7 +322,6 @@ public partial class ExaminationContext : DbContext
             entity.ToTable("Intake", "orgnization", tb =>
                 {
                     tb.HasTrigger("trg_SoftDeleteIntake");
-                    tb.HasTrigger("trg_intakeTrackinactivateWhenInaactiveIntake");
                     tb.HasTrigger("trg_syncIntakeTrackStatus");
                 });
 
@@ -373,7 +368,7 @@ public partial class ExaminationContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("IT_TrackFK");
         });
-
+        modelBuilder.Entity<UserLoginResult>().HasNoKey();
         modelBuilder.Entity<Question>(entity =>
         {
             entity.HasKey(e => e.QuestionId).HasName("QuestionPK");
@@ -434,8 +429,6 @@ public partial class ExaminationContext : DbContext
             entity.HasIndex(e => e.Phone, "StudentPhoneUnique").IsUnique();
 
             entity.HasIndex(e => e.UserId, "StudentUserUnique").IsUnique();
-
-            entity.HasIndex(e => new { e.BranchId, e.IntakeId, e.TrackId }, "ix_userAcc_Branch_track_intake");
 
             entity.Property(e => e.Age).HasComputedColumnSql("(datediff(year,[BirthDate],getdate()))", false);
             entity.Property(e => e.FirstName)
@@ -572,10 +565,6 @@ public partial class ExaminationContext : DbContext
 
             entity.HasIndex(e => e.UserName, "UserNameUnique").IsUnique();
 
-            entity.HasIndex(e => e.UserName, "ix_userAcc_userName");
-
-            entity.HasIndex(e => e.Email, "ix_userAccount_email");
-
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnName("createdAt");
@@ -602,7 +591,7 @@ public partial class ExaminationContext : DbContext
         {
             entity.HasKey(e => e.RoleId).HasName("RolePK");
 
-            entity.ToTable("UserRole", "userAcc");
+            entity.ToTable("UserRole", "userAcc", tb => tb.HasTrigger("trg_PreventModifyUserRole"));
 
             entity.HasIndex(e => e.RoleName, "RoleNameUniqe").IsUnique();
 
@@ -789,19 +778,6 @@ public partial class ExaminationContext : DbContext
                 .HasColumnName("intake_name");
             entity.Property(e => e.NumberOfTracks).HasColumnName("number_of_tracks");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
-        });
-
-        modelBuilder.Entity<VNumTrackInIntake>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("v_numTrackInIntake", "MangerViews");
-
-            entity.Property(e => e.IntakeName)
-                .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("Intake_Name");
-            entity.Property(e => e.TotalTracks).HasColumnName("total_tracks");
         });
 
         modelBuilder.Entity<VOrgIntegrityCheck>(entity =>
@@ -1015,7 +991,7 @@ public partial class ExaminationContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_track_Intake_details", "MangerViews");
+                .ToView("v_track_intake_details", "MangerViews");
 
             entity.Property(e => e.IntakeName)
                 .HasMaxLength(10)

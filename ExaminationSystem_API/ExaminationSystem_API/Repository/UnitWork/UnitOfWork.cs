@@ -1,8 +1,11 @@
+using System.Collections;
+
 namespace ExaminationSystem_API.Repository.UnitWork
 {
     public class UnitOfWork : IUnitOfWork
     {
         private readonly ExaminationContext _context;
+        private Hashtable _repositories;
         public IBranchRepository Branches { get; private set; }
         public IDepartmentRepository Departments { get; private set; }
         public ITrackRepository Tracks { get; private set; }
@@ -13,6 +16,8 @@ namespace ExaminationSystem_API.Repository.UnitWork
         public IQuestionRepository Questions { get; private set; }
         public IExamRepository Exams { get; private set; }
         public IStudentAnswerRepository StudentAnswer { get; private set; }
+
+        public IInstructorRepository Instructors { get; private set; }
         public UnitOfWork(ExaminationContext context)
         {
             _context = context;
@@ -26,7 +31,9 @@ namespace ExaminationSystem_API.Repository.UnitWork
             Questions = new QuestionRepository(_context);
             Exams = new ExamRepository(_context);
             StudentAnswer = new StudentAnswerRepository(_context);
+            Instructors = new InstructorRepository(_context);
         }
+       
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
 
     }

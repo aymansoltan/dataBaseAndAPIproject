@@ -13,7 +13,7 @@ namespace ExaminationSystem_API.Controllers
         private readonly IStudentAnswerService _studentAnswerService;
         public StudentAnswerController(IStudentAnswerService studentAnswerService)
         {
-             _studentAnswerService = studentAnswerService;
+            _studentAnswerService = studentAnswerService;
         }
         [HttpPost("Submit-Answer")]
         public async Task<IActionResult> SubmitAnswerAsync([FromBody] SubmitExamDTO dto)

@@ -48,10 +48,10 @@ namespace ExaminationSystem_API.Controllers
         [Authorize(Roles = "Instructor")]
         public async Task<IActionResult> GradeTextQuestions([FromBody] InstructorGradingDTO dto)
         {
-            var instructorId = GetInstructorId(); 
+            var instructorId = GetInstructorId();
             try
             {
-                await _examService.GradingAsync(dto , instructorId);
+                await _examService.GradingAsync(dto, instructorId);
                 return Ok("Grading completed and results finalized.");
             }
             catch (Exception ex)

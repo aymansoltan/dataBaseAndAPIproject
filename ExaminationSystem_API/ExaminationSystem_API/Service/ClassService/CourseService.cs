@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace ExaminationSystem_API.Service.ClassService
 {
-    public class CourseService :ICourseService
+    public class CourseService : ICourseService
     {
         private readonly IUnitOfWork _unitOfWork;
         public CourseService(IUnitOfWork unitOfWork)
@@ -23,5 +23,18 @@ namespace ExaminationSystem_API.Service.ClassService
         {
             await _unitOfWork.Courses.DeleteCourseWithStoredAsync(id);
         }
+        public async Task<IEnumerable<CourseLookupDTO>> GetCourseLookupAsync()
+        {
+            return await _unitOfWork.Courses
+                .GetAllQueryable()
+                .Where(c => c.IsActive == true && c.IsDeleted == false)
+                .Select(c => new CourseLookupDTO
+                {
+                    courseId = c.CourseId,
+                    courseName = c.CourseName,
+                })
+                .ToListAsync();
+        }
+
     }
 }

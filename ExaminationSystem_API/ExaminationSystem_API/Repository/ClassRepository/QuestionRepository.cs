@@ -10,7 +10,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         {
             _context = context;
         }
-        public async Task AddQuestionWithStoredAsync(BaseQuestionDTO dto , int InstructorId)
+        public async Task AddQuestionWithStoredAsync(BaseQuestionDTO dto, int InstructorId)
         {
             string questionType = "";
             object? correctAnswer = null;
@@ -45,7 +45,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
                     @instructorid = {InstructorId}, 
                     @optionslist = {optionsList ?? DBNull.Value}");
         }
-        public async Task DeleteQuestionWithStoredAsync(int questionID , int instructorId )
+        public async Task DeleteQuestionWithStoredAsync(int questionID, int instructorId)
             => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [InstructorStp].stp_deletequestion @questionid = {questionID} , @instructorid = {instructorId}");
 
     }

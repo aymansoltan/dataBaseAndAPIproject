@@ -26,7 +26,7 @@ namespace ExaminationSystem_API.Service.ClassService
         }
         public async Task GradingAsync(InstructorGradingDTO dto, int instructorId)
         {
-            await _unitOfWork.Exams.GradeTextQuestionsAsync(instructorId,dto );
+            await _unitOfWork.Exams.GradeTextQuestionsAsync(instructorId, dto);
         }
 
     }

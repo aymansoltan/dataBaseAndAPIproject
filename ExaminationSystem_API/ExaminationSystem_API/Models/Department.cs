@@ -1,4 +1,5 @@
-
+﻿using System;
+using System.Collections.Generic;
 
 namespace ExaminationSystem_API.Models;
 
@@ -14,9 +15,9 @@ public partial class Department
 
     public DateOnly? CreatedAt { get; set; }
 
-    public byte? BranchId { get; set; }
+    public byte BranchId { get; set; }
 
-    public virtual Branch? Branch { get; set; }
+    public virtual Branch Branch { get; set; } = null!;
 
     public virtual ICollection<Instructor> Instructors { get; set; } = new List<Instructor>();
 

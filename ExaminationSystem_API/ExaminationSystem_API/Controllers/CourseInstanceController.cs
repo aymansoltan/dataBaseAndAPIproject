@@ -15,23 +15,23 @@ namespace ExaminationSystem_API.Controllers
             _courseInstanceService = courseInstanceService;
         }
         [HttpPost("Add-Instance")]
-        public async Task<IActionResult> AddInstaceAsync([FromBody]AddCourseInstaceDTO instaceDTO)
+        public async Task<IActionResult> AddInstaceAsync([FromBody] AddCourseInstaceDTO instaceDTO)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
                 await _courseInstanceService.AddCourseInstanceAsync(instaceDTO);
                 return this.SuccessResponse("Course instance Added Successfully");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return this.HandleException(ex);
             }
         }
         [HttpPut("Update-Instance/{id}")]
-        public async Task<IActionResult> UpdateInstaceAsync([FromRoute] int id ,[FromBody]UpdateCourseInstanceDTO instaceDTO)
+        public async Task<IActionResult> UpdateInstaceAsync([FromRoute] int id, [FromBody] UpdateCourseInstanceDTO instaceDTO)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             if (instaceDTO.CourseInstanceId != id)
                 return this.BadRequestResponse("id Mistake");
             try
@@ -39,20 +39,20 @@ namespace ExaminationSystem_API.Controllers
                 await _courseInstanceService.UpdateCourseInstanceAsync(instaceDTO);
                 return this.SuccessResponse("Course instance updated Successfully");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return this.HandleException(ex);
             }
         }
         [HttpDelete("delete-Instance/{id}")]
-        public async Task<IActionResult> DeleteInstaceAsync([FromRoute] int id )
+        public async Task<IActionResult> DeleteInstaceAsync([FromRoute] int id)
         {
             try
             {
                 await _courseInstanceService.DeleteCourseInstanceAsync(id);
                 return this.SuccessResponse("Course instance deleted Successfully");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return this.HandleException(ex);
             }

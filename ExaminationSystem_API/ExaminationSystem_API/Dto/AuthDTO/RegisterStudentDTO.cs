@@ -1,7 +1,7 @@
 
 namespace ExaminationSystem_API.Dto.AuthDTO
 {
-    public class RegisterStudentDTO :RegisterBaseDTO
+    public class RegisterStudentDTO : RegisterBaseDTO
     {
         [Required(ErrorMessage = "BranchId  is required ")]
         public byte BranchId { get; set; }

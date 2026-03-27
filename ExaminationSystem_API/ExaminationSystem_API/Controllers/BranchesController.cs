@@ -82,7 +82,7 @@ namespace ExaminationSystem_API.Controllers
             try
             {
                 var result = await _branchService.GetAllBranchSummryAsync(searchTerm, pageNumber, pageSize);
-                return this.SuccessResponse("all branch get successfully" , result);
+                return this.SuccessResponse("all branch get successfully", result);
             }
             catch (Exception ex)
             {

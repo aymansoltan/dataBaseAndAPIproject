@@ -2,11 +2,11 @@
 
 namespace ExaminationSystem_API.Service.ClassService
 {
-    public class IntakeService :IIntakeService
+    public class IntakeService : IIntakeService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        public IntakeService(IUnitOfWork unitOfWork , IMapper mapper)
+        public IntakeService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
@@ -17,7 +17,7 @@ namespace ExaminationSystem_API.Service.ClassService
         }
         public async Task UpdateIntakeAsync(UpdateIntakeDTO intakeDTO)
         {
-            await _unitOfWork.Intakes.UpdateIntakeWithStoredAsync(intakeDTO.IntakeID,intakeDTO.IntakeName);
+            await _unitOfWork.Intakes.UpdateIntakeWithStoredAsync(intakeDTO.IntakeID, intakeDTO.IntakeName);
         }
         public async Task DeleteIntakeAsync(byte id)
         {
@@ -29,7 +29,7 @@ namespace ExaminationSystem_API.Service.ClassService
             IQueryable<Intake> query = _unitOfWork.Intakes.GetAllQueryable()
                 .AsNoTracking()
                 .Where(i => i.IsDeleted==false);
-              
+
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchTerm = searchTerm.Trim().ToLower();

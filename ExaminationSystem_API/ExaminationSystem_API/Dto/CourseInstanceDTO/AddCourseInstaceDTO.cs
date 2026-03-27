@@ -4,7 +4,7 @@ namespace ExaminationSystem_API.Dto.CourseInstanceDTO
 {
     public class AddCourseInstaceDTO
     {
-        [Required(ErrorMessage ="Course id is required")]
+        [Required(ErrorMessage = "Course id is required")]
         public short CourseId { get; set; }
 
         [Required(ErrorMessage = "Instructor id is required")]

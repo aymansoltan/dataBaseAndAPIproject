@@ -11,11 +11,13 @@ namespace ExaminationSystem_API.Helper
             services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             services.AddScoped<ITrackRepository, TrackRepository>();
             services.AddScoped<IIntakeRepository, intakeRepository>();
-            services.AddScoped<IAuthRepository,AuthRepository>();
-            services.AddScoped<ICourseRepository,CourseRepository>();
-            services.AddScoped<ICourseInstanceRepository,CourseInstanceRepository>();
-            services.AddScoped<IQuestionRepository,QuestionRepository>();
+            services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<ICourseRepository, CourseRepository>();
+            services.AddScoped<ICourseInstanceRepository, CourseInstanceRepository>();
+            services.AddScoped<IQuestionRepository, QuestionRepository>();
             services.AddScoped<IExamRepository, ExamRepository>();
+            services.AddScoped<IStudentAnswerRepository, StudentAnswerRepository>();
+            services.AddScoped<IInstructorRepository, InstructorRepository>();
 
             return services;
         }
@@ -28,9 +30,10 @@ namespace ExaminationSystem_API.Helper
             services.AddScoped<ICourseService, CourseService>();
             services.AddScoped<ICourseInstanceService, CourseInstanceService>();
             services.AddScoped<IJWTTokenService, JWTTokenService>();
-            services.AddScoped<IQuestionService,QuestionService>();
-            services.AddScoped<IExamService,ExamService>();
-
+            services.AddScoped<IQuestionService, QuestionService>();
+            services.AddScoped<IExamService, ExamService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IStudentAnswerService, StudentAnswerService>();
             return services;
         }
         public static IServiceCollection AddMapping(this IServiceCollection services)

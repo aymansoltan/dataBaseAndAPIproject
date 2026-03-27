@@ -5,7 +5,7 @@ namespace ExaminationSystem_API.Controllers
     public class TrackController : ControllerBase
     {
         private readonly ITrackService _trackService;
-        public TrackController(ITrackService trackService  )
+        public TrackController(ITrackService trackService)
         {
             _trackService = trackService;
         }
@@ -17,9 +17,9 @@ namespace ExaminationSystem_API.Controllers
         }
 
 
-       
+
         [HttpPost("Add-Track")]
-        public async Task<IActionResult> AddTrackAsync([FromBody]AddTrackDTO trackDTO)
+        public async Task<IActionResult> AddTrackAsync([FromBody] AddTrackDTO trackDTO)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             try
@@ -34,10 +34,10 @@ namespace ExaminationSystem_API.Controllers
         }
 
         [HttpPut("Update-Track/{id}")]
-        public async Task<IActionResult> UpdateTrackAsync([FromRoute]short id , [FromBody] UpdateTrackDTO trackDTO)
+        public async Task<IActionResult> UpdateTrackAsync([FromRoute] short id, [FromBody] UpdateTrackDTO trackDTO)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            if(trackDTO.TrackId != id)
+            if (trackDTO.TrackId != id)
                 return this.BadRequestResponse("ID mismatch between URL and Body.");
 
             try

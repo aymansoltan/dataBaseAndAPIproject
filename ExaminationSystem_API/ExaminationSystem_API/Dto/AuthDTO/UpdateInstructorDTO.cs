@@ -1,6 +1,6 @@
 namespace ExaminationSystem_API.Dto.AuthDTO
 {
-    public class UpdateInstructorDTO :BaseUpdateMemberDTO
+    public class UpdateInstructorDTO : BaseUpdateMemberDTO
     {
         public decimal? Salary { get; set; }
         public string? Specialization { get; set; }

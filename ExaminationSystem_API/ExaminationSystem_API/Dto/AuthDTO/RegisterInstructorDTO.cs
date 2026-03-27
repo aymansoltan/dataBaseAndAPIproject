@@ -1,7 +1,7 @@
 
 namespace ExaminationSystem_API.Dto.AuthDTO
 {
-    public class RegisterInstructorDTO :RegisterBaseDTO
+    public class RegisterInstructorDTO : RegisterBaseDTO
     {
         [Required(ErrorMessage = "Salary  is required ")]
         public decimal Salary { get; set; }

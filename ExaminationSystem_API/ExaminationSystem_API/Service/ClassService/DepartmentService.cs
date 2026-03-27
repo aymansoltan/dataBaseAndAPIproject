@@ -2,30 +2,30 @@
 
 namespace ExaminationSystem_API.Service.ClassService
 {
-    public class DepartmentService :IDepartmentService
+    public class DepartmentService : IDepartmentService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        public DepartmentService(IUnitOfWork unitOfWork , IMapper mapper)
+        public DepartmentService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-        
+
         public async Task AddDepartmentAsync(AddDepartmentDTO departmentDTO)
         {
             var DeptMapper = _mapper.Map<Department>(departmentDTO);
-            await _unitOfWork.Departments.AddDepartmentWithStoredAsync(DeptMapper.DeptName,DeptMapper.BranchId.Value );
+            await _unitOfWork.Departments.AddDepartmentWithStoredAsync(DeptMapper.DeptName, DeptMapper.BranchId);
         }
         public async Task UpdateDepartmentAsync(UpdateDepartmentDTO departmentDTO)
         {
             var DeptMapper = _mapper.Map<Department>(departmentDTO);
-            await _unitOfWork.Departments.UpdateDepartmentWithStoredAsync(DeptMapper.DeptId , DeptMapper.DeptName , DeptMapper.BranchId.Value );
+            await _unitOfWork.Departments.UpdateDepartmentWithStoredAsync(DeptMapper.DeptId, DeptMapper.DeptName, DeptMapper.BranchId);
         }
 
         public async Task DeleteDepartmentAsync(byte id)
         {
-            await _unitOfWork.Departments.DeleteDepartmentWithStoredAsync(id); 
+            await _unitOfWork.Departments.DeleteDepartmentWithStoredAsync(id);
         }
 
         public async Task<DepartmentReadByIDDTO> GetDepartmentByID(byte id)
@@ -40,7 +40,7 @@ namespace ExaminationSystem_API.Service.ClassService
             return deptMapper;
         }
 
-        public async Task<PaginatedList<DepartmentReadAll>> GetAllDepartment(string? searchTerm , int pageNumber , int pageSize)
+        public async Task<PaginatedList<DepartmentReadAll>> GetAllDepartment(string? searchTerm, int pageNumber, int pageSize)
         {
             IQueryable<Department> query = _unitOfWork.Departments.GetAllQueryable()
                 .AsNoTracking()
