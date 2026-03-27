@@ -74,7 +74,7 @@ namespace ExaminationSystem_API.Controllers
         }
 
 
-        [HttpPut("Update-Account-Student/{int id}")]
+        [HttpPut("Update-Account-Student/{id}")]
         public async Task<IActionResult> UpdateAccountStudentAsync([FromRoute] int id, [FromBody] UpdateStudentDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);

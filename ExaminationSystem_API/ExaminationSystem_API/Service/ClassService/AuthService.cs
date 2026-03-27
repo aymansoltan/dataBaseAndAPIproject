@@ -29,19 +29,12 @@ namespace ExaminationSystem_API.Service.ClassService
             await _unitOfWork.Auths.AddUserWithStoredAsync(instructorDTO);
         }
 
-        public async Task UpdateAccountStudentAsync(UpdateStudentDTO studentDTO)
-        {
+        public async Task UpdateAccountStudentAsync(UpdateStudentDTO studentDTO) =>
             await _unitOfWork.Auths.UpdateUserWithStoredAsync(studentDTO);
-        }
-        public async Task UpdateAccountInstructorAsync(UpdateInstructorDTO instructorDTO)
-        {
+        public async Task UpdateAccountInstructorAsync(UpdateInstructorDTO instructorDTO) => 
             await _unitOfWork.Auths.UpdateUserWithStoredAsync(instructorDTO);
-        }
-
-        public async Task DeleteAccountAsync(int id)
-        {
+        public async Task DeleteAccountAsync(int id) =>
             await _unitOfWork.Auths.DeleteUserWithStoredAsync(id);
-        }
         public async Task<string> LoginAsync(LoginDto dto)
         {
             var userResult = await _unitOfWork.Auths.GetUserByEmailAsync(dto.Email);
