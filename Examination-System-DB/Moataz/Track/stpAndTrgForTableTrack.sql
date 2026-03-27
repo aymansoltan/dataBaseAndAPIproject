@@ -32,13 +32,13 @@ begin
         insert into [IntakeTrack] (IntakeId, TrackId)
         values (@LatestIntakeId, @NewTrackId);
 
-        select SCOPE_IDENTITY() as NewTrackId ,1 as Success , 'track added Successfully' as Message;
     end try
     begin catch
         throw;  
     end catch
 end
 go
+
 create or alter proc [TrainingMangerStp].stp_UpdateTrack
     @TrackId smallint,
     @TrackName varchar(40),
@@ -74,9 +74,6 @@ begin
                 values (@LatestIntakeId, @TrackId);
             end
         end
-
-        select @TrackId as UpdatedTrackId, 1 as Success, 'Track updated and linkage verified successfully' as Message;
-
     end try
     begin catch
         throw;
@@ -94,7 +91,6 @@ begin
         if not exists (select 1 from [Track] where [TrackId] = @trackid and [isDeleted] = 0 and [isActive] = 1)
             throw 50007, 'Error: Track not found, inactive, or it has been deleted.', 1;
         delete from [Track] where [TrackId] = @trackid;
-        select 1 as Success ,'track deleted Successfully' as Message;
     end try
     begin catch
         throw;
@@ -127,6 +123,7 @@ begin
 end
 
 go
+
 create or alter trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveTrack
 on [orgnization].[Track]
 after update

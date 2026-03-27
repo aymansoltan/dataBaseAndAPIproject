@@ -1,5 +1,7 @@
 using ExaminationSystem_API.Dto.ExamDto;
+using ExaminationSystem_API.Dto.GradingDTO;
 using ExaminationSystem_API.Dto.QuestionDTO;
+using ExaminationSystem_API.Dto.StudentAnswerDTO;
 
 namespace ExaminationSystem_API.Service.ClassService
 {
@@ -21,6 +23,10 @@ namespace ExaminationSystem_API.Service.ClassService
         public async Task DeleteExamAsync(short ExamId, int instructorId)
         {
             await _unitOfWork.Exams.DeleteExamWithStoredAsync(ExamId, instructorId);
+        }
+        public async Task GradingAsync(InstructorGradingDTO dto, int instructorId)
+        {
+            await _unitOfWork.Exams.GradeTextQuestionsAsync(instructorId,dto );
         }
 
     }

@@ -37,7 +37,6 @@ begin
         insert into  [Courses].[CourseInstance](courseid, instructorid, branchid, trackid, intakeid, academicyear )
         values (@courseid, @instructorid, @branchid, @trackid, @LastIntahke, @academicyear);
 
-       select scope_identity() as NewCourseInstanceId, 1 as Success, 'Course instance added successfully.' as Message;
     end try
     begin catch
         throw;
@@ -102,7 +101,6 @@ begin
             [AcademicYear]= @Year
         where [CourseInstanceId] = @instanceid;
 
-        select @instanceid as UpdatedCourseInstanceId, 1 as Success, 'Course instance updated successfully.' as Message;
 
     end try
     begin catch
@@ -120,10 +118,7 @@ begin
         throw 55010, 'error: course instance not found or has been deleted.', 1;
     begin try
         delete from [courses].courseinstance 
-        where courseinstanceid = @instanceid;
-        
-        select 1 as Success, 'Course instance deleted successfully.' as Message;
-        
+        where courseinstanceid = @instanceid;        
     end try
     begin catch
         throw; 
@@ -142,7 +137,6 @@ begin
     select @instanceid =[CourseInstanceId] , @courseid =[CourseId] , @year = academicyear from deleted;
 
     if exists (select 1 from[exams].[Exam]  where [CourseInstanceId] = @instanceid and [isDeleted] = 0) 
-    or exists (select 1 from [Courses].[CourseInstance] where [CourseInstanceId] = @instanceid and [isDeleted] = 0)
     begin
         update [Courses].[CourseInstance]
         set [isActive] = 0, [isDeleted] = 1

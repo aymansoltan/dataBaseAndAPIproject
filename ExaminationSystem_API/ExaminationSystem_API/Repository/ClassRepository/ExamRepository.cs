@@ -1,4 +1,7 @@
 using ExaminationSystem_API.Dto.ExamDto;
+using ExaminationSystem_API.Dto.GradingDTO;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace ExaminationSystem_API.Repository.ClassRepository
 {
@@ -53,5 +56,29 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         public async Task DeleteExamWithStoredAsync(short ExamId, int instructorId)
     => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [InstructorStp].stp_deleteexam @examid = {ExamId} , @InstructorId = {instructorId}");
 
+        public async Task GradeTextQuestionsAsync(int instructorId, InstructorGradingDTO dto)
+        {
+            var table = new DataTable();
+            table.Columns.Add("studentid", typeof(int));
+            table.Columns.Add("questionid", typeof(short));
+            table.Columns.Add("grade", typeof(byte));
+
+            foreach (var item in dto.Grades)
+            {
+                table.Rows.Add(item.StudentId, item.QuestionId, item.Grade);
+            }
+
+            var examIdParam = new SqlParameter("@examid", dto.ExamId);
+            var instructorIdParam = new SqlParameter("@instructorid", instructorId);
+            var gradingTableParam = new SqlParameter("@gradingtable", table)
+            {
+                TypeName = "[InstructorStp].InstructorGradingTableType",
+                SqlDbType = SqlDbType.Structured
+            };
+
+            await _context.Database.ExecuteSqlRawAsync(
+                "EXEC [InstructorStp].stp_InstructorGradeText @examid, @instructorid, @gradingtable",
+                examIdParam, instructorIdParam, gradingTableParam);
+        }
     }
 }

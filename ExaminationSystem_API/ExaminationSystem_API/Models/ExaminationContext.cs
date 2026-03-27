@@ -1,6 +1,4 @@
-
-
-using ExaminationSystem_API.Models.QueryResults;
+using ExaminationSystem_API.QueryResults;
 
 namespace ExaminationSystem_API.Models;
 
@@ -264,7 +262,6 @@ public partial class ExaminationContext : DbContext
                     });
         });
 
-        modelBuilder.Entity<UserLoginResult>().HasNoKey();
 
         modelBuilder.Entity<Instructor>(entity =>
         {

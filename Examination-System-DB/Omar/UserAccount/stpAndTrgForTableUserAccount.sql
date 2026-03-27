@@ -125,9 +125,6 @@ BEGIN
             END
 
         COMMIT TRANSACTION;
-
-        SELECT @NewUserId AS UserId, 1 AS Success, 'Registration completed successfully for ' + @TargetType AS Message;
-
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -163,6 +160,8 @@ BEGIN
     WHERE u.Email = @Email 
       AND u.isActive = 1;
 END
+
+
 go
 create or alter proc [TrainingMangerStp].[stp_UpdateMemberFull]
     @UserId int,
@@ -205,7 +204,7 @@ begin
         if @Gender is not null and upper(trim(@Gender)) not in ('M', 'F')
             throw 50007, 'Error: Gender must be M or F.', 1;
 
-        if @Phone is not null and (len(@Phone) <> 11 or @Phone not like '[0-9]%')
+        if @Phone is not null and (len(@Phone) <> 11 or @Phone like '%[^0-9]%')
             throw 50008, 'Error: Phone must be exactly 11 digits.', 1;
 
         if @NationalID is not null and len(@NationalID) <> 14
@@ -303,7 +302,6 @@ begin
         end
 
         commit transaction;
-        select @UserId as UserId, 1 as Success, 'Update completed successfully' as Message;
 
     end try
     begin catch
@@ -326,14 +324,13 @@ begin
 
         if not exists (
             select 1 
-            from [Accounts]
+            from [userAcc].[UserAccount]
             where UserId = @UserId
         )
             throw 50008, 'User ID not found.', 1;
 
-        delete from [Accounts] where UserId = @UserId;
+        delete from [userAcc].[UserAccount] where UserId = @UserId;
 
-        select @UserId as UserId, 1 as Success, 'User account deleted successfully.' as Message;    
     end try
     begin catch
         throw;
@@ -350,45 +347,44 @@ begin
     set nocount on;
     if exists (
         select 1 from deleted d
-        join [Accounts] UA on UA.UserId = d.UserId
-        join [Roles] R on UA.RoleId = R.RoleId
-        where R.RoleName = 'admin' and R.RoleName ='TrainingManager'
+        join [userAcc].[UserAccount] UA on UA.UserId = d.UserId
+        join [userAcc].[UserRole] R on UA.RoleId = R.RoleId
+        where R.RoleName = 'admin' or R.RoleName ='TrainingManager'
     )
     throw 50022, 'Error: Cannot delete an admin or Manger account.', 1;
 
     if exists (
         select 1 from deleted d
-        join [Students] S on d.UserId = S.UserId
-        where exists (select 1 from [StudentAnswers] SA where SA.StudentId = S.StudentId)
-           or exists (select 1 from [FinalResults] SR where SR.StudentId = S.StudentId)
+        join [userAcc].[Student] S on d.UserId = S.UserId
+        where exists (select 1 from [exams].[Student_Answer] SA where SA.StudentId = S.StudentId)
+           or exists (select 1 from [exams].[Student_Exam_Result] SR where SR.StudentId = S.StudentId)
     )
     throw 51030, 'Error: Cannot delete student with submitted answers or exam results.', 1;
 
 
     if exists (
         select 1 from deleted d
-        join [Instructors] I on d.UserId = I.UserId
-        where  exists (select 1 from [CourseInstance] CI_INST where CI_INST.InstructorId = I.InstructorId)
+        join [userAcc].[Instructor] I on d.UserId = I.UserId
+        where  exists (select 1 from [Courses].[CourseInstance] CI_INST where CI_INST.InstructorId = I.InstructorId)
     )
     throw 51035, 'Error: Cannot delete instructor assigned to active courses or course instances.', 1;
 
 
-    begin transaction ;
+
         update S 
         set isActive = 0, isDeleted = 1
-        from [Students] S
+        from [userAcc].[Student]  S
         join deleted d on S.UserId = d.UserId;
 
      
         update I 
         set isActive = 0, isDeleted = 1
-        from [Instructors] I
+        from [userAcc].[Instructor] I
         join deleted d on I.UserId = d.UserId;
 
   
         update UA 
         set isActive = 0, isDeleted = 1
-        from [Accounts] UA
+        from [userAcc].[UserAccount] UA
         join deleted d on UA.UserId = d.UserId;
-    commit transaction;
 end

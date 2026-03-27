@@ -1,6 +1,4 @@
-
-
-using ExaminationSystem_API.Models.QueryResults;
+using ExaminationSystem_API.QueryResults;
 
 namespace ExaminationSystem_API.Repository.ClassRepository
 {

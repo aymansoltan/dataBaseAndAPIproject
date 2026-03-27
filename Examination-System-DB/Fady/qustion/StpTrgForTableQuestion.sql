@@ -1,3 +1,7 @@
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
 create or alter procedure [InstructorStp].stp_createquestion
     @questiontext  varchar(4000),
     @questiontype  varchar(5),        
@@ -9,7 +13,8 @@ create or alter procedure [InstructorStp].stp_createquestion
     @optionslist   varchar(4000) = null  
 as
 begin
-    set nocount on;
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
     set @questiontext = trim(@questiontext);
     set @questiontype = lower(trim(@questiontype));
@@ -19,13 +24,13 @@ begin
     begin try
         begin transaction;
 
-        if not exists (select 1 from [Instructors] where InstructorId = @instructorid and isactive = 1 and isdeleted = 0)
+        if not exists (select 1 from [userAcc].[Instructor] where InstructorId = @instructorid and isactive = 1 and isdeleted = 0)
             throw 50001, 'Access denied. Only active instructors can create questions.', 1;
 
-        if not exists (select 1 from [Course] where courseid = @courseid and isactive = 1 and isdeleted = 0)
+        if not exists (select 1 from Courses.Course where courseid = @courseid and isactive = 1 and isdeleted = 0)
             throw 50002, 'Course not found or is currently inactive.', 1;
 
-        if not exists (select 1 from [CourseInstance] where courseid = @courseid and instructorid = @instructorid)
+        if not exists (select 1 from Courses.CourseInstance where courseid = @courseid and instructorid = @instructorid)
             throw 50003, 'Access denied: You are not assigned to teach this course.', 1;
 
         if len(@questiontext) < 10
@@ -69,10 +74,7 @@ begin
 
         if exists (select 1 from [exams].[question] 
                    where courseid = @courseid and questiontext = @questiontext and isdeleted = 0)
-        begin
             throw 50013, 'this question already exists for this course.', 1;
-            rollback; return;
-        end
 
         declare @questionid smallint;
         insert into [exams].[question] ([questiontext], [questiontype], [correctanswer], [bestanswer], [points], [courseid])
@@ -94,7 +96,6 @@ begin
         end
 
         commit transaction;
-        SELECT @questionid AS QuestionId, 1 as Success ,'qustion added successfully' as Message;
     end try
     begin catch
         if xact_state() <> 0 rollback;
@@ -127,18 +128,24 @@ begin
         begin transaction;
 
     
-        if not exists (select 1 from [Instructors] where InstructorId = @instructorid and isactive = 1 and isdeleted = 0)
+        if not exists (select 1 from userAcc.Instructor where InstructorId = @instructorid and isactive = 1 and isdeleted = 0)
             throw 50001, 'Access denied. Only active instructors can update questions.', 1;
 
         if not exists (select 1 from [exams].[question] where questionid = @questionid and isdeleted = 0)
             throw 50014, 'Error: Question not found or has been deleted.', 1;
-
+        if exists (select 1 from [exams].[question] 
+           where courseid = @courseid 
+           and questiontext = @questiontext 
+           and questionid <> @questionid 
+           and isdeleted = 0)
+                throw 50013, 'Another question with the same text already exists in this course.', 1;
+        
      
-        if not exists (select 1 from [CourseInstance] where courseid = @courseid and instructorid = @instructorid)
+        if not exists (select 1 from Courses.CourseInstance where courseid = @courseid and instructorid = @instructorid)
             throw 50003, 'Access denied: You are not assigned to teach this course.', 1;
 
    
-        if exists (select 1 from [exams].[StudentAnswer] where questionid = @questionid)
+        if exists (select 1 from [exams].[Student_Answer] where questionid = @questionid)
             throw 51000, 'Cannot update: Students have already started answering this question. Try creating a new one.', 1;
 
   
@@ -181,10 +188,6 @@ begin
         where questionid  = @questionid;
 
         commit transaction;
-
-   
-        SELECT @questionid AS QuestionId, 1 as Success, 'Question updated successfully' as Message;
-
     end try
     begin catch
         if xact_state() <> 0 rollback;
@@ -221,7 +224,6 @@ begin
 
         commit transaction;
 
-        SELECT @questionid AS QuestionId, 1 as Success, 'Question deleted successfully' as Message;
 
     end try
     begin catch
@@ -230,6 +232,8 @@ begin
     end catch
 end;
 go
+
+
 create or alter trigger [exams].trg_softdeletequestion
 on [exams].question
 instead of delete
@@ -245,9 +249,9 @@ begin
 
 
     delete qo
-    from [exams].questionoption qo
+    from [exams].[QuestionOption] qo
     inner join deleted d on qo.questionid = d.questionid
-    where not exists (select 1 from [exams].examquestion eq where eq.questionid = d.questionid)
+    where not exists (select 1 from [exams].[ExamQuestion] eq where eq.questionid = d.questionid)
         and not exists (select 1 from [exams].student_answer sa where sa.questionid = d.questionid);
 
 

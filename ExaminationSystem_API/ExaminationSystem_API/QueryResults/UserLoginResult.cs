@@ -1,4 +1,4 @@
-namespace ExaminationSystem_API.Models.QueryResults
+namespace ExaminationSystem_API.QueryResults
 {
     public class UserLoginResult
     {

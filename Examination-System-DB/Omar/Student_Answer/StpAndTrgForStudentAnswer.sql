@@ -2,127 +2,73 @@ CREATE TYPE [StudentStp].StudentAnswersTableType AS TABLE (
     QuestionId      smallint,
     StudentResponse varchar(max)
 );
-
-create or alter procedure [StudentStp].stp_StudentSubmitAnswer 
+go
+CREATE OR ALTER PROCEDURE [StudentStp].stp_StudentSubmitAnswer 
     @examid          smallint,
     @studentid       int,  
-    @answers         [StudentStp].StudentAnswersTableType readonly 
-as
-begin
-    set nocount on;
-    begin try
-        begin transaction;
+    @answers         [StudentStp].StudentAnswersTableType READONLY 
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
-       
-        if not exists (select 1 from [exams].exam where examid = @examid and isdeleted = 0)
-            throw 53020, 'error: exam not found or has been deleted.', 1;
+    BEGIN TRY
+        -- 1. التحقق من صلاحية الامتحان
+        DECLARE @examstart datetime2(0), @examend datetime2(0);
+        SELECT @examstart = starttime, @examend = endtime 
+        FROM [exams].exam WHERE examid = @examid AND isdeleted = 0;
 
-       
-        if not exists (select 1 from [userAcc].student s where s.studentid = @studentid and s.isactive = 1 and s.isdeleted = 0)
-            throw 53021, 'error: student not found, inactive, or deleted.', 1;
+        IF @@ROWCOUNT = 0 THROW 53020, 'Error: Exam not found.', 1;
+        IF GETDATE() NOT BETWEEN @examstart AND @examend THROW 53023, 'Error: Exam is not active.', 1;
 
-      
-        declare @examstart datetime2(0), @examend datetime2(0), @examtrackid smallint, 
-                @examintakeid tinyint, @exambranchid tinyint, @examtype varchar(11), @courseinstanceid smallint;
+        BEGIN TRANSACTION;
 
-        select @examstart = starttime, @examend = endtime, @examtrackid = trackid, 
-               @examintakeid = intakeid, @exambranchid = branchid, @examtype = lower(examtype), 
-               @courseinstanceid = courseinstanceid
-        from [exams].exam where examid = @examid and isdeleted = 0;
+            -- 2. تحديث الإجابات الموجودة مسبقاً (سيقوم بتفعيل التريجر INSTEAD OF UPDATE)
+            UPDATE sa
+            SET sa.studentresponse = ans.StudentResponse,
+                sa.systemgrade = CASE 
+                                    WHEN LOWER(q.QuestionType) IN ('mcq', 't/f') 
+                                         AND LOWER(TRIM(ans.StudentResponse)) = LOWER(TRIM(q.CorrectAnswer)) THEN q.Points
+                                    ELSE 0 
+                                 END,
+                sa.instructorgrade = CASE 
+                                        WHEN LOWER(q.QuestionType) = 'text' AND (ans.StudentResponse IS NULL OR TRIM(ans.StudentResponse) = '') THEN 0
+                                        ELSE sa.instructorgrade -- احتفظ بالدرجة القديمة لو موجودة
+                                     END
+            FROM [exams].student_answer sa
+            JOIN @answers ans ON sa.questionid = ans.QuestionId
+            JOIN [exams].question q ON sa.questionid = q.questionid
+            WHERE sa.studentid = @studentid AND sa.examid = @examid;
 
-     
-        if getdate() < @examstart throw 53022, 'error: exam not started yet.', 1;
-        if getdate() > @examend   throw 53023, 'error: exam has already ended.', 1;
+            -- 3. إضافة الإجابات الجديدة (التي لم تكن موجودة)
+            INSERT INTO [exams].student_answer (studentid, examid, questionid, studentresponse, systemgrade, instructorgrade)
+            SELECT 
+                @studentid, @examid, ans.QuestionId, ans.StudentResponse,
+                CASE 
+                    WHEN LOWER(q.QuestionType) IN ('mcq', 't/f') 
+                         AND LOWER(TRIM(ans.StudentResponse)) = LOWER(TRIM(q.CorrectAnswer)) THEN q.Points
+                    ELSE 0 
+                END,
+                CASE 
+                    WHEN LOWER(q.QuestionType) = 'text' AND (ans.StudentResponse IS NULL OR TRIM(ans.StudentResponse) = '') THEN 0
+                    ELSE NULL 
+                END
+            FROM @answers ans
+            JOIN [exams].question q ON ans.QuestionId = q.questionid
+            JOIN [exams].examquestion eq ON q.questionid = eq.questionid AND eq.examid = @examid
+            WHERE NOT EXISTS (
+                SELECT 1 FROM [exams].student_answer sa 
+                WHERE sa.studentid = @studentid AND sa.examid = @examid AND sa.questionid = ans.QuestionId
+            );
 
-     
-        if @examtype = 'regular'
-        begin
-            if not exists (select 1 from [userAcc].student s where s.studentid = @studentid and s.trackid = @examtrackid and s.intakeid = @examintakeid and s.branchid = @exambranchid)
-                throw 53024, 'access denied: you are not enrolled in the track/intake/branch for this exam.', 1;
-        end
-        else if @examtype = 'corrective'
-        begin
-            declare @regularexamid smallint;
-            select @regularexamid = examid from [exams].exam where courseinstanceid = @courseinstanceid and lower(examtype) = 'regular' and isdeleted = 0;
-
-            if exists (select 1 from [exams].student_exam_result where studentid = @studentid and examid = @regularexamid and ispassed = 1)
-                throw 53026, 'access denied: you passed the regular exam and cannot take the corrective exam.', 1;
-        end
-
-        declare @currentqid smallint, @currentresponse varchar(max);
-        
-        declare answer_cursor cursor local fast_forward for 
-        select questionid, studentresponse from @answers;
-
-        open answer_cursor;
-        fetch next from answer_cursor into @currentqid, @currentresponse;
-
-        while @@fetch_status = 0
-        begin
-            if exists (select 1 from [exams].examquestion where examid = @examid and questionid = @currentqid)
-            begin
-                declare @qtype varchar(11), @correctans varchar(1000), @bestans varchar(1000), @qpoints tinyint;
-                declare @sysgrade int = 0, @instgrade int = null;
-
-                select @qtype = lower(questiontype), @correctans = lower(correctanswer), @bestans = lower(bestanswer), @qpoints = points
-                from [exams].question where questionid = @currentqid and isdeleted = 0;
-
-                if @qtype in ('mcq', 't/f')
-                begin
-                    if trim(lower(@currentresponse)) = trim(@correctans) 
-                        set @sysgrade = @qpoints;
-                end
-                else if @qtype = 'text'
-                begin
-                    if @currentresponse is null or trim(@currentresponse) = ''
-                    begin
-                        set @sysgrade = 0; set @instgrade = 0;
-                    end
-                    else
-                    begin
-                        declare @keywordfound bit = 0;
-                        select top 1 @keywordfound = 1 
-                        from string_split(@bestans, ' ') 
-                        where len(trim(value)) >= 3 
-                          and charindex(trim(lower(value)), trim(lower(@currentresponse))) > 0;
-
-                        if @keywordfound = 1 set @instgrade = null; 
-                        else set @instgrade = 0;
-                    end
-                end
-
-                merge into [exams].student_answer as target
-                using (select @studentid as sid, @examid as eid, @currentqid as qid) as source
-                on target.studentid = source.sid and target.examid = source.eid and target.questionid = source.qid
-                when matched then
-                    update set studentresponse = @currentresponse, systemgrade = @sysgrade, instructorgrade = @instgrade
-                when not matched then
-                    insert (studentid, examid, questionid, studentresponse, systemgrade, instructorgrade)
-                    values (@studentid, @examid, @currentqid, @currentresponse, @sysgrade, @instgrade);
-            end
-
-            fetch next from answer_cursor into @currentqid, @currentresponse;
-        end
-
-        close answer_cursor;
-        deallocate answer_cursor;
-
-        commit transaction;
-        
-        declare @totalqs int, @answeredqs int;
-        select @totalqs = count(*) from [exams].examquestion where examid = @examid;
-        select @answeredqs = count(*) from [exams].student_answer where studentid = @studentid and examid = @examid;
-
-        select 1 as success, 'answers submitted successfully' as message, @answeredqs as answeredcount, @totalqs as totalcount;
-
-    end try
-    begin catch
-        if xact_state() <> 0 rollback;
-        declare @errmsg nvarchar(2000) = lower(error_message());
-        raiserror(@errmsg, 16, 1);
-    end catch
-end;
-go
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
 ---------------------------------------------------------------------------------------------
 
 create type [InstructorStp].InstructorGradingTableType as table (
@@ -130,7 +76,7 @@ create type [InstructorStp].InstructorGradingTableType as table (
     questionid   smallint,
     grade        tinyint
 );
-
+go
 create or alter procedure [InstructorStp].stp_InstructorGradeText
     @examid          smallint,
     @instructorid    int, 
@@ -220,7 +166,6 @@ begin
             values (source.studentid, source.examid, source.totalgrade, source.ispassed);
 
         commit transaction;
-        select 1 as success, 'grading completed and results finalized.' as message;
 
     end try
     begin catch

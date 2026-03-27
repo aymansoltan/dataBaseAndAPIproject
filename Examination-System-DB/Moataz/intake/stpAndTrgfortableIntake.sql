@@ -26,7 +26,6 @@ begin
         insert into [Intake] ([IntakeName])
         values (trim(@IntakeName));
 
-        select SCOPE_IDENTITY() as NewIntakeId, 1 as Success, 'Intake added successfully' as Message;
     end try
     begin catch
         throw;  
@@ -54,7 +53,6 @@ begin
         set [IntakeName] = trim(@IntakeName)
         where [IntakeId] = @IntakeId;
 
-        select @IntakeId as UpdatedIntakeId , 1 as Success , 'intake updated Successfully' as Message ;
     end try
     begin catch
         throw;  
@@ -72,7 +70,6 @@ begin
             throw 50003, 'Error: Intake not found or it has been deleted.', 1;
 
         delete from [Intake] where [IntakeId] = @IntakeId
-        select 1 as Success , 'intake deleted Successfully' as Message ;
     end try
     begin catch
         throw;  

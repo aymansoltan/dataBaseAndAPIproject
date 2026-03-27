@@ -11,6 +11,7 @@ namespace ExaminationSystem_API.Repository.UnitWork
         ICourseInstanceRepository CoursesInstances { get; }
         IQuestionRepository Questions { get; }
         IExamRepository Exams { get; }
+        IStudentAnswerRepository StudentAnswer { get; }
         Task<int> CompleteAsync();
     }
 }

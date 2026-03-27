@@ -12,6 +12,7 @@ namespace ExaminationSystem_API.Repository.UnitWork
         public ICourseInstanceRepository CoursesInstances { get; private set; }
         public IQuestionRepository Questions { get; private set; }
         public IExamRepository Exams { get; private set; }
+        public IStudentAnswerRepository StudentAnswer { get; private set; }
         public UnitOfWork(ExaminationContext context)
         {
             _context = context;
@@ -24,6 +25,7 @@ namespace ExaminationSystem_API.Repository.UnitWork
             CoursesInstances = new CourseInstanceRepository(_context);
             Questions = new QuestionRepository(_context);
             Exams = new ExamRepository(_context);
+            StudentAnswer = new StudentAnswerRepository(_context);
         }
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
 

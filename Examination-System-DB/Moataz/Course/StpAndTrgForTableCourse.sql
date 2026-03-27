@@ -27,13 +27,13 @@ set nocount on;
         insert into [Courses].[Course] ([CourseName] , [MaxDegree] , [MinDegree] , [CourseDescription]   )
         values (lower(trim(@coursename)), @maxdegree, @mindegree, ltrim(rtrim(@description)));
 
-        select SCOPE_IDENTITY() as NewCourseId , 1 as Success, 'Course added successfully.' as Message  ;
     end try
     begin catch
         throw;
     end catch 
 end
 go
+
 create or alter proc [TrainingMangerStp].stp_UpdateCourse
     @CourseId   smallint,
     @CourseName varchar(30) = null,
@@ -79,8 +79,6 @@ begin
             [MinDegree]   = @CurrentMin,
             [CourseDescription] = coalesce(trim(@Description),[CourseDescription] )
         where [CourseId] = @CourseId;
-
-        select @CourseId as UpdatedCourseId, 1 as Success, 'Course updated successfully.' as Message;
         
     end try 
     begin catch
@@ -97,9 +95,7 @@ begin
         if not exists (select 1 from [Courses].[Course]  where [CourseId] = @CourseId and [isDeleted] = 0)
             throw  53030, 'Error: Course not found or it has been deleted.', 1;
         
-        delete from [Courses].[Course] where [CourseId] =@CourseId
-        select 1 as Success, 'Course deleted successfully.' as Message;
-        
+        delete from [Courses].[Course] where [CourseId] =@CourseId        
 end;
 go
 

@@ -19,13 +19,13 @@ begin
 
         insert into [Department] ([DeptName], [BranchId])
         values (trim(@Deptname), @BranchId);
-        select SCOPE_IDENTITY() as NewDepartmentId , 1 as Success, 'Department added successfully' as Message;
         
     end try
     begin catch
         throw;
     end catch
 end
+go
 
 create or alter proc [TrainingMangerStp].stp_UpdateDepartment
     @DeptId tinyint,
@@ -49,7 +49,6 @@ begin
         set DeptName = trim(@DeptName),
             BranchId = @BranchId
         where DeptId = @DeptId;
-        select @DeptId as UpdateDepartmentId , 1 as Success , 'Department Updated successfully' as Message;
     end try
     begin catch
         throw;
@@ -67,12 +66,12 @@ begin
             throw 50004, 'Error: Department not found or it has been deleted.', 1;
 
         delete from [Department]where [DeptId] = @DeptId;
-        select 1 as Success , 'Department deleted successfully.' as Message;
     end try
     begin catch
         throw;
     end catch
 end
+go
 
 create or alter trigger [orgnization].trg_SoftDeleteDepartment
 on [orgnization].[Department]
@@ -95,8 +94,8 @@ begin
         delete from [Department] where [DeptId] = @DeptId;
     end
 end
-
 go
+
 create or alter trigger [orgnization].trg_CheckBranchStatusBeforeInsert
 on [orgnization].[Department]
 after insert
@@ -116,10 +115,6 @@ begin
 end
 go
 
-
-go
-
-go
 create trigger [orgnization].trg_inactivateTracksWhenInActiveDerpartment
 on [orgnization].[Department]
 after update

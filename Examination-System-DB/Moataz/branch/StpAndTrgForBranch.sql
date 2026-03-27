@@ -1,5 +1,6 @@
 use [ExaminationSystemDB]
 go
+
 create or alter proc [TrainingMangerStp].stp_AddBranch @BranchName varchar(15)
 as 
 begin
@@ -10,7 +11,6 @@ begin
 
         insert into [Branch] (BranchName)
         values (lower(trim(@BranchName)));
-        select SCOPE_IDENTITY() as NewBranchId , 1 as Success ,'Branch added successfully' as Message;
     end try
     begin catch 
    
@@ -21,7 +21,6 @@ begin
     end catch
 end
 go
-
 
 create or alter proc [TrainingMangerStp].stp_UpdateBranch @BranchId tinyint  ,@BranchName varchar(15) 
 as
@@ -38,7 +37,6 @@ begin
         update [Branch]
         set [BranchName] =@BranchName 
         where [BranchId] = @BranchId   
-        select @BranchId as UpdatedBranchId , 1 as Success, 'Branch updated successfully' as Message;
     end try
     begin catch
         if error_number() in (2627, 2601)   
@@ -59,14 +57,12 @@ begin
             throw 50003, 'Error: Branch not found or it has been deleted.', 1;
 
         delete from [Branch] where [BranchId] = @BranchId
-        select 1 as Success , 'Branch deleted successfully.' as Message;
     end try
     begin catch
         throw;
     end catch
 end
 go
-
 
 create  or alter trigger [orgnization].trg_SoftDeleteBranch
 on [orgnization].[Branch]
@@ -92,7 +88,6 @@ begin
 end 
 go
 
-
 create or alter proc [TrainingMangerStp].stp_ActivateBranch @BranchId tinyint 
 as
 begin
@@ -112,7 +107,6 @@ begin
             update [Department]
             set [isActive] =1
             where [BranchId] =@BranchId
-            select 1 as Success, 'Branch activated and its related departments have been synchronized.' as Message;   
         end
     end try
     begin catch
@@ -120,6 +114,7 @@ begin
      end catch
 end
 go
+
 create or alter  trigger [orgnization].trg_inactivateDepartmentWhenInActiveBranch
 on [orgnization].[Branch]
 after update

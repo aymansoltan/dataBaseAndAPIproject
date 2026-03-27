@@ -34,7 +34,7 @@ begin
             if not exists (select 1 from [useracc].Instructor where InstructorId = @InstructorId and isActive = 1 and isDeleted = 0)
                 throw 50001, 'error: instructor not found or inactive.', 1;
 
-            if not exists (select 1 from [courses].CourseInstance where CourseInstanceId = @courseinstanceid and InstructorId = @InstructorId and BranchId = @branchid and TrackId = @trackid and IntakeId = @intakeid)
+            if not exists (select 1 from [courses].CourseInstance where CourseInstanceId = @courseinstanceid and InstructorId = @InstructorId and BranchId = @branchid and TrackId = @trackid and IntakeId = @lastIntakeId)
                 throw 50002, 'error: course instance not found or you do not have permission to create an exam for this course instance.', 1;
 
         declare @courseid smallint;
@@ -43,7 +43,8 @@ begin
         where ci.courseinstanceid = @courseinstanceid 
             and ci.instructorid = @InstructorId
             and ci.branchid = @branchid 
-            and ci.trackid = @trackid ;
+            and ci.trackid = @trackid
+            and ci.IntakeId = @lastIntakeId;
 
         if @courseid is null
             throw 50002, 'you canot put this exam for course beacuse you dont have this course ', 1;
@@ -132,7 +133,8 @@ begin
 
             if @textcount > (select count(*) from [exams].question where courseid = @courseid and questiontype = 'text' and isdeleted = 0)
                 throw 50013, 'not enough text questions in the bank.', 1;
-
+            IF (@mcqcount + @tfcount + @textcount) > @questioncount
+                THROW 50016, 'Error: Sum of specific counts exceeds total question count.', 1;
             insert into @selectedq
             select top (@mcqcount) questionid from [exams].question where courseid = @courseid and questiontype = 'mcq' and isdeleted = 0 order by newid();
             
@@ -159,7 +161,6 @@ begin
         end
 
         commit transaction;
-        select @examid as CreatedExamId, 1 as Success, 'Exam created successfully.' as Message;
 
     end try
     begin catch
@@ -194,14 +195,13 @@ begin
 
         delete from [exams].exam where examid = @examid;
 
-        select 1 as Success, 'Exam deleted successfully.' as Message;
     end try
     begin catch
         throw;
     end catch
 end;
 
-
+go
 create or alter trigger [exams].trg_softdeleteexam
 on [exams].exam
 instead of delete
@@ -210,31 +210,27 @@ begin
     set nocount on;
 
   
-    declare @SoftDeleteIDs table (id int);
-    insert into @SoftDeleteIDs
-    select examid from deleted d
-    where exists (select 1 from [exams].student_answer sa where sa.examid = d.examid)
-       or exists (select 1 from [exams].student_exam_result sr where sr.examid = d.examid);
+  UPDATE e
+    SET e.isdeleted = 1
+    FROM [exams].exam e
+    JOIN deleted d ON e.examid = d.examid
+    WHERE EXISTS (SELECT 1 FROM [exams].student_answer sa WHERE sa.examid = d.examid)
+       OR EXISTS (SELECT 1 FROM [exams].student_exam_result sr WHERE sr.examid = d.examid);
 
-    declare @HardDeleteIDs table (id int);
-    insert into @HardDeleteIDs
-    select examid from deleted d
-    where examid not in (select id from @SoftDeleteIDs);
+    DELETE eq 
+    FROM [exams].examquestion eq
+    JOIN deleted d ON eq.examid = d.examid
+    WHERE NOT EXISTS (SELECT 1 FROM [exams].student_answer sa WHERE sa.examid = d.examid)
+      AND NOT EXISTS (SELECT 1 FROM [exams].student_exam_result sr WHERE sr.examid = d.examid);
 
-  
-    update [exams].exam 
-    set isdeleted = 1 
-    where examid in (select id from @SoftDeleteIDs);
-
-
-    delete from [exams].examquestion 
-    where examid in (select id from @HardDeleteIDs);
-    
-
-    delete from [exams].exam 
-    where examid in (select id from @HardDeleteIDs);
+    DELETE e
+    FROM [exams].exam e
+    JOIN deleted d ON e.examid = d.examid
+    WHERE NOT EXISTS (SELECT 1 FROM [exams].student_answer sa WHERE sa.examid = d.examid)
+      AND NOT EXISTS (SELECT 1 FROM [exams].student_exam_result sr WHERE sr.examid = d.examid);
 end;
 go
+
 CREATE OR ALTER TRIGGER [exams].trg_UpdateExamTotalDegree
 ON [exams].[ExamQuestion]
 AFTER INSERT, UPDATE, DELETE
