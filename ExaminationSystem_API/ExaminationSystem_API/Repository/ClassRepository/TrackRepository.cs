@@ -7,8 +7,8 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         {
             _context = context;
         }
-        public async Task AddTrackWithStoredAsync(string name, byte deptId) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_AddTrack @TrackName = {name} , @DeptId = {deptId} ");
-        public async Task UpdateTrackWithStoredAsync(short trackId, string name, byte deptId) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_UpdateTrack @TrackId = {trackId} , @TrackName = {name} , @DeptId = {deptId} ");
+        public async Task AddTrackWithStoredAsync(AddTrackDTO dto) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_AddTrack @TrackName = {dto.TrackName} , @DeptId = {dto.DeptId} ");
+        public async Task UpdateTrackWithStoredAsync(UpdateTrackDTO dto) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_UpdateTrack @TrackId = {dto.TrackId} , @TrackName = {dto.TrackName} , @DeptId = {dto.DeptId} ");
         public async Task DeleteTrackWithStoredAsync(short trackId) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_DeleteTrack @trackid = {trackId} ");
 
     }

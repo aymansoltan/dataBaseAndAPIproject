@@ -2,8 +2,8 @@ namespace ExaminationSystem_API.Repository.InterfaceRepository
 {
     public interface ITrackRepository : IGenericRepository<Track>
     {
-        Task AddTrackWithStoredAsync(string name, byte deptId);
-        Task UpdateTrackWithStoredAsync(short trackId, string name, byte deptId);
+        Task AddTrackWithStoredAsync(AddTrackDTO dto);
+        Task UpdateTrackWithStoredAsync(UpdateTrackDTO dto);
         Task DeleteTrackWithStoredAsync(short trackId);
     }
 }

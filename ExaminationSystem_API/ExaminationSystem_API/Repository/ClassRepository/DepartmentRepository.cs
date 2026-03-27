@@ -8,8 +8,8 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         {
             _context = context;
         }
-        public async Task AddDepartmentWithStoredAsync(string name, byte BranchID) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_AddDepartment @Deptname={name},@BranchId ={BranchID} ");
-        public async Task UpdateDepartmentWithStoredAsync(byte DeptId, string name, byte BranchID) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_UpdateDepartment @DeptId ={DeptId},@DeptName={name},@BranchId ={BranchID}");
+        public async Task AddDepartmentWithStoredAsync(AddDepartmentDTO dto) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_AddDepartment @Deptname={dto.DeptName},@BranchId ={dto.BranchId} ");
+        public async Task UpdateDepartmentWithStoredAsync(UpdateDepartmentDTO dto) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_UpdateDepartment @DeptId ={dto.DeptId},@DeptName={dto.DeptName},@BranchId ={dto.BranchId}");
         public async Task DeleteDepartmentWithStoredAsync(byte DeptId) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_DeleteDepartment @DeptId={DeptId}");
 
     }

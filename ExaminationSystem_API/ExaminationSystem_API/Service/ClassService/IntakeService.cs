@@ -11,18 +11,14 @@ namespace ExaminationSystem_API.Service.ClassService
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-        public async Task AddIntakeAsync(AddIntakeDTO intakeDTO)
-        {
-            await _unitOfWork.Intakes.AddIntakeWithStoredAsync(intakeDTO.IntakeName);
-        }
-        public async Task UpdateIntakeAsync(UpdateIntakeDTO intakeDTO)
-        {
-            await _unitOfWork.Intakes.UpdateIntakeWithStoredAsync(intakeDTO.IntakeID, intakeDTO.IntakeName);
-        }
-        public async Task DeleteIntakeAsync(byte id)
-        {
+        public async Task AddIntakeAsync(AddIntakeDTO intakeDTO)=>
+            await _unitOfWork.Intakes.AddIntakeWithStoredAsync(intakeDTO);
+
+        public async Task UpdateIntakeAsync(UpdateIntakeDTO intakeDTO) =>
+           await _unitOfWork.Intakes.UpdateIntakeWithStoredAsync(intakeDTO);
+
+        public async Task DeleteIntakeAsync(byte id) =>
             await _unitOfWork.Intakes.DeleteIntakeWithStoredAsync(id);
-        }
 
         public async Task<PaginatedList<IntakeReadAllDTO>> GetAllIntackeAsync(string? searchTerm, int pageNumber, int pageSize)
         {

@@ -12,21 +12,11 @@ namespace ExaminationSystem_API.Service.ClassService
             _mapper = mapper;
         }
 
-        public async Task AddDepartmentAsync(AddDepartmentDTO departmentDTO)
-        {
-            var DeptMapper = _mapper.Map<Department>(departmentDTO);
-            await _unitOfWork.Departments.AddDepartmentWithStoredAsync(DeptMapper.DeptName, DeptMapper.BranchId);
-        }
-        public async Task UpdateDepartmentAsync(UpdateDepartmentDTO departmentDTO)
-        {
-            var DeptMapper = _mapper.Map<Department>(departmentDTO);
-            await _unitOfWork.Departments.UpdateDepartmentWithStoredAsync(DeptMapper.DeptId, DeptMapper.DeptName, DeptMapper.BranchId);
-        }
+        public async Task AddDepartmentAsync(AddDepartmentDTO dto) => await _unitOfWork.Departments.AddDepartmentWithStoredAsync(dto);
 
-        public async Task DeleteDepartmentAsync(byte id)
-        {
-            await _unitOfWork.Departments.DeleteDepartmentWithStoredAsync(id);
-        }
+        public async Task UpdateDepartmentAsync(UpdateDepartmentDTO dto) => await _unitOfWork.Departments.UpdateDepartmentWithStoredAsync(dto);
+        
+        public async Task DeleteDepartmentAsync(byte id) => await _unitOfWork.Departments.DeleteDepartmentWithStoredAsync(id);
 
         public async Task<DepartmentReadByIDDTO> GetDepartmentByID(byte id)
         {

@@ -11,9 +11,9 @@ namespace ExaminationSystem_API.Service.ClassService
             _mapper = mapper;
         }
         public async Task AddTrackAsync(AddTrackDTO trackDTO)
-            => await _unitOfWork.Tracks.AddTrackWithStoredAsync(trackDTO.TrackName, trackDTO.DeptId);
+            => await _unitOfWork.Tracks.AddTrackWithStoredAsync(trackDTO);
         public async Task UpdateTrackAsync(UpdateTrackDTO trackDTO)
-            => await _unitOfWork.Tracks.UpdateTrackWithStoredAsync(trackDTO.TrackId, trackDTO.TrackName, trackDTO.DeptId);
+            => await _unitOfWork.Tracks.UpdateTrackWithStoredAsync(trackDTO);
         public async Task DeleteTrackAsync(short id)
             => await _unitOfWork.Tracks.DeleteTrackWithStoredAsync(id);
         public async Task<PaginatedList<TrackReadAllDTO>> GetAllTrackAsync(string? searchTerm, int pageNumber, int pageSize)

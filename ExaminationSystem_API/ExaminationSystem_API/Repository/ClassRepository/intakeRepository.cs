@@ -7,8 +7,8 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         {
             _context = context;
         }
-        public async Task AddIntakeWithStoredAsync(string name) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_AddIntake @IntakeName = {name} ");
-        public async Task UpdateIntakeWithStoredAsync(byte intakeId, string name) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_UpdateIntake @IntakeId = {intakeId} , @IntakeName = {name} ");
+        public async Task AddIntakeWithStoredAsync(AddIntakeDTO dto) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_AddIntake @IntakeName = {dto.IntakeName} ");
+        public async Task UpdateIntakeWithStoredAsync(UpdateIntakeDTO dto) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_UpdateIntake @IntakeId = {dto.IntakeID} , @IntakeName = {dto.IntakeName} ");
         public async Task DeleteIntakeWithStoredAsync(byte intakeId) => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [TrainingMangerStp].stp_DeleteIntake @IntakeId = {intakeId} ");
 
     }
