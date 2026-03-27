@@ -10,17 +10,11 @@ namespace ExaminationSystem_API.Service.ClassService
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task AddCourseInstanceAsync(AddCourseInstaceDTO instaceDTO)
-        {
+        public async Task AddCourseInstanceAsync(AddCourseInstaceDTO instaceDTO) =>
             await _unitOfWork.CoursesInstances.AddCourseInstaceWithStoredAsync(instaceDTO);
-        }
-        public async Task UpdateCourseInstanceAsync(UpdateCourseInstanceDTO instaceDTO)
-        {
+        public async Task UpdateCourseInstanceAsync(UpdateCourseInstanceDTO instaceDTO) =>
             await _unitOfWork.CoursesInstances.UpdateCourseInstanceWithStoredAsync(instaceDTO);
-        }
-        public async Task DeleteCourseInstanceAsync(int id)
-        {
+        public async Task DeleteCourseInstanceAsync(int id)=>
             await _unitOfWork.CoursesInstances.DeleteCourseInstaceWithStoredAsync(id);
-        }
     }
 }

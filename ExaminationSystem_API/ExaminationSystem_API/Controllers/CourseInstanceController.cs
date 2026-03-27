@@ -33,7 +33,7 @@ namespace ExaminationSystem_API.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if (instaceDTO.CourseInstanceId != id)
-                return this.BadRequestResponse("id Mistake");
+                return this.BadRequestResponse("ID mismatch between URL and body.");
             try
             {
                 await _courseInstanceService.UpdateCourseInstanceAsync(instaceDTO);
