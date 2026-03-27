@@ -12,22 +12,14 @@ namespace ExaminationSystem_API.Service.ClassService
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task AddManaulExamAsync(ManualExamDTO examDTO, int instructorId)
-        {
+        public async Task AddManaulExamAsync(ManualExamDTO examDTO, int instructorId) =>
             await _unitOfWork.Exams.AddExamWithStoredAsync(examDTO, instructorId);
-        }
-        public async Task AddRandomExamAsync(RandomExamDTO examDTO, int instructorId)
-        {
+        public async Task AddRandomExamAsync(RandomExamDTO examDTO, int instructorId) => 
             await _unitOfWork.Exams.AddExamWithStoredAsync(examDTO, instructorId);
-        }
-        public async Task DeleteExamAsync(short ExamId, int instructorId)
-        {
+        public async Task DeleteExamAsync(short ExamId, int instructorId) => 
             await _unitOfWork.Exams.DeleteExamWithStoredAsync(ExamId, instructorId);
-        }
-        public async Task GradingAsync(InstructorGradingDTO dto, int instructorId)
-        {
+        public async Task GradingAsync(InstructorGradingDTO dto, int instructorId) =>
             await _unitOfWork.Exams.GradeTextQuestionsAsync(instructorId, dto);
-        }
 
     }
 }

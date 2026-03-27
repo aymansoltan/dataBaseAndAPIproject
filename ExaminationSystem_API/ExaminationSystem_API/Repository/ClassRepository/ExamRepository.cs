@@ -54,7 +54,7 @@ namespace ExaminationSystem_API.Repository.ClassRepository
         }
 
         public async Task DeleteExamWithStoredAsync(short ExamId, int instructorId)
-    => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [InstructorStp].stp_deleteexam @examid = {ExamId} , @InstructorId = {instructorId}");
+            => await _context.Database.ExecuteSqlInterpolatedAsync($"EXEC [InstructorStp].stp_deleteexam @examid = {ExamId} , @InstructorId = {instructorId}");
 
         public async Task GradeTextQuestionsAsync(int instructorId, InstructorGradingDTO dto)
         {
