@@ -1,6 +1,6 @@
 use  [ExaminationSystemDB]
 go
-create proc[TrainingMangerStp].stp_addCourseInstance
+create or alter proc[TrainingMangerStp].stp_addCourseInstance
     @courseid     int,
     @instructorid int,
     @branchid     int,
@@ -42,7 +42,7 @@ begin
 end;
 go
 
-create proc [TrainingMangerStp].stp_updatecourseinstance
+create or alter proc [TrainingMangerStp].stp_updatecourseinstance
     @instanceid    int,            
     @courseid      int = null,       
     @instructorid  int = null,       
@@ -111,7 +111,7 @@ begin
     end catch
 end;
 go
-create  proc [TrainingMangerStp].stp_deleteinstance
+create or alter proc [TrainingMangerStp].stp_deleteinstance
     @instanceid int
 as
 begin
@@ -134,7 +134,7 @@ begin
 end
 go
 
-create  trigger [courses].trg_preventdeleteinstance
+create or alter  trigger [courses].trg_preventdeleteinstance
 on [courses].[courseinstance]
 instead of delete
 as

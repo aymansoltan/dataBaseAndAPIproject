@@ -117,7 +117,7 @@ END;
 GO
 --==========================================
 
-create  proc [TrainingMangerStp].stp_deleteinstructor 
+create or alter proc [TrainingMangerStp].stp_deleteinstructor 
     @instructoid int 
 as 
 begin

@@ -1,5 +1,5 @@
 go
-create proc [TrainingMangerStp].stp_AddCourse 
+create or alter proc [TrainingMangerStp].stp_AddCourse 
     @CourseName nvarchar(50),
     @MaxDegree  int,
     @MinDegree  int,
@@ -36,7 +36,7 @@ begin
     end catch 
 end
 go
-create proc [TrainingMangerStp].stp_UpdateCourse
+create or alter proc [TrainingMangerStp].stp_UpdateCourse
     @CourseId   int,
     @CourseName nvarchar(50) = null,
     @MaxDegree  int = null,
@@ -90,7 +90,7 @@ begin
 end;
 
 go
-create proc [TrainingMangerStp].stp_DeleteCourse
+create or alter proc [TrainingMangerStp].stp_DeleteCourse
     @CourseId int
 as 
 begin
@@ -103,7 +103,7 @@ begin
         print 'Course deactivated successfully (Soft Delete).';
 end;
 go
-create trigger [courses].trg_Softcoursedelete
+create or alter trigger [courses].trg_Softcoursedelete
 on [courses].[course]
 instead of delete
 as

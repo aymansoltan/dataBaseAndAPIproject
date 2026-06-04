@@ -31,7 +31,7 @@ as
     inner join [orgnization].Intake     i  on s.IntakeId = i.IntakeId
 
     -- each student sees only their own data
-    where  ua.UserName = replace(suser_name(), 'login', 'user')
+    where  ua.UserName = suser_name()
       and  ua.isActive = 1
       and  s.isActive  = 1;
 go
@@ -66,7 +66,7 @@ as
     inner join [orgnization].Track       t  on ci.TrackId        = t.TrackId
     inner join [orgnization].Intake      it on ci.IntakeId       = it.IntakeId
 
-    where  ua.UserName = replace(suser_name(), 'login', 'user')
+    where  ua.UserName = suser_name()
       and  ua.isActive = 1
       and  s.isActive  = 1
       and  c.isActive  = 1;
@@ -122,7 +122,7 @@ as
     inner join [userAcc].Student         s  on r.StudentId        = s.StudentId
     inner join [userAcc].UserAccount     ua on s.UserId           = ua.UserId
 
-    where  ua.UserName = replace(suser_name(), 'login', 'user')
+    where  ua.UserName = suser_name()
       and  ua.isActive = 1
       and  s.isActive  = 1
       and  e.IsDeleted = 0;
@@ -158,7 +158,7 @@ as
                                            and s.BranchId         = e.BranchId
     inner join [userAcc].UserAccount     ua on s.UserId           = ua.UserId
 
-    where  ua.UserName = replace(suser_name(), 'login', 'user')
+    where  ua.UserName =suser_name()
       and  ua.isActive = 1
       and  s.isActive  = 1
       and  e.IsDeleted = 0
@@ -186,7 +186,7 @@ begin
         inner join [userAcc].Student s
             on ua.UserId  = s.UserId
            and s.isActive = 1
-        where  ua.UserName = replace(suser_name(), 'login', 'user')
+        where  ua.UserName = suser_name()
           and  ua.isActive = 1;
 
         if @CurrentStudentId is null

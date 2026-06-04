@@ -1,7 +1,7 @@
 use [ExaminationSystemDB]
 
 go
-create proc [TrainingMangerStp].stp_addIntakeTrack
+create or alter proc [TrainingMangerStp].stp_addIntakeTrack
     @intakeid int,
     @trackid int
 as
@@ -31,7 +31,7 @@ begin
     end catch
 end
 go
-create proc [TrainingMangerStp].stp_ToggleIntakeTrack
+create or alter proc [TrainingMangerStp].stp_ToggleIntakeTrack
     @intakeid int,
     @trackid int,
     @status bit
@@ -51,7 +51,7 @@ begin
     print 'intaketrack status updated.';
 end
 go
-create proc [TrainingMangerStp].stp_DeleteIntakeTrack
+create or alter proc [TrainingMangerStp].stp_DeleteIntakeTrack
     @intakeid int,
     @trackid int
 as
@@ -74,7 +74,7 @@ begin
     end catch
 end
 go
-create trigger [orgnization].trg_SoftDeleteIntakeTrack
+create or alter trigger [orgnization].trg_SoftDeleteIntakeTrack
 on [orgnization].[IntakeTrack]
 instead of delete
 as

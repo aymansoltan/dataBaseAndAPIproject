@@ -22,8 +22,9 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua 
         join [useracc].instructor i on ua.userid = i.userid 
-        where ua.username = replace(suser_name() , 'login' ,'user') and i.isactive = 1;
+        where ua.username =suser_name()  and i.isactive = 'true';
 
+      
         if @currentinsid is null
         begin
             raiserror('access denied. only active instructors can create questions.', 16, 1);
@@ -143,8 +144,8 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua
         inner join [useracc].instructor i on ua.userid = i.userid
-        where ua.username = replace(suser_name(), 'login', 'user')
-          and i.isactive = 1;
+        where ua.username = suser_name()
+          and i.isactive = 'true';
 
         if @currentinsid is null
         begin
@@ -264,8 +265,8 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua
         inner join [useracc].instructor i on ua.userid = i.userid
-        where ua.username = replace(suser_name(), 'login', 'user')
-          and i.isactive = 1;
+        where ua.username = suser_name()
+          and i.isactive = 'true';
 
         if @currentinsid is null
         begin

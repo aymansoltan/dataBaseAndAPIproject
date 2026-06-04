@@ -1,6 +1,6 @@
 use [ExaminationSystemDB]
 go
-create proc [TrainingMangerStp].stp_AddIntake
+create or alter proc [TrainingMangerStp].stp_AddIntake
     @IntakeName nvarchar(50)
 as
 begin
@@ -28,7 +28,7 @@ begin
     end catch
 end
 go
-create proc [TrainingMangerStp].stp_UpdateIntake
+create or alter proc [TrainingMangerStp].stp_UpdateIntake
     @IntakeId int,
     @IntakeName nvarchar(50),
     @IsActive bit =1
@@ -66,7 +66,7 @@ begin
     end catch
 end
 go
-create proc [TrainingMangerStp].stp_DeleteIntack @IntakeId int 
+create or alter proc [TrainingMangerStp].stp_DeleteIntack @IntakeId int 
 as
 begin
     begin try
@@ -86,7 +86,7 @@ begin
     end catch
 end
 go
-create trigger [orgnization].trg_SoftDeleteIntake
+create or alter trigger [orgnization].trg_SoftDeleteIntake
 on [orgnization].[Intake]
 instead of delete
 as
@@ -112,7 +112,7 @@ begin
     end
 end
 go
-create trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveIntake
+create or alter trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveIntake
 on [orgnization].[Intake]
 after update
 as

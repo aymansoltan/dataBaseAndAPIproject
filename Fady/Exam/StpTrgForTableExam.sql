@@ -28,8 +28,8 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua
         inner join [useracc].instructor i on ua.userid = i.userid
-        where ua.username = replace(suser_name(), 'login', 'user')
-          and i.isactive = 1;
+        where ua.username = suser_name()
+          and i.isactive = 'true';
 
         if @currentinsid is null
             throw 50001, 'access denied. only active instructors can create exams.', 1;
@@ -174,7 +174,7 @@ begin
         select  @currentinsid = i.insid
         from [useracc].useraccount ua
         join [useracc].instructor i on ua.userid = i.userid and i.isactive = 1
-        where ua.username = replace(suser_name(), 'login', 'user');
+        where ua.username = suser_name();
 
         if @currentinsid is null 
             throw 50001, 'access denied: instructor profile not found or inactive.', 1;
@@ -269,7 +269,7 @@ begin
         select @currentinsid = i.insid
         from [useracc].useraccount ua
         join [useracc].instructor i on ua.userid = i.userid and i.isactive = 1
-        where ua.username = replace(suser_name(), 'login', 'user');
+        where ua.username = suser_name();
 
         if @currentinsid is null 
             throw 50001, 'access denied: you must be an active instructor to perform this action.', 1;
@@ -309,7 +309,7 @@ begin
         raiserror(@err, 16, 1);
     end catch
 end;
-go
+
 go
 create or alter trigger [exams].trg_softdeleteexam
 on [exams].exam

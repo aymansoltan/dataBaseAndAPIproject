@@ -1,6 +1,6 @@
 use [ExaminationSystemDB]
 go
-create proc [TrainingMangerStp].stp_AddTrack
+create or alter proc  [TrainingMangerStp].stp_AddTrack
     @TrackName nvarchar(50),
     @DeptId int
 as
@@ -37,7 +37,7 @@ begin
     end catch
 end
 go
-create proc [TrainingMangerStp].stp_UpdateTrack
+create or alter proc [TrainingMangerStp].stp_UpdateTrack
     @TrackId int,
     @TrackName nvarchar(50),
     @DeptId int
@@ -78,7 +78,7 @@ end
 go
 
 
-create proc [TrainingMangerStp].stp_DeleteTrack
+create or alter proc  [TrainingMangerStp].stp_DeleteTrack
     @trackid int
 as
 begin
@@ -98,7 +98,7 @@ begin
 end
 go
 
-create trigger [orgnization].trg_SoftDeleteTrack
+create or alter trigger [orgnization].trg_SoftDeleteTrack
 on [orgnization].[Track]
 instead of delete
 as
@@ -122,7 +122,7 @@ begin
     end
 end
 go
-create trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveTrack
+create or alter trigger [orgnization].trg_intakeTrackinactivateWhenInaactiveTrack
 on [orgnization].[Track]
 after update
 as

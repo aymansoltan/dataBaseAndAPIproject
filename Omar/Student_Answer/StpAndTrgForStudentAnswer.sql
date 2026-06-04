@@ -15,8 +15,8 @@ begin
         inner join [userAcc].Student s
             on ua.UserId  = s.UserId
            and s.isActive = 1
-        where  ua.UserName =replace( suser_name(),'login','user')
-          and  ua.isActive = 1;
+        where  ua.UserName = suser_name()
+          and  ua.isActive = 'true';
 
         if @CurrentStudentId is null
         begin
@@ -260,219 +260,208 @@ end
 go
 ---------------------------------------------------------------------------------------------
 
-create procedure [InstructorStp].stp_InstructorGradeText
-    @ExamId          int,
-    @StudentId       int,
-    @QuestionId      int,
-    @InstructorGrade int
-as
-begin
-    set nocount on;
-    begin try
-        begin transaction;
+CREATE OR ALTER PROCEDURE [InstructorStp].stp_InstructorGradeText
+    @ExamId          INT,
+    @StudentId       INT,
+    @QuestionId      INT,
+    @InstructorGrade INT
+AS
+BEGIN
+    SET NOCOUNT ON;
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 1: Get current instructor from SQL Server login
-        -- Check role = 'instructor' + isActive on both tables
-        -- ══════════════════════════════════════════════════════════════
-        declare @CurrentInsId int;
+    BEGIN TRY
+        BEGIN TRAN;
 
-        select @CurrentInsId = i.InsId
-        from   [userAcc].UserAccount ua
-        inner join [userAcc].Instructor i
-            on ua.UserId  = i.UserId
-           and i.isActive = 1
-        where  ua.UserName =replace( suser_name(),'login','user')
-          and  ua.isActive = 1;
+        -------------------------------------------------
+        -- 1️⃣ Get Current Instructor
+        -------------------------------------------------
+        DECLARE @CurrentInsId INT;
 
-        if @CurrentInsId is null
-        begin
-            raiserror('Access Denied. Only active instructors can grade answers.', 16, 1);
-            rollback; return;
-        end
+        SELECT @CurrentInsId = i.InsId
+        FROM   [userAcc].UserAccount ua
+        JOIN   [userAcc].Instructor  i
+               ON ua.UserId = i.UserId
+              AND i.IsActive = 1
+        WHERE  ua.UserName = SUSER_NAME()
+          AND  ua.IsActive = 'true';
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 2: Check exam exists and is not deleted
-        -- ══════════════════════════════════════════════════════════════
-        declare @ExamEnd          datetime,
-                @ExamCourseInstId int;
+        IF @CurrentInsId IS NULL
+            THROW 50001, 'Access Denied. Only active instructors can grade.', 1;
 
-        select @ExamEnd          = EndTime,
-               @ExamCourseInstId = CourseInstanceId
-        from   [exams].Exam
-        where  ExamId    = @ExamId
-          and  IsDeleted = 0;
 
-        if @ExamEnd is null
-        begin
-            raiserror('Exam not found or has been deleted.', 16, 1);
-            rollback; return;
-        end
+        -------------------------------------------------
+        -- 2️⃣ Validate Exam
+        -------------------------------------------------
+        DECLARE @ExamEnd DATETIME,
+                @CourseInstanceId INT,
+                @ExamTotalGrade INT,
+                @MinDegree INT,
+                @MaxDegree INT;
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 3: Check exam has already ended
-        -- Grading is only allowed after the exam is over
-        -- ══════════════════════════════════════════════════════════════
-        if getdate() <= @ExamEnd
-        begin
-            raiserror('Cannot grade answers while the exam is still active.', 16, 1);
-            rollback; return;
-        end
+        SELECT  @ExamEnd = e.EndTime,
+                @CourseInstanceId = e.CourseInstanceId,
+                @ExamTotalGrade = e.TotalGrade,
+                @MinDegree = c.MinDegree,
+                @MaxDegree = c.MaxDegree
+        FROM    [exams].Exam e
+        JOIN    [Courses].CourseInstance ci ON e.CourseInstanceId = ci.CourseInstanceId
+        JOIN    [Courses].Course c ON ci.CourseId = c.CourseId
+        WHERE   e.ExamId = @ExamId
+          AND   e.IsDeleted = 0;
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 4: Check this instructor owns the CourseInstance
-        -- ══════════════════════════════════════════════════════════════
-        if not exists (
-            select 1
-            from   [Courses].CourseInstance
-            where  CourseInstanceId = @ExamCourseInstId
-              and  InstructorId     = @CurrentInsId
+        IF @ExamEnd IS NULL
+            THROW 50002, 'Exam not found or deleted.', 1;
+
+
+        -------------------------------------------------
+        -- 3️⃣ Exam must be finished
+        -------------------------------------------------
+        IF GETDATE() <= @ExamEnd
+            THROW 50003, 'Exam is still active.', 1;
+
+
+        -------------------------------------------------
+        -- 4️⃣ Check if grading window closed (3 hours)
+        -------------------------------------------------
+        IF GETDATE() > DATEADD(HOUR,3,@ExamEnd)
+        BEGIN
+
+            -- give half grade to ungraded text answers
+            UPDATE sa
+            SET    sa.InstructorGrade = CEILING(q.Points / 2.0)
+            FROM   [exams].Student_Answer sa
+            JOIN   [exams].Question q ON sa.QuestionId = q.QuestionId
+            WHERE  sa.ExamId = @ExamId
+              AND  q.QuestionType = 'Text'
+              AND  sa.InstructorGrade IS NULL;
+
+            DECLARE @PassMark INT =
+                CEILING(@ExamTotalGrade * CAST(@MinDegree AS FLOAT) / @MaxDegree);
+
+            MERGE [exams].Student_Exam_Result AS target
+            USING (
+                SELECT
+                    sa.StudentId,
+                    SUM(ISNULL(sa.SystemGrade,0) + ISNULL(sa.InstructorGrade,0)) AS TotalGrade
+                FROM [exams].Student_Answer sa
+                WHERE sa.ExamId = @ExamId
+                GROUP BY sa.StudentId
+            ) AS source
+            ON target.StudentId = source.StudentId
+            AND target.ExamId = @ExamId
+
+            WHEN MATCHED THEN
+                UPDATE SET
+                    target.TotalGrade = source.TotalGrade,
+                    target.IsPassed =
+                        CASE WHEN source.TotalGrade >= @PassMark THEN 1 ELSE 0 END
+
+            WHEN NOT MATCHED THEN
+                INSERT (StudentId, ExamId, TotalGrade, IsPassed)
+                VALUES (
+                    source.StudentId,
+                    @ExamId,
+                    source.TotalGrade,
+                    CASE WHEN source.TotalGrade >= @PassMark THEN 1 ELSE 0 END
+                );
+
+            COMMIT;
+            THROW 50004, 'Grading window closed. Results finalized.', 1;
+        END
+
+
+        -------------------------------------------------
+        -- 5️⃣ Check ownership
+        -------------------------------------------------
+        IF NOT EXISTS (
+            SELECT 1
+            FROM [Courses].CourseInstance
+            WHERE CourseInstanceId = @CourseInstanceId
+              AND InstructorId = @CurrentInsId
         )
-        begin
-            raiserror('Access Denied. You can only grade exams for your own course instances.', 16, 1);
-            rollback; return;
-        end
-
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 5: Check question type is Text and not deleted
-        -- ══════════════════════════════════════════════════════════════
-        declare @Points int;
-
-        select @Points = Points
-        from   [exams].Question
-        where  QuestionId   = @QuestionId
-          and  QuestionType = 'Text'
-          and  IsDeleted    = 0;
-
-        if @Points is null
-        begin
-            raiserror('Question not found, deleted, or is not a Text question.', 16, 1);
-            rollback; return;
-        end
-
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 6: Check student answer exists in Student_Answer
-        -- NULL + no record  = answer not submitted
-        -- NULL + record     = keyword matched, pending review
-        -- 0                 = auto zero, no keyword match
-        -- ══════════════════════════════════════════════════════════════
-        declare @CurrentInstructorGrade int;
-
-        select @CurrentInstructorGrade = InstructorGrade
-        from   [exams].Student_Answer
-        where  StudentId  = @StudentId
-          and  ExamId     = @ExamId
-          and  QuestionId = @QuestionId;
-
-        if @CurrentInstructorGrade = 0
-        begin
-            raiserror('This answer was auto-graded as zero (no keyword match). No review needed.', 16, 1);
-            rollback; return;
-        end
+            THROW 50005, 'Access Denied. Not your course.', 1;
 
 
-        --if @CurrentInstructorGrade is null (
-        --    select 1
-        --    from   [exams].Student_Answer
-        --    where  StudentId  = @StudentId
-        --      and  ExamId     = @ExamId
-        --      and  QuestionId = @QuestionId
-        --)
-        --begin
-        --    raiserror('No answer found for this student and question.', 16, 1);
-        --    rollback; return;
-        --end
+        -------------------------------------------------
+        -- 6️⃣ Validate Question
+        -------------------------------------------------
+        DECLARE @Points INT;
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 7: Block auto zero answers from manual grading
-        -- 0   = auto zero (no keyword match) → block
-        -- NULL = keyword matched, pending    → allow
-        -- > 0  = already graded before       → allow re-grade
-        -- ══════════════════════════════════════════════════════════════
+        SELECT @Points = Points
+        FROM [exams].Question
+        WHERE QuestionId = @QuestionId
+          AND QuestionType = 'Text'
+          AND IsDeleted = 0;
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 8: Validate grade is not negative
-        -- ══════════════════════════════════════════════════════════════
-        if @InstructorGrade < 0
-        begin
-            raiserror('Instructor grade cannot be negative.', 16, 1);
-            rollback; return;
-        end
+        IF @Points IS NULL
+            THROW 50006, 'Invalid or non-text question.', 1;
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 9: Validate grade does not exceed question points
-        -- ══════════════════════════════════════════════════════════════
-        if @InstructorGrade > @Points
-        begin
-            raiserror(
-                'Instructor grade (%d) cannot exceed question points (%d).',
-                16, 1, @InstructorGrade, @Points
-            );
-            rollback; return;
-        end
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 10: Update InstructorGrade
-        -- Print different message for new grade vs updated grade
-        -- ══════════════════════════════════════════════════════════════
-        update [exams].Student_Answer
-        set    InstructorGrade = @InstructorGrade
-        where  StudentId  = @StudentId
-          and  ExamId     = @ExamId
-          and  QuestionId = @QuestionId;
+        -------------------------------------------------
+        -- 7️⃣ Validate Answer Exists
+        -------------------------------------------------
+        DECLARE @CurrentInstructorGrade INT;
 
-        if @CurrentInstructorGrade is  null
-            print 'Grade added successfully. StudentId: '
-                + cast(@StudentId       as nvarchar(10))
-                + ' | QuestionId: '
-                + cast(@QuestionId      as nvarchar(10))
-                + ' | Grade: '
-                + cast(@InstructorGrade as nvarchar(10))
-                + ' / '
-                + cast(@Points          as nvarchar(10));
-        else
-            print 'Grade updated successfully. StudentId: '
-                + cast(@StudentId              as nvarchar(10))
-                + ' | QuestionId: '
-                + cast(@QuestionId             as nvarchar(10))
-                + ' | Old Grade: '
-                + cast(@CurrentInstructorGrade as nvarchar(10))
-                + ' → New Grade: '
-                + cast(@InstructorGrade        as nvarchar(10))
-                + ' / '
-                + cast(@Points                 as nvarchar(10));
+        SELECT @CurrentInstructorGrade = InstructorGrade
+        FROM [exams].Student_Answer
+        WHERE StudentId = @StudentId
+          AND ExamId = @ExamId
+          AND QuestionId = @QuestionId;
 
-        -- ══════════════════════════════════════════════════════════════
-        -- STEP 11: Show remaining ungraded Text answers for this exam
-        -- Helps instructor track how many answers still need review
-        -- ══════════════════════════════════════════════════════════════
-        declare @Remaining int;
+        IF @@ROWCOUNT = 0
+            THROW 50007, 'Student answer not found.', 1;
 
-        select @Remaining = count(*)
-        from   [exams].Student_Answer sa
-        join   [exams].Question       q  on sa.QuestionId = q.QuestionId
-        where  sa.ExamId          = @ExamId
-          and  q.QuestionType     = 'Text'
-          and  sa.InstructorGrade is null;
+        IF @CurrentInstructorGrade = 0
+            THROW 50008, 'Auto zero answer cannot be modified.', 1;
 
-        if @Remaining = 0
-            print 'All text answers have been graded for this exam.';
-        else
-            print 'Remaining text answers to grade: '
-                + cast(@Remaining as nvarchar(10));
 
-        commit transaction;
+        -------------------------------------------------
+        -- 8️⃣ Validate Grade Range
+        -------------------------------------------------
+        IF @InstructorGrade < 0
+            THROW 50009, 'Grade cannot be negative.', 1;
 
-    end try
-    begin catch
-        if xact_state() <> 0 rollback;
-        declare @ErrMsg nvarchar(2000) = error_message();
-        raiserror(@ErrMsg, 16, 1);
-    end catch
-end
-go
+        IF @InstructorGrade > @Points
+            THROW 50010, 'Grade exceeds question points.', 1;
+
+
+        -------------------------------------------------
+        -- 9️⃣ Update Grade
+        -------------------------------------------------
+        UPDATE [exams].Student_Answer
+        SET InstructorGrade = @InstructorGrade
+        WHERE StudentId = @StudentId
+          AND ExamId = @ExamId
+          AND QuestionId = @QuestionId;
+
+
+        -------------------------------------------------
+        -- 🔟 Show remaining ungraded
+        -------------------------------------------------
+        DECLARE @Remaining INT;
+
+        SELECT @Remaining = COUNT(*)
+        FROM [exams].Student_Answer sa
+        JOIN [exams].Question q ON sa.QuestionId = q.QuestionId
+        WHERE sa.ExamId = @ExamId
+          AND q.QuestionType = 'Text'
+          AND sa.InstructorGrade IS NULL;
+
+        PRINT 'Remaining text answers: ' + CAST(@Remaining AS NVARCHAR(10));
+
+        COMMIT;
+
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK;
+
+        THROW;
+    END CATCH
+END
+GO
 --------------------------------- ----------------------------------------------
-create   procedure [InstructorStp].stp_deletstudentanswer 
+create  or alter procedure [InstructorStp].stp_deletstudentanswer 
 @studentid int
 as 
 begin
@@ -481,7 +470,7 @@ where @studentid = StudentId
 end
 go
 --------------------------------------------------------------------
-create  trigger [exams].trg_StudentAnswer
+create or alter trigger [exams].trg_StudentAnswer
 on [exams].Student_Answer
 instead of delete, update
 as

@@ -289,8 +289,8 @@ BEGIN
     UNION
     SELECT ExamId FROM deleted;
 
-    UPDATE [exams].Exam
-    SET E.TotalDegree = ISNULL(
+    UPDATE E
+    SET E.[TotalGrade]= ISNULL(
         (SELECT SUM(Q.Points) 
          FROM [exams].ExamQuestion EQ
          JOIN [exams].Question Q ON EQ.QuestionId = Q.QuestionId
@@ -298,119 +298,4 @@ BEGIN
     FROM [exams].Exam E
     WHERE E.ExamId IN (SELECT ExamId FROM @AffectedExams);
 END;
-
--- =====================================================================
---  TEST CASES  (v2)
--- =====================================================================
-
--- ── stp_AddExamQuestion ──────────────────────────────────────────────
-
--- Test 1: مدرس مش في السيستم / مش نشط (should fail)
-EXEC [InstructorStp].stp_AddExamQuestion
-    @ExamId = 1, @QuestionIds = '9,10';
-GO
-
--- Test 2: Exam مش موجود (should fail)
-EXEC [InstructorStp].stp_AddExamQuestion
-    @ExamId = 9999, @QuestionIds = '9,10';
-GO
-
--- Test 3: سؤال من Course تانية (should fail)
-EXEC [InstructorStp].stp_AddExamQuestion
-    @ExamId = 1, @QuestionIds = '4,5';
-GO
-
--- Test 4: أسئلة موجودة بالفعل + @SkipExisting = 0 (should fail + hint)
-EXEC [InstructorStp].stp_AddExamQuestion
-    @ExamId = 1, @QuestionIds = '1,2,9';
-GO
-
--- Test 5: أسئلة موجودة بالفعل + @SkipExisting = 1 (should succeed - يضيف 9 فقط)
-EXEC [InstructorStp].stp_AddExamQuestion
-    @ExamId = 1, @QuestionIds = '1,2,9', @SkipExisting = 1;
-GO
-
--- Test 6: إضافة جديدة صحيحة مع Output Parameter
-DECLARE @Added INT;
-EXEC [InstructorStp].stp_AddExamQuestion
-    @ExamId = 1, @QuestionIds = '10,11', @AddedCount = @Added OUTPUT;
-PRINT 'Returned @AddedCount = ' + CAST(@Added AS NVARCHAR(10));
-GO
-
--- Test 7: Duplicate IDs في الـ Input (should succeed + note)
-EXEC [InstructorStp].stp_AddExamQuestion
-    @ExamId = 2, @QuestionIds = '4,4,5,5,5';
-GO
-
--- ── stp_UpdateExamQuestion ───────────────────────────────────────────
-
--- Test 8: Single swap صح (should succeed)
-EXEC [InstructorStp].stp_UpdateExamQuestion
-    @ExamId = 1, @OldQuestionId = 1, @NewQuestionId = 12;
-GO
-
--- Test 9: Old = New (should fail)
-EXEC [InstructorStp].stp_UpdateExamQuestion
-    @ExamId = 1, @OldQuestionId = 2, @NewQuestionId = 2;
-GO
-
--- Test 10: OldId مش موجود في الـ Exam (should fail)
-EXEC [InstructorStp].stp_UpdateExamQuestion
-    @ExamId = 1, @OldQuestionId = 999, @NewQuestionId = 1;
-GO
-
--- Test 11: NewId من Course تانية (should fail)
-EXEC [InstructorStp].stp_UpdateExamQuestion
-    @ExamId = 1, @OldQuestionId = 2, @NewQuestionId = 4;
-GO
-
--- Test 12: Multi-swap صح (should succeed)
--- بنبدل سؤالين في نفس الوقت
-EXEC [InstructorStp].stp_UpdateExamQuestion
-    @ExamId = 1, @SwapList = '2:9, 3:10';
-GO
-
--- Test 13: إدخال SwapList و Single في نفس الوقت (should fail)
-EXEC [InstructorStp].stp_UpdateExamQuestion
-    @ExamId = 1,
-    @OldQuestionId = 1, @NewQuestionId = 2,
-    @SwapList = '1:2';
-GO
-
--- Test 14: SwapList بـ format غلط (should fail)
-EXEC [InstructorStp].stp_UpdateExamQuestion
-    @ExamId = 1, @SwapList = '1-2, 3-4';
-GO
-
--- ── stp_DeleteExamQuestion ───────────────────────────────────────────
-
--- Test 15: حذف أسئلة موجودة صح (should succeed)
-DECLARE @Removed INT;
-EXEC [InstructorStp].stp_DeleteExamQuestion
-    @ExamId = 1, @QuestionIds = '10,11', @RemovedCount = @Removed OUTPUT;
-PRINT 'Returned @RemovedCount = ' + CAST(@Removed AS NVARCHAR(10));
-GO
-
--- Test 16: سؤال مش موجود + @SkipNotFound = 0 (should fail + hint)
-EXEC [InstructorStp].stp_DeleteExamQuestion
-    @ExamId = 1, @QuestionIds = '999';
-GO
-
--- Test 17: سؤال مش موجود + @SkipNotFound = 1 (should succeed with note)
-EXEC [InstructorStp].stp_DeleteExamQuestion
-    @ExamId = 1, @QuestionIds = '999,2', @SkipNotFound = 1;
-GO
-
--- Test 18: محاولة حذف كل الأسئلة (should fail)
-EXEC [InstructorStp].stp_DeleteExamQuestion
-    @ExamId = 1, @QuestionIds = '1,2,3,9,10,11,12';
-GO
-
--- Test 19: Exam مش موجود (should fail)
-EXEC [InstructorStp].stp_DeleteExamQuestion
-    @ExamId = 9999, @QuestionIds = '1';
-GO
-
-SELECT * FROM [exams].ExamQuestion WHERE ExamId IN (1, 2);
-GO
 

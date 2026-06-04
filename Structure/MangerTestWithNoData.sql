@@ -14,7 +14,7 @@ exec [TrainingMangerStp].stp_ActivateBranch @BranchId =7
 ------------------------------------------------
 --Stp
 
-exec [TrainingMangerStp].stp_AddDepartment @Deptname ='Full Stack .net', @BranchId =1
+exec [TrainingMangerStp].stp_AddDepartment @Deptname ='Full Stack', @BranchId =1
 exec [TrainingMangerStp].stp_UpdateDepartment @DeptId =1 , @DeptName='Full Stack' ,@BranchId =1
 exec [TrainingMangerStp].stp_DeleteDepartment @DeptId =2
 
@@ -26,7 +26,9 @@ exec [TrainingMangerStp].stp_DeleteDepartment @DeptId =2
 ----------------Track----------------------
 ------------------------------------------------
 --Stp
+exec [TrainingMangerStp].stp_AddTrack @TrackName='.NET' ,@DeptId =1
 exec [TrainingMangerStp].stp_AddTrack @TrackName='Mern' ,@DeptId =1
+
 exec [TrainingMangerStp].stp_UpdateTrack @TrackId =1 ,@TrackName ='Full Stack .NET' ,@DeptId =1
 exec [TrainingMangerStp].stp_DeleteTrack @trackid =5
 
@@ -47,7 +49,9 @@ exec [TrainingMangerStp].stp_DeleteIntack @IntakeId =5
 ----------------IntakeTrack----------------------
 ------------------------------------------------
 --Stp
+exec [TrainingMangerStp].stp_addIntakeTrack @intakeid =1 ,@trackid=1
 exec [TrainingMangerStp].stp_addIntakeTrack @intakeid =1 ,@trackid=2
+
 exec [TrainingMangerStp].stp_ToggleIntakeTrack @intakeid  ,@trackid ,@status
 exec [TrainingMangerStp].stp_DeleteIntakeTrack @intakeid ,@trackid
 --trg
@@ -56,9 +60,8 @@ exec [TrainingMangerStp].stp_DeleteIntakeTrack @intakeid ,@trackid
 ----------------User----------------------
 ------------------------------------------------
 --Stp
---  ﬂ—Ì  «·√œ„‰
+
 exec [TrainingMangerStp].[stp_createsystemuser] @username = 'Admin',  @password = 'Pass@123', @email = 'admin@exam.com',  @roletype = 'admin';
---  ﬂ—Ì  «·„«‰Ã— (≈‰  ⁄«„· Mapping ·‹ manager ⁄‘«‰ Ì—ÊÕ ·‹ training manager)
 exec [TrainingMangerStp].[stp_createsystemuser] @username = 'Mrihan', @password = 'Mrihan@123', @email = 'Mrihan@exam.com', @roletype = 'manager';
 exec [TrainingMangerStp].[stp_createsystemuser] 'Hassan', 'Inst@123', 'Hassan@exam.com', 'instructor';
 exec [TrainingMangerStp].[stp_createsystemuser] 'Mariam', 'Inst@123', 'Mariam@exam.com', 'instructor';
@@ -79,8 +82,6 @@ exec [TrainingMangerStp].stp_DeleteUserAccount @UserId
 ----------------student------------------------
 ------------------------------------------------
 --Stp
-exec [TrainingMangerStp].[stp_addstudent] 'Moatz' ,'Ahmed'  ,'M'   ,'1985-05-20' ,'Minya','30108222501474',5,1,1,1   
-select * from [userAcc].[UserAccount]
 exec [TrainingMangerStp].[stp_addstudent] @firstname ='Moatz' ,@lastname='Ahmed'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650211',@nationalid='30108222501474',@userid=5,@branchid=1,@intakeid=1,@trackid=1 
 exec [TrainingMangerStp].[stp_addstudent] @firstname ='Fady' ,@lastname='Sameh'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650214',@nationalid='30108222501476',@userid=6,@branchid=1,@intakeid=1,@trackid=1 
 exec [TrainingMangerStp].[stp_addstudent] @firstname ='Omar' ,@lastname='Kotb'  ,@gender='M'    ,@birthdate='1985-05-20' ,@stuaddress='6th of october, giza',@phone='01146650213',@nationalid='30108222501477',@userid=7,@branchid=1,@intakeid=1,@trackid=1 
@@ -171,35 +172,11 @@ EXEC [TrainingMangerStp].stp_addCourseInstance
     @intakeid=1     ,
     @academicyear=2026 
 
-    select * from [Courses].[Course]
-        select * from [userAcc].[Instructor]
-            select * from [orgnization].[Track]
---Question------------------------------------------------------
-('mcq', 't/f', 'text')
-EXEC [InstructorStp].stp_createquestion
-    @questiontext='html html html html ',
-    @questiontype='t/f'  ,        
-    @correctanswer='True' ,
-    @bestanswer='True'    ,
-    @points =2      ,
-    @courseid=1     
+select * from [userAcc].[UserAccount]
 
 
-    EXEC [InstructorStp].stp_createquestion
-    @questiontext='css html html html ',
-    @questiontype='mcq'  ,        
-    @correctanswer='A' ,
-    @bestanswer='A'    ,
-    @points =4      ,
-    @courseid=1,
-    @optionlist = 'A-omar |B-Moatz |C-Fady'
 
-        EXEC [InstructorStp].stp_createquestion
-    @questiontext='JS html html html ',
-    @questiontype='text'  ,        
-    @bestanswer=' js js js'    ,
-    @points =4      ,
-    @courseid=1
+
 
 ---------------------------------------------
 --------------VIEWS--------------------------

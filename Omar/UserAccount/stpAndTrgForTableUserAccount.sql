@@ -1,7 +1,7 @@
 USE [ExaminationSystemDB]
 GO
 
-create  procedure [TrainingMangerStp].[stp_createsystemuser]
+create or alter procedure [TrainingMangerStp].[stp_createsystemuser]
     @username nvarchar(50),
     @password nvarchar(250),
     @email    nvarchar(100),
@@ -41,7 +41,7 @@ begin
 
   
         declare @loginname nvarchar(100) = @cleanname + 'login';
-        declare @dbusername nvarchar(100) = @cleanname + 'user';
+        declare @dbusername nvarchar(100) = @cleanname + 'login';
         
         if exists (select 1 from sys.server_principals where name = @loginname)
             throw 50003, 'error: login already exists on the server.', 1;
@@ -83,7 +83,7 @@ go
 -- 2) Update User (Fully Secured)
 ------------------------------------------------------------
 go
-create  procedure [TrainingMangerStp].[stp_updateuseraccount] 
+create or alter procedure [TrainingMangerStp].[stp_updateuseraccount] 
     @userid int,
     @username nvarchar(50) = null,     -- «·«”„ «·ÃœÌœ (·Ê Õ«»»  €Ì—Â)
     @email nvarchar(100) = null,
@@ -157,7 +157,7 @@ go
 -- 3) Delete User (Soft Delete Driven)
 ------------------------------------------------------------
 go
-CREATE PROC [TrainingMangerStp].stp_DeleteUserAccount 
+CREATE or alter PROC [TrainingMangerStp].stp_DeleteUserAccount 
     @UserId int
 AS
 BEGIN

@@ -9,7 +9,7 @@ GO
 -- 1) Add Student
 ------------------------------------------------------------
 go
-create  procedure [TrainingMangerStp].[stp_addstudent]
+create or alter procedure [TrainingMangerStp].[stp_addstudent]
     @firstname nvarchar(50),
     @lastname  nvarchar(50),
     @gender    char(1),
@@ -100,7 +100,7 @@ go
 -- 2) Update Student
 ------------------------------------------------------------
 go
-create  procedure [TrainingMangerStp].[stp_updatestudent]
+create or alter procedure [TrainingMangerStp].[stp_updatestudent]
     @studentid int,
     @firstname nvarchar(50) = null,
     @lastname  nvarchar(50) = null,
@@ -190,7 +190,7 @@ go
 -- 3) Delete Student (Soft Delete Only)
 ------------------------------------------------------------
 go
-create proc [TrainingMangerStp].stp_DeleteStudent @StudentId int
+create or alter proc [TrainingMangerStp].stp_DeleteStudent @StudentId int
 as 
 begin 
     set nocount on;
@@ -205,7 +205,7 @@ end
 -- 4) Soft Delete Trigger
 ------------------------------------------------------------
 go
-create  trigger [useracc].[trg_preventdeletestudent]
+create or alter trigger [useracc].[trg_preventdeletestudent]
 on [useracc].[student]
 instead of delete
 as
